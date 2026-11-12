@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Space+Grotesk:wght@300..700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-tertiary-container":"#262d00","on-surface-variant":"#e5bdb7","on-secondary-fixed":"#1d1c16","tertiary":"#c0ce71","error-container":"#93000a","outline-variant":"#5c403b","background":"#141312","on-error-container":"#ffdad6","on-primary-fixed":"#410000","surface-container-lowest":"#0f0e0d","outline":"#ac8883","primary-container":"#ff5541","on-error":"#690005","on-primary-container":"#5c0000","on-secondary-container":"#bcb8af","error":"#ffb4ab","on-secondary-fixed-variant":"#494740","inverse-primary":"#bc160c","inverse-surface":"#e6e1df","surface-container-low":"#1d1b1a","on-tertiary-fixed":"#191e00","on-background":"#e6e1df","primary-fixed":"#ffdad4","on-surface":"#e6e1df","secondary":"#cac6bd","on-primary-fixed-variant":"#930000","surface-container":"#211f1e","surface-variant":"#363433","secondary-fixed":"#e7e2d8","secondary-container":"#4b4942","surface-dim":"#141312","surface-container-highest":"#363433","on-secondary":"#32302a","inverse-on-surface":"#32302f","tertiary-container":"#8b9841","secondary-fixed-dim":"#cac6bd","on-tertiary-fixed-variant":"#424b00","tertiary-fixed-dim":"#c0ce71","on-primary":"#690000","surface-tint":"#ffb4a8","on-tertiary":"#2d3400","surface-bright":"#3b3937","primary-fixed-dim":"#ffb4a8","surface-container-high":"#2b2a28","tertiary-fixed":"#dceb8a","primary":"#ffb4a8","surface":"#141312"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xs":"0.25rem","space-md":"1rem",gutter:"0px","space-xl":"2.5rem","gutter-desktop":"0px",margin:"1rem","margin-tablet":"1.5rem","margin-desktop":"2rem","space-lg":"1.5rem","space-sm":"0.5rem"},fontFamily:{"label-mono-md":["Space Mono"],"label-mono-lg":["Space Mono"],"headline-lg":["Space Grotesk"],"headline-md":["Space Grotesk"],"display-xl-mobile":["Space Grotesk"],"body-sm":["DM Sans"],"body-lg":["DM Sans"],"label-mono-sm":["Space Mono"],"display-xl":["Space Grotesk"],"body-md":["DM Sans"],"display-lg-mobile":["Space Grotesk"],"display-lg":["Space Grotesk"],"headline-sm":["Space Grotesk"]},fontSize:{"label-mono-md":["12px",{lineHeight:"16px",letterSpacing:"0.06em",fontWeight:"400"}],"label-mono-lg":["14px",{lineHeight:"18px",letterSpacing:"0.05em",fontWeight:"700"}],"headline-lg":["32px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"700"}],"headline-md":["24px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"700"}],"display-xl-mobile":["44px",{lineHeight:"44px",letterSpacing:"-0.03em",fontWeight:"700"}],"body-sm":["12px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"400"}],"body-lg":["16px",{lineHeight:"24px",letterSpacing:"0em",fontWeight:"400"}],"label-mono-sm":["10px",{lineHeight:"12px",letterSpacing:"0.08em",fontWeight:"400"}],"display-xl":["80px",{lineHeight:"80px",letterSpacing:"-0.04em",fontWeight:"700"}],"body-md":["14px",{lineHeight:"20px",letterSpacing:"0em",fontWeight:"400"}],"display-lg-mobile":["36px",{lineHeight:"38px",letterSpacing:"-0.02em",fontWeight:"700"}],"display-lg":["56px",{lineHeight:"58px",letterSpacing:"-0.03em",fontWeight:"700"}],"headline-sm":["18px",{lineHeight:"22px",letterSpacing:"0em",fontWeight:"700"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest border-r-2 border-surface-container-highest z-50 flex flex-col justify-between select-none"><div class="flex flex-col"><div class="p-space-lg border-b-2 border-surface-container-highest bg-surface-container-lowest"><div class="flex flex-col"><span class="font-headline-lg text-headline-lg tracking-tighter text-on-surface uppercase font-black leading-none">KAIZEN</span><div class="flex items-center gap-space-xs mt-space-xs"><span class="font-label-mono-sm text-label-mono-sm text-outline tracking-widest font-normal">改善</span><span class="font-label-mono-sm text-label-mono-sm text-outline-variant">// CONTINUOUS DISCIPLINE</span></div></div></div><div class="px-space-md py-space-xs bg-surface-container-low border-b border-surface-container-highest"><span class="font-label-mono-sm text-label-mono-sm uppercase text-outline tracking-widest">SYSTEM CORE // REGISTRY</span></div><nav class="flex flex-col" data-active-classes="bg-primary-container text-on-primary-container font-bold border-l-4 border-on-surface"><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="today" href="#"><span class="tracking-wider">.01 TODAY</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ ACT ]</span></a><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="quests" href="#"><span class="tracking-wider">.02 QUESTS</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ MAN ]</span></a><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="habits" href="#"><span class="tracking-wider">.03 HABITS</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ RTN ]</span></a><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="progress" href="#"><span class="tracking-wider">.04 PROGRESS</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ ANL ]</span></a><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="profile" href="#"><span class="tracking-wider">.05 PROFILE</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ DOS ]</span></a></nav></div><div class="border-t-2 border-surface-container-highest bg-surface-container-low"><div class="p-space-md border-b border-surface-container-highest flex items-center justify-between"><span class="font-label-mono-sm text-label-mono-sm text-outline uppercase">DOSSIER TELEMETRY</span><span class="bg-tertiary-container text-on-tertiary-container px-space-xs font-label-mono-sm text-label-mono-sm uppercase font-bold">STREAK 42D</span></div><div class="p-space-md space-y-space-sm"><div class="flex justify-between items-baseline font-label-mono-md text-label-mono-md"><span class="text-on-surface font-bold">DISCIPLE #042</span><span class="text-primary-container font-bold">LVL 12</span></div><div class="w-full bg-surface-container-lowest border border-surface-container-highest h-3 flex"><div class="h-full bg-primary-container w-[81%]"></div><div class="h-full bg-surface-container-highest w-[19%]"></div></div><div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-outline"><span class="tracking-wider">EXP ACCRUAL</span><span class="text-on-surface-variant font-bold">2,450 / 3,000 XP</span></div></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest border-b-2 border-surface-container-highest z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md flex-1 max-w-xl"><div class="flex items-center w-full bg-surface-container-low border border-surface-container-highest px-space-md py-space-xs"><span class="material-symbols-outlined text-outline text-[18px] mr-space-sm">search</span><span class="font-label-mono-sm text-label-mono-sm text-outline tracking-wider uppercase select-none">SEARCH ARCHIVE // CTRL+K</span></div></div><div class="flex items-center gap-space-md"><button class="bg-primary-container text-on-primary-container font-label-mono-md text-label-mono-md uppercase px-space-md py-space-sm tracking-wider font-bold hover:bg-inverse-surface hover:text-inverse-on-surface transition-none flex items-center gap-space-xs border border-primary-container" type="button"><span class="material-symbols-outlined text-[16px]">add</span><span>QUICK QUEST</span></button><div class="flex items-center border-l-2 border-surface-container-highest pl-space-md"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-background px-space-lg min-h-screen"><div class="flex flex-col w-full">
+<!-- SCRIPT: Synchronize Active State on Shell Navigation -->
+<script>
+    (function () {
+      const navLinks = document.querySelectorAll('aside nav a');
+      navLinks.forEach((link) => {
+        if (link.getAttribute('data-path') === 'progress') {
+          link.className =
+            'flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg bg-primary-container text-on-primary-container font-bold border-l-4 border-on-surface transition-none';
+          const badge = link.querySelector('span:last-child');
+          if (badge) badge.className = 'font-label-mono-sm text-label-mono-sm text-on-primary-container font-bold';
+        } else {
+          link.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-bold', 'border-l-4');
+        }
+      });
+    })();
+  </script>
+<!-- ROOT CONTINUOUS BROADSHEET LEDGER -->
+<div class="w-full flex flex-col border-b-2 border-surface-container-highest bg-surface-container-lowest">
+<!-- 01. DOSSIER MASTHEAD & CYCLE HEADER -->
+<div class="grid grid-cols-1 lg:grid-cols-12 border-b-2 border-surface-container-highest">
+<!-- Title & Classification Header -->
+<div class="lg:col-span-8 p-space-lg bg-surface-container-lowest flex flex-col justify-between">
+<div class="flex items-center gap-space-sm mb-space-sm">
+<span class="bg-primary-container text-on-primary-container px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">FIG. 04 // OPERATIONAL CADENCE</span>
+<span class="font-label-mono-sm text-label-mono-sm text-outline tracking-widest uppercase">// SYSTEM TELEMETRY ARCHIVE</span>
+</div>
+<div>
+<h1 class="font-headline-lg text-display-lg uppercase font-black tracking-tighter text-on-surface leading-none">
+            .04 PROGRESS
+          </h1>
+<p class="font-label-mono-md text-label-mono-md text-secondary mt-space-xs uppercase tracking-wider">
+            ANALYTICAL MANIFEST // COMPOUND DISCIPLINE &amp; PROTOCOL INTEGRITY
+          </p>
+</div>
+</div>
+<!-- Live Cycle Metadata Box -->
+<div class="lg:col-span-4 p-space-lg bg-surface-container-low border-t-2 lg:border-t-0 lg:border-l-2 border-surface-container-highest flex flex-col justify-between">
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm text-outline uppercase">
+<span>REGISTRY ID: #042</span>
+<span class="text-tertiary-container font-bold">[ CYCLE STABLE ]</span>
+</div>
+<div class="my-space-sm space-y-space-xs font-label-mono-sm text-label-mono-sm">
+<div class="flex justify-between border-b border-surface-container-highest pb-space-xs">
+<span class="text-secondary">INTERVAL</span>
+<span class="text-on-surface font-bold">2026.W14 // D-098</span>
+</div>
+<div class="flex justify-between border-b border-surface-container-highest pb-space-xs">
+<span class="text-secondary">TIER / CLEARANCE</span>
+<span class="text-primary-container font-bold">LVL 12 // INITIATE</span>
+</div>
+<div class="flex justify-between">
+<span class="text-secondary">CYCLE EXP POOL</span>
+<span class="text-on-surface font-bold">2,450 / 3,000 XP</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-lowest border border-surface-container-highest h-2 flex">
+<div class="h-full bg-primary-container w-[81%]"></div>
+<div class="h-full bg-surface-container-highest w-[19%]"></div>
+</div>
+</div>
+</div>
+<!-- 02. ZERO-GAP VITALS BAND: 4 ABUTTING MONOLITHIC MODULES -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-b-2 border-surface-container-highest">
+<!-- Metric 01: Lifetime XP -->
+<div class="p-space-lg bg-surface-container-lowest border-b lg:border-b-0 sm:border-r border-surface-container-highest flex flex-col justify-between">
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-outline uppercase mb-space-sm">
+<span>// YIELD: LIFETIME ACCRUAL</span>
+<span class="text-tertiary font-bold">+1,240 XP</span>
+</div>
+<div class="my-space-sm">
+<span class="font-headline-lg text-display-lg uppercase font-black text-on-surface tracking-tighter leading-none block">
+            48,920
+          </span>
+<span class="font-label-mono-md text-label-mono-md text-outline uppercase block mt-space-xs">
+            TOTAL CONVERTED XP
+          </span>
+</div>
+<div class="pt-space-sm border-t border-surface-container-highest font-label-mono-sm text-label-mono-sm text-secondary flex justify-between">
+<span>CYCLE 2026.Q1</span>
+<span class="text-on-surface font-bold">94.2% TO LVL 13</span>
+</div>
+</div>
+<!-- Metric 02: Momentum Chain -->
+<div class="p-space-lg bg-surface-container-low border-b lg:border-b-0 lg:border-r border-surface-container-highest flex flex-col justify-between">
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-outline uppercase mb-space-sm">
+<span>// ACTIVE VELOCITY: UNBROKEN</span>
+<span class="bg-primary-container text-on-primary-container px-space-xs font-bold text-label-mono-sm">HOT</span>
+</div>
+<div class="my-space-sm">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-display-lg uppercase font-black text-primary-container tracking-tighter leading-none">
+              42
+            </span>
+<span class="font-headline-md text-headline-md uppercase font-bold text-on-surface">
+              DAYS
+            </span>
+</div>
+<span class="font-label-mono-md text-label-mono-md text-outline uppercase block mt-space-xs">
+            CONTINUOUS EXECUTION
+          </span>
+</div>
+<div class="pt-space-sm border-t border-surface-container-highest font-label-mono-sm text-label-mono-sm text-secondary flex justify-between">
+<span>ALL-TIME PEAK</span>
+<span class="text-on-surface font-bold">50 DAYS [2025.Q3]</span>
+</div>
+</div>
+<!-- Metric 03: Compliance Rate (INVERTED WARM CREAM EDITORIAL POSTER BLOCK) -->
+<div class="p-space-lg bg-inverse-surface border-b sm:border-b-0 sm:border-r border-surface-container-highest flex flex-col justify-between text-inverse-on-surface">
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-surface-container-highest uppercase mb-space-sm">
+<span>// EXECUTION FIDELITY</span>
+<span class="font-bold text-primary-container">[ OPTIMAL ]</span>
+</div>
+<div class="my-space-sm">
+<span class="font-headline-lg text-display-lg uppercase font-black tracking-tighter leading-none block text-inverse-on-surface">
+            89.8%
+          </span>
+<span class="font-label-mono-md text-label-mono-md text-surface-variant uppercase block mt-space-xs font-bold">
+            PROTOCOL COMPLIANCE
+          </span>
+</div>
+<div class="pt-space-sm border-t border-surface-container-highest/20 font-label-mono-sm text-label-mono-sm flex justify-between text-surface-container-highest font-bold">
+<span>CONVERSION INDEX</span>
+<span class="text-inverse-on-surface">59.3% RAW CRUNCH</span>
+</div>
+</div>
+<!-- Metric 04: Canonical Seals -->
+<div class="p-space-lg bg-surface-container-lowest flex flex-col justify-between">
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-outline uppercase mb-space-sm">
+<span>// CANONICAL SEALS</span>
+<span class="bg-tertiary-container text-on-tertiary-container px-space-xs font-bold text-label-mono-sm">59.3%</span>
+</div>
+<div class="my-space-sm">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-display-lg uppercase font-black text-on-surface tracking-tighter leading-none">
+              38
+            </span>
+<span class="font-headline-md text-headline-md uppercase font-bold text-outline">
+              / 64
+            </span>
+</div>
+<span class="font-label-mono-md text-label-mono-md text-outline uppercase block mt-space-xs">
+            DISCIPLINARY HONORS
+          </span>
+</div>
+<div class="pt-space-sm border-t border-surface-container-highest font-label-mono-sm text-label-mono-sm text-secondary flex justify-between">
+<span>UNCLAIMED POOL</span>
+<span class="text-primary-container font-bold">1 VERIFIED SEAL</span>
+</div>
+</div>
+</div>
+<!-- 03. FULL COMPOUNDING GRID // 52 WEEKS DENSITY MATRIX -->
+<div class="flex flex-col border-b-2 border-surface-container-highest bg-surface-container-lowest"><div class="p-space-lg bg-[#141312] border-b border-surface-container-highest/60 flex flex-col gap-6"><div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-container-highest/40 pb-5"><div class="flex items-baseline gap-2.5 flex-wrap"><span class="font-headline-lg text-display-lg uppercase font-black text-on-surface leading-none tracking-tight">412</span><span class="font-label-mono-md text-label-mono-md text-secondary tracking-normal">submissions in the past one year</span><span class="inline-flex items-center justify-center text-outline hover:text-on-surface cursor-pointer text-xs select-none" title="Annual protocol submission log telemetry">ⓘ</span></div><div class="flex items-center gap-6 font-label-mono-sm text-label-mono-sm text-secondary"><div class="flex items-center gap-1.5"><span>Total active days:</span><strong class="font-bold text-white font-headline-sm text-[15px]">284</strong></div><div class="h-3 w-px bg-surface-container-highest"></div><div class="flex items-center gap-1.5"><span>Max streak:</span><strong class="font-bold text-white font-headline-sm text-[15px]">50</strong></div><div class="h-3 w-px bg-surface-container-highest"></div><div class="flex items-center gap-1.5 select-none"><span class="text-outline text-[10px] uppercase font-bold mr-1">LESS</span><span class="inline-block w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></span><span class="inline-block w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></span><span class="inline-block w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></span><span class="inline-block w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></span><span class="text-outline text-[10px] uppercase font-bold ml-1">MORE</span></div></div></div><div class="w-full overflow-x-auto pb-2"><div class="min-w-[920px] flex items-start gap-4 select-none"><div class="flex flex-col justify-between text-[10px] font-label-mono-sm text-[#8e8a82] uppercase h-[102px] pr-2 pt-0.5 select-none shrink-0"><span>Mon</span><span>Wed</span><span>Fri</span><span>Sun</span></div><div class="flex items-start gap-[18px] flex-1 justify-between"><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Jan</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Feb</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Mar</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Apr</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">May</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Jun</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Jul</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Aug</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Sep</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Oct</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Nov</span></div><div class="flex flex-col items-center gap-2"><div class="grid grid-rows-7 grid-flow-col gap-[3px]"><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#242321]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#4d6b30]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#86af3f]"></div><div class="w-[11px] h-[11px] rounded-[3px] bg-[#b6f04a]"></div></div><span class="text-[11px] font-label-mono-sm text-[#8e8a82] uppercase tracking-wider">Dec</span></div></div></div></div></div></div>
+<!-- 04. ASYMMETRIC LOWER SPLIT: ACHIEVEMENT HALL (65%) vs TRANSACTION ACCRUALS (35%) -->
+<div class="grid grid-cols-1 lg:grid-cols-12">
+<!-- LEFT MODULE: CANONICAL SEALS (HALL OF HONORS) -->
+<div class="lg:col-span-8 flex flex-col border-b lg:border-b-0 lg:border-r-2 border-surface-container-highest bg-surface-container-lowest">
+<!-- Header Strip -->
+<div class="p-space-md border-b-2 border-surface-container-highest bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="bg-primary-container text-on-primary-container px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">SEC .04-C</span>
+<span class="font-headline-sm text-headline-sm uppercase font-bold text-on-surface">CANONICAL SEALS // VERIFIED RECORDS</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-outline uppercase">INDEX: 06 VISIBLE</span>
+</div>
+<!-- Abutting 3x2 Seal Grid (0px Border Radius, Pure Duotone Contrast) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+<!-- SEAL 01: SEVEN-DAY WARRIOR [CLAIMED] -->
+<div class="p-space-md bg-surface-container-lowest border-b sm:border-r border-surface-container-highest flex flex-col justify-between min-h-[220px]">
+<div>
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-sm">
+<span class="text-outline uppercase">SEAL #001</span>
+<span class="bg-tertiary-container text-on-tertiary-container px-space-xs font-bold">[ CLAIMED ]</span>
+</div>
+<div class="w-16 h-16 bg-surface-container-low border-2 border-surface-container-highest flex items-center justify-center mb-space-sm">
+<span class="material-symbols-outlined text-[32px] text-tertiary" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm uppercase font-bold text-on-surface leading-tight">
+                SEVEN-DAY WARRIOR
+              </h2>
+<p class="font-body-sm text-body-sm text-secondary mt-space-xs">
+                Zero deviations across initial 7 continuous solar cycles.
+              </p>
+</div>
+<div class="pt-space-sm border-t border-surface-container-highest font-label-mono-sm text-label-mono-sm flex justify-between text-outline">
+<span>ACQUIRED: 2026.W02</span>
+<span class="text-tertiary font-bold">+500 XP</span>
+</div>
+</div>
+<!-- SEAL 02: IRON WILL [CLAIMED] -->
+<div class="p-space-md bg-surface-container-lowest border-b md:border-r border-surface-container-highest flex flex-col justify-between min-h-[220px]">
+<div>
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-sm">
+<span class="text-outline uppercase">SEAL #008</span>
+<span class="bg-tertiary-container text-on-tertiary-container px-space-xs font-bold">[ CLAIMED ]</span>
+</div>
+<div class="w-16 h-16 bg-surface-container-low border-2 border-surface-container-highest flex items-center justify-center mb-space-sm">
+<span class="material-symbols-outlined text-[32px] text-tertiary" style="font-variation-settings: 'FILL' 1;">shield</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm uppercase font-bold text-on-surface leading-tight">
+                IRON WILL
+              </h2>
+<p class="font-body-sm text-body-sm text-secondary mt-space-xs">
+                Execute core protocol during declared severe deficit or sickness.
+              </p>
+</div>
+<div class="pt-space-sm border-t border-surface-container-highest font-label-mono-sm text-label-mono-sm flex justify-between text-outline">
+<span>ACQUIRED: 2026.W06</span>
+<span class="text-tertiary font-bold">+750 XP</span>
+</div>
+</div>
+<!-- SEAL 03: HUNDRED GATES CONQUEROR [UNCLAIMED - SOLID SIGNAL RED POSTER MODULE] -->
+<div class="p-space-md bg-primary-container text-on-primary-container border-b border-surface-container-highest flex flex-col justify-between min-h-[220px]">
+<div>
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-sm">
+<span class="text-on-primary font-bold uppercase">SEAL #014</span>
+<span class="bg-surface text-primary-container px-space-xs font-bold uppercase animate-pulse">[ UNCLAIMED ]</span>
+</div>
+<div class="w-16 h-16 bg-surface border-2 border-surface-container-lowest flex items-center justify-center mb-space-sm">
+<span class="material-symbols-outlined text-[32px] text-primary-container" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm uppercase font-black text-on-primary-container leading-tight">
+                HUNDRED GATES
+              </h2>
+<p class="font-body-sm text-body-sm text-on-primary-container mt-space-xs font-medium">
+                100 aggregate operational drills logged into the Kaizen ledger.
+              </p>
+</div>
+<div class="pt-space-sm border-t border-on-primary-container/20 flex items-center justify-between mt-space-sm">
+<span class="font-label-mono-sm text-label-mono-sm font-black text-on-primary">+1,500 XP</span>
+<button class="bg-surface text-on-surface hover:bg-inverse-surface hover:text-inverse-on-surface font-label-mono-sm text-label-mono-sm uppercase px-space-md py-space-xs font-bold transition-none" type="button">
+                CLAIM SEAL
+              </button>
+</div>
+</div>
+<!-- SEAL 04: MASTER OF CONSISTENCY [LOCKED] -->
+<div class="p-space-md bg-surface-container-low border-b sm:border-b-0 sm:border-r border-surface-container-highest flex flex-col justify-between min-h-[220px] opacity-70">
+<div>
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-sm">
+<span class="text-outline uppercase">SEAL #022</span>
+<span class="bg-surface-container-highest text-secondary px-space-xs font-bold">[ LOCKED ]</span>
+</div>
+<div class="w-16 h-16 bg-surface-container-lowest border-2 border-surface-container-highest flex items-center justify-center mb-space-sm">
+<span class="material-symbols-outlined text-[32px] text-outline">lock</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm uppercase font-bold text-secondary leading-tight">
+                CONSISTENCY ARCHON
+              </h2>
+<p class="font-body-sm text-body-sm text-outline mt-space-xs">
+                Maintain 90%+ protocol compliance across 90 consecutive solar days.
+              </p>
+</div>
+<div class="pt-space-sm border-t border-surface-container-highest font-label-mono-sm text-label-mono-sm flex justify-between text-outline">
+<span>PROGRESS: 42/90 DAYS</span>
+<span>+2,500 XP</span>
+</div>
+</div>
+<!-- SEAL 05: DEEP SCHOLAR [CLAIMED] -->
+<div class="p-space-md bg-surface-container-lowest border-b sm:border-b-0 md:border-r border-surface-container-highest flex flex-col justify-between min-h-[220px]">
+<div>
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-sm">
+<span class="text-outline uppercase">SEAL #029</span>
+<span class="bg-tertiary-container text-on-tertiary-container px-space-xs font-bold">[ CLAIMED ]</span>
+</div>
+<div class="w-16 h-16 bg-surface-container-low border-2 border-surface-container-highest flex items-center justify-center mb-space-sm">
+<span class="material-symbols-outlined text-[32px] text-tertiary" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm uppercase font-bold text-on-surface leading-tight">
+                DEEP SCHOLAR
+              </h2>
+<p class="font-body-sm text-body-sm text-secondary mt-space-xs">
+                Complete 25 continuous deep-work focus blocs without interception.
+              </p>
+</div>
+<div class="pt-space-sm border-t border-surface-container-highest font-label-mono-sm text-label-mono-sm flex justify-between text-outline">
+<span>ACQUIRED: 2026.W10</span>
+<span class="text-tertiary font-bold">+600 XP</span>
+</div>
+</div>
+<!-- SEAL 06: SOLSTICE ASCENDANT [LOCKED] -->
+<div class="p-space-md bg-surface-container-low flex flex-col justify-between min-h-[220px] opacity-70">
+<div>
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-sm">
+<span class="text-outline uppercase">SEAL #040</span>
+<span class="bg-surface-container-highest text-secondary px-space-xs font-bold">[ LOCKED ]</span>
+</div>
+<div class="w-16 h-16 bg-surface-container-lowest border-2 border-surface-container-highest flex items-center justify-center mb-space-sm">
+<span class="material-symbols-outlined text-[32px] text-outline">wb_sunny</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm uppercase font-bold text-secondary leading-tight">
+                SOLSTICE ASCENDANT
+              </h2>
+<p class="font-body-sm text-body-sm text-outline mt-space-xs">
+                Log a flawless calendar month with zero missed recurring habits.
+              </p>
+</div>
+<div class="pt-space-sm border-t border-surface-container-highest font-label-mono-sm text-label-mono-sm flex justify-between text-outline">
+<span>PROGRESS: 18/30 DAYS</span>
+<span>+3,000 XP</span>
+</div>
+</div>
+</div>
+<!-- Seal Ledger Footer Action -->
+<div class="p-space-md bg-surface-container-low border-t-2 border-surface-container-highest flex flex-col sm:flex-row justify-between items-center gap-space-sm">
+<span class="font-label-mono-sm text-label-mono-sm text-secondary uppercase">
+            // ALL HONORS PERMANENTLY BURNED TO CANONICAL DISCIPLINE HASH
+          </span>
+<button class="bg-surface border border-surface-container-highest text-on-surface hover:bg-surface-container-highest font-label-mono-sm text-label-mono-sm uppercase px-space-md py-space-xs tracking-wider transition-none" type="button">
+            EXPAND FULL REGISTER (64)
+          </button>
+</div>
+</div>
+<!-- RIGHT MODULE: RECENT DISCIPLINE ACCRUALS (OPERATIONAL TRANSACTION REGISTER) -->
+<div class="lg:col-span-4 flex flex-col bg-surface-container-lowest">
+<!-- Header Strip -->
+<div class="p-space-md border-b-2 border-surface-container-highest bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="bg-on-surface text-surface px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">SEC .04-D</span>
+<span class="font-headline-sm text-headline-sm uppercase font-bold text-on-surface">LEDGER ACCRUALS</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-outline uppercase">[ LAST 5 ]</span>
+</div>
+<!-- Ledger Table / Register Tape -->
+<div class="flex flex-col flex-1 divide-y divide-surface-container-highest">
+<!-- Entry 01 -->
+<div class="p-space-md hover:bg-surface-container transition-none flex flex-col justify-between">
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-xs">
+<span class="text-outline uppercase">#TX-9908 // 07:15</span>
+<span class="text-tertiary font-bold">+180 XP</span>
+</div>
+<div class="font-headline-sm text-[16px] leading-tight uppercase font-bold text-on-surface">
+              COLD EXPOSURE &amp; BREATH PROTOCOL
+            </div>
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-secondary mt-space-xs">
+<span>CATEGORY: PHYSIOLOGY</span>
+<span class="text-tertiary-container font-bold">[ VERIFIED ]</span>
+</div>
+</div>
+<!-- Entry 02 -->
+<div class="p-space-md hover:bg-surface-container transition-none flex flex-col justify-between">
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-xs">
+<span class="text-outline uppercase">#TX-9907 // YESTERDAY</span>
+<span class="text-tertiary font-bold">+400 XP</span>
+</div>
+<div class="font-headline-sm text-[16px] leading-tight uppercase font-bold text-on-surface">
+              DEEP CODING ARCHITECTURE BLOC
+            </div>
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-secondary mt-space-xs">
+<span>CATEGORY: COGNITION</span>
+<span class="text-tertiary-container font-bold">[ VERIFIED ]</span>
+</div>
+</div>
+<!-- Entry 03 -->
+<div class="p-space-md hover:bg-surface-container transition-none flex flex-col justify-between">
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-xs">
+<span class="text-outline uppercase">#TX-9906 // YESTERDAY</span>
+<span class="text-primary-container font-bold">+250 XP</span>
+</div>
+<div class="font-headline-sm text-[16px] leading-tight uppercase font-bold text-on-surface">
+              ZONE-2 ENDURANCE CONDENSATE
+            </div>
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-secondary mt-space-xs">
+<span>CATEGORY: KINETIC</span>
+<span class="text-tertiary-container font-bold">[ VERIFIED ]</span>
+</div>
+</div>
+<!-- Entry 04 -->
+<div class="p-space-md hover:bg-surface-container transition-none flex flex-col justify-between">
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-xs">
+<span class="text-outline uppercase">#TX-9905 // 2D AGO</span>
+<span class="text-tertiary font-bold">+150 XP</span>
+</div>
+<div class="font-headline-sm text-[16px] leading-tight uppercase font-bold text-on-surface">
+              NUTRITIONAL FASTING (18H)
+            </div>
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-secondary mt-space-xs">
+<span>CATEGORY: METABOLISM</span>
+<span class="text-tertiary-container font-bold">[ VERIFIED ]</span>
+</div>
+</div>
+<!-- Entry 05 -->
+<div class="p-space-md hover:bg-surface-container transition-none flex flex-col justify-between">
+<div class="flex justify-between items-start font-label-mono-sm text-label-mono-sm mb-space-xs">
+<span class="text-outline uppercase">#TX-9904 // 2D AGO</span>
+<span class="text-primary-container font-bold">+500 XP</span>
+</div>
+<div class="font-headline-sm text-[16px] leading-tight uppercase font-bold text-on-surface">
+              WEEKLY POST-MORTEM &amp; BENCHMARK
+            </div>
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-secondary mt-space-xs">
+<span>CATEGORY: AUDIT</span>
+<span class="text-tertiary-container font-bold">[ VERIFIED ]</span>
+</div>
+</div>
+</div>
+<!-- Ledger Footer Summary -->
+<div class="p-space-md border-t-2 border-surface-container-highest bg-surface-container-low flex items-center justify-between font-label-mono-sm text-label-mono-sm">
+<span class="text-outline uppercase">TOTAL BATCHED XP</span>
+<span class="text-on-surface font-bold text-label-mono-md">+1,480 XP</span>
+</div>
+</div>
+</div>
+</div>
+<!-- CLIENT INTERACTIVE BEHAVIOR: GENERATE 52 WEEKS HEATMAP CELLS -->
+<script>
+    (function () {
+      const rows = [
+        document.getElementById('heatmap-row-1'),
+        document.getElementById('heatmap-row-2'),
+        document.getElementById('heatmap-row-3'),
+        document.getElementById('heatmap-row-4'),
+        document.getElementById('heatmap-row-5'),
+        document.getElementById('heatmap-row-6'),
+        document.getElementById('heatmap-row-7')
+      ];
+
+      // Simulated density pattern across 52 weeks (0 to 14 active, rest pending/dormant)
+      rows.forEach((row, rowIdx) => {
+        if (!row) return;
+        for (let week = 1; week <= 52; week++) {
+          const cell = document.createElement('div');
+          cell.className = 'w-full aspect-square border border-surface-container-highest/40 select-none';
+
+          if (week <= 14) {
+            // Simulated active cycle
+            const seed = (week * 7 + rowIdx * 13) % 10;
+            if (seed === 0) {
+              cell.className += ' bg-surface-container-high'; // Rest / low intensity
+            } else if (seed < 4) {
+              cell.className += ' bg-tertiary-container/30'; // Moderate
+            } else if (seed < 8) {
+              cell.className += ' bg-tertiary-container'; // High compliance
+            } else {
+              cell.className += ' bg-primary-container'; // Peak drill
+            }
+          } else {
+            // Future weeks in 2026
+            cell.className += ' bg-surface-container-lowest/60 opacity-30';
+          }
+
+          row.appendChild(cell);
+        }
+      });
+    })();
+  </script>
+</div></main></div></body></html>

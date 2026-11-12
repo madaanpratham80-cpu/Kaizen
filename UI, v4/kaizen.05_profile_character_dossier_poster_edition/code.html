@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Space+Grotesk:wght@300..700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-tertiary-container":"#262d00","on-surface-variant":"#e5bdb7","on-secondary-fixed":"#1d1c16","tertiary":"#c0ce71","error-container":"#93000a","outline-variant":"#5c403b","background":"#141312","on-error-container":"#ffdad6","on-primary-fixed":"#410000","surface-container-lowest":"#0f0e0d","outline":"#ac8883","primary-container":"#ff5541","on-error":"#690005","on-primary-container":"#5c0000","on-secondary-container":"#bcb8af","error":"#ffb4ab","on-secondary-fixed-variant":"#494740","inverse-primary":"#bc160c","inverse-surface":"#e6e1df","surface-container-low":"#1d1b1a","on-tertiary-fixed":"#191e00","on-background":"#e6e1df","primary-fixed":"#ffdad4","on-surface":"#e6e1df","secondary":"#cac6bd","on-primary-fixed-variant":"#930000","surface-container":"#211f1e","surface-variant":"#363433","secondary-fixed":"#e7e2d8","secondary-container":"#4b4942","surface-dim":"#141312","surface-container-highest":"#363433","on-secondary":"#32302a","inverse-on-surface":"#32302f","tertiary-container":"#8b9841","secondary-fixed-dim":"#cac6bd","on-tertiary-fixed-variant":"#424b00","tertiary-fixed-dim":"#c0ce71","on-primary":"#690000","surface-tint":"#ffb4a8","on-tertiary":"#2d3400","surface-bright":"#3b3937","primary-fixed-dim":"#ffb4a8","surface-container-high":"#2b2a28","tertiary-fixed":"#dceb8a","primary":"#ffb4a8","surface":"#141312"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xs":"0.25rem","space-md":"1rem",gutter:"0px","space-xl":"2.5rem","gutter-desktop":"0px",margin:"1rem","margin-tablet":"1.5rem","margin-desktop":"2rem","space-lg":"1.5rem","space-sm":"0.5rem"},fontFamily:{"label-mono-md":["Space Mono"],"label-mono-lg":["Space Mono"],"headline-lg":["Space Grotesk"],"headline-md":["Space Grotesk"],"display-xl-mobile":["Space Grotesk"],"body-sm":["DM Sans"],"body-lg":["DM Sans"],"label-mono-sm":["Space Mono"],"display-xl":["Space Grotesk"],"body-md":["DM Sans"],"display-lg-mobile":["Space Grotesk"],"display-lg":["Space Grotesk"],"headline-sm":["Space Grotesk"]},fontSize:{"label-mono-md":["12px",{lineHeight:"16px",letterSpacing:"0.06em",fontWeight:"400"}],"label-mono-lg":["14px",{lineHeight:"18px",letterSpacing:"0.05em",fontWeight:"700"}],"headline-lg":["32px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"700"}],"headline-md":["24px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"700"}],"display-xl-mobile":["44px",{lineHeight:"44px",letterSpacing:"-0.03em",fontWeight:"700"}],"body-sm":["12px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"400"}],"body-lg":["16px",{lineHeight:"24px",letterSpacing:"0em",fontWeight:"400"}],"label-mono-sm":["10px",{lineHeight:"12px",letterSpacing:"0.08em",fontWeight:"400"}],"display-xl":["80px",{lineHeight:"80px",letterSpacing:"-0.04em",fontWeight:"700"}],"body-md":["14px",{lineHeight:"20px",letterSpacing:"0em",fontWeight:"400"}],"display-lg-mobile":["36px",{lineHeight:"38px",letterSpacing:"-0.02em",fontWeight:"700"}],"display-lg":["56px",{lineHeight:"58px",letterSpacing:"-0.03em",fontWeight:"700"}],"headline-sm":["18px",{lineHeight:"22px",letterSpacing:"0em",fontWeight:"700"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest border-r-2 border-surface-container-highest z-50 flex flex-col justify-between select-none"><div class="flex flex-col"><div class="p-space-lg border-b-2 border-surface-container-highest bg-surface-container-lowest"><div class="flex flex-col"><span class="font-headline-lg text-headline-lg tracking-tighter text-on-surface uppercase font-black leading-none">KAIZEN</span><div class="flex items-center gap-space-xs mt-space-xs"><span class="font-label-mono-sm text-label-mono-sm text-outline tracking-widest font-normal">改善</span><span class="font-label-mono-sm text-label-mono-sm text-outline-variant">// CONTINUOUS DISCIPLINE</span></div></div></div><div class="px-space-md py-space-xs bg-surface-container-low border-b border-surface-container-highest"><span class="font-label-mono-sm text-label-mono-sm uppercase text-outline tracking-widest">SYSTEM CORE // REGISTRY</span></div><nav class="flex flex-col" data-active-classes="bg-primary-container text-on-primary-container font-bold border-l-4 border-on-surface"><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="today" href="#"><span class="tracking-wider">.01 TODAY</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ ACT ]</span></a><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="quests" href="#"><span class="tracking-wider">.02 QUESTS</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ MAN ]</span></a><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="habits" href="#"><span class="tracking-wider">.03 HABITS</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ RTN ]</span></a><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="progress" href="#"><span class="tracking-wider">.04 PROGRESS</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ ANL ]</span></a><a class="flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none" data-path="profile" href="#"><span class="tracking-wider">.05 PROFILE</span><span class="font-label-mono-sm text-label-mono-sm text-outline">[ DOS ]</span></a></nav></div><div class="border-t-2 border-surface-container-highest bg-surface-container-low"><div class="p-space-md border-b border-surface-container-highest flex items-center justify-between"><span class="font-label-mono-sm text-label-mono-sm text-outline uppercase">DOSSIER TELEMETRY</span><span class="bg-tertiary-container text-on-tertiary-container px-space-xs font-label-mono-sm text-label-mono-sm uppercase font-bold">STREAK 42D</span></div><div class="p-space-md space-y-space-sm"><div class="flex justify-between items-baseline font-label-mono-md text-label-mono-md"><span class="text-on-surface font-bold">DISCIPLE #042</span><span class="text-primary-container font-bold">LVL 12</span></div><div class="w-full bg-surface-container-lowest border border-surface-container-highest h-3 flex"><div class="h-full bg-primary-container w-[81%]"></div><div class="h-full bg-surface-container-highest w-[19%]"></div></div><div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-outline"><span class="tracking-wider">EXP ACCRUAL</span><span class="text-on-surface-variant font-bold">2,450 / 3,000 XP</span></div></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest border-b-2 border-surface-container-highest z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md flex-1 max-w-xl"><div class="flex items-center w-full bg-surface-container-low border border-surface-container-highest px-space-md py-space-xs"><span class="material-symbols-outlined text-outline text-[18px] mr-space-sm">search</span><span class="font-label-mono-sm text-label-mono-sm text-outline tracking-wider uppercase select-none">SEARCH ARCHIVE // CTRL+K</span></div></div><div class="flex items-center gap-space-md"><button class="bg-primary-container text-on-primary-container font-label-mono-md text-label-mono-md uppercase px-space-md py-space-sm tracking-wider font-bold hover:bg-inverse-surface hover:text-inverse-on-surface transition-none flex items-center gap-space-xs border border-primary-container" type="button"><span class="material-symbols-outlined text-[16px]">add</span><span>QUICK QUEST</span></button><div class="flex items-center border-l-2 border-surface-container-highest pl-space-md"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-background px-space-lg min-h-screen"><div class="flex flex-col w-full">
+<!-- TOP DOSSIER REGISTRATION BAND -->
+<section class="w-full bg-surface-container-lowest border-b-2 border-surface-container-highest">
+<div class="flex flex-col xl:flex-row items-stretch justify-between">
+<!-- Title & Archival Coordinates -->
+<div class="p-space-lg flex-1 border-b-2 xl:border-b-0 xl:border-r-2 border-surface-container-highest">
+<div class="flex items-center gap-space-sm mb-space-xs">
+<span class="bg-primary-container text-on-primary-container px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase tracking-widest">DOSSIER // ARCHIVE</span>
+<span class="font-label-mono-sm text-label-mono-sm text-outline tracking-widest uppercase">FIG. 05 // PERSONNEL ARCHIVE // DISCIPLINARY DOSSIER</span>
+</div>
+<div class="flex items-baseline gap-space-md">
+<h1 class="font-display-xl text-display-xl uppercase tracking-tighter text-on-surface font-black leading-none">.05 PROFILE</h1>
+<span class="font-headline-md text-headline-md text-outline-variant font-light tracking-tight">改善</span>
+</div>
+<p class="font-label-mono-md text-label-mono-md text-secondary mt-space-xs tracking-wider uppercase">
+          BIOMETRIC ACCRUAL &amp; CANONICAL DISCIPLE IDENTITY // 改善 PERSONNEL FILE
+        </p>
+</div>
+<!-- Right Registry Telemetry Matrix -->
+<div class="flex flex-col sm:flex-row xl:w-[480px] bg-surface-container-low divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-surface-container-highest">
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="font-label-mono-sm text-label-mono-sm text-outline uppercase tracking-widest">// REGISTRY IDENTIFIER</div>
+<div class="font-headline-sm text-headline-sm text-on-surface uppercase font-bold mt-1">#042 [ CYCLE STABLE ]</div>
+</div>
+<div class="mt-space-md flex items-center justify-between font-label-mono-sm text-label-mono-sm text-outline border-t border-surface-container-highest pt-space-xs">
+<span>AUDIT STATE</span>
+<span class="text-tertiary font-bold">[ SYNCHRONOUS ]</span>
+</div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="font-label-mono-sm text-label-mono-sm text-outline uppercase tracking-widest">// SECURITY CLEARANCE</div>
+<div class="font-headline-sm text-headline-sm text-primary font-bold mt-1">TIER IV RUNNER</div>
+</div>
+<div class="mt-space-md flex items-center justify-between font-label-mono-sm text-label-mono-sm text-outline border-t border-surface-container-highest pt-space-xs">
+<span>CLEARANCE HASH</span>
+<span class="font-label-mono-sm text-on-surface">SEC-042-ALPHA</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- UPPER VITALS BAND: ZERO-GAP 4-CELL SWISS METRIC RUNWAY -->
+<section class="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 border-b-2 border-surface-container-highest">
+<!-- Metric 1: Exp Accrual -->
+<div class="bg-surface-container-low p-space-lg border-b-2 md:border-b-0 border-r-2 border-surface-container-highest flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-outline tracking-widest">METRIC .01 // XP ACCRUAL</span>
+<span class="bg-primary-container text-on-primary-container px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">+1,240 XP</span>
+</div>
+<div class="my-space-md">
+<div class="font-display-lg text-display-lg font-black tracking-tighter text-on-surface leading-none">48,920</div>
+<div class="font-label-mono-md text-label-mono-md text-secondary mt-1">LIFETIME OPERATIONAL POINTS</div>
+</div>
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm border-t border-surface-container-highest pt-space-xs text-outline">
+<span>PERCENTILE BRACKET</span>
+<span class="text-tertiary font-bold">TOP 4.2% GLOBAL</span>
+</div>
+</div>
+<!-- Metric 2: Discipline Continuum -->
+<div class="bg-surface-container p-space-lg border-b-2 md:border-b-0 border-r-2 border-surface-container-highest flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-outline tracking-widest">METRIC .02 // DISCIPLINE</span>
+<span class="bg-tertiary text-on-tertiary px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">HOT STREAK</span>
+</div>
+<div class="my-space-md">
+<div class="font-display-lg text-display-lg font-black tracking-tighter text-on-surface leading-none">42<span class="font-headline-lg text-headline-lg text-primary">DAYS</span></div>
+<div class="font-label-mono-md text-label-mono-md text-secondary mt-1">CONTINUUM UNBROKEN</div>
+</div>
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm border-t border-surface-container-highest pt-space-xs text-outline">
+<span>ALL-TIME PEAK</span>
+<span class="text-on-surface font-bold">50 DAYS CANONICAL</span>
+</div>
+</div>
+<!-- Metric 3: Inverted Cream Block (Poster Contrast Anchor) -->
+<div class="bg-inverse-surface text-inverse-on-surface p-space-lg border-b-2 md:border-b-0 border-r-2 border-surface-container-highest flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-mono-sm text-label-mono-sm uppercase font-bold text-inverse-on-surface tracking-widest">METRIC .03 // PROTOCOL FIDELITY</span>
+<span class="bg-surface-dim text-on-surface px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">VERIFIED</span>
+</div>
+<div class="my-space-md">
+<div class="font-display-lg text-display-lg font-black tracking-tighter text-inverse-on-surface leading-none">89.8<span class="font-headline-lg text-headline-lg text-inverse-primary">%</span></div>
+<div class="font-label-mono-md text-label-mono-md font-bold text-inverse-on-surface mt-1">ZERO-BREACH CADENCE</div>
+</div>
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm border-t border-outline-variant pt-space-xs font-bold text-inverse-on-surface">
+<span>RECOVERY INDEX</span>
+<span>1 PENALTY RESOLVED</span>
+</div>
+</div>
+<!-- Metric 4: Canonical Seal Ratio -->
+<div class="bg-surface-container-low p-space-lg flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-outline tracking-widest">METRIC .04 // SEAL RATIO</span>
+<span class="bg-secondary-container text-on-secondary px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">ARCHON</span>
+</div>
+<div class="my-space-md">
+<div class="font-display-lg text-display-lg font-black tracking-tighter text-on-surface leading-none">38<span class="text-outline font-headline-lg text-headline-lg">/64</span></div>
+<div class="font-label-mono-md text-label-mono-md text-secondary mt-1">SEALS ARCHIVED PERPETUALLY</div>
+</div>
+<div class="flex items-center justify-between font-label-mono-sm text-label-mono-sm border-t border-surface-container-highest pt-space-xs text-outline">
+<span>CANONICAL RATIO</span>
+<span class="text-tertiary font-bold">59.3% COMPLETION</span>
+</div>
+</div>
+</section>
+<!-- MAIN SPREAD: BESPOKE TWO-COLUMN POSTER EDITORIAL ARCHITECTURE -->
+<div class="w-full grid grid-cols-1 lg:grid-cols-12 border-b-2 border-surface-container-highest">
+<!-- LEFT SPREAD COLUMN (5 COLS / 42%) -->
+<div class="lg:col-span-5 bg-surface-container-lowest border-b-2 lg:border-b-0 lg:border-r-2 border-surface-container-highest flex flex-col">
+<!-- Panel Header -->
+<div class="p-space-md bg-surface-container-low border-b-2 border-surface-container-highest flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-mono-sm text-label-mono-sm text-primary-container font-bold">// SEC .05-A</span>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface uppercase font-bold tracking-wider">AVATAR MANIFEST &amp; VITALITY STATES</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-outline">[ FIG. 04 COMPLIANT ]</span>
+</div>
+<!-- Main Portrait Frame: Brutalist Duotone Display -->
+<div class="p-space-lg bg-surface-container border-b-2 border-surface-container-highest flex flex-col items-center">
+<!-- Canonical Avatar Specimen Container with Swiss crop marks -->
+<div class="relative w-full max-w-sm bg-surface-container-lowest border-2 border-surface-container-highest p-space-md">
+<div class="flex items-center justify-between border-b border-surface-container-highest pb-space-xs mb-space-md font-label-mono-sm text-label-mono-sm">
+<span class="text-outline uppercase">DISCIPLE AVATAR // .01 OPTIMAL</span>
+<span class="text-tertiary font-bold">[ STATE: DISCIPLINED ]</span>
+</div>
+<!-- Graphic Character Display -->
+<div class="relative w-full aspect-square bg-background border border-surface-container-highest flex items-center justify-center overflow-hidden">
+<!-- Inline SVG Character State Representation mirroring Duotone Persona Spec -->
+<svg class="w-48 h-48" fill="none" viewbox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+<!-- Pixel Grid/Poster Backdrop Wireframe -->
+<path d="M0 20H160M0 40H160M0 60H160M0 80H160M0 100H160M0 120H160M0 140H160" stroke="#211f1e" stroke-width="0.5"></path>
+<path d="M20 0V160M40 0V160M60 0V160M80 0V160M100 0V160M120 0V160M140 0V160" stroke="#211f1e" stroke-width="0.5"></path>
+<!-- Character Body (Healthy Duotone Construct) -->
+<!-- Triangular Helm / Hat in Signal Red -->
+<polygon fill="#ff5541" points="80,24 50,48 110,48"></polygon>
+<rect fill="#ff5541" height="6" width="12" x="74" y="18"></rect>
+<!-- Head / Visor in Clean Cream Base -->
+<rect fill="#e6e1df" height="30" width="48" x="56" y="52"></rect>
+<!-- Visor Sensors (Red Squares) -->
+<rect fill="#690000" height="8" width="8" x="66" y="60"></rect>
+<rect fill="#690000" height="8" width="8" x="86" y="60"></rect>
+<!-- Neck Bridge -->
+<rect fill="#363433" height="4" width="12" x="74" y="82"></rect>
+<!-- Torso Unit -->
+<rect fill="#e6e1df" height="34" width="56" x="52" y="86"></rect>
+<rect fill="#ff5541" height="10" width="56" x="52" y="98"></rect>
+<rect fill="#141312" height="6" width="8" x="76" y="100"></rect>
+<!-- Dual Pillars / Limbs -->
+<rect fill="#363433" height="24" width="12" x="62" y="120"></rect>
+<rect fill="#363433" height="24" width="12" x="86" y="120"></rect>
+<!-- Base Footings in Signal Red -->
+<rect fill="#ff5541" height="6" width="16" x="58" y="138"></rect>
+<rect fill="#ff5541" height="6" width="16" x="86" y="138"></rect>
+</svg>
+<!-- Corner Alignment Crosshairs -->
+<span class="absolute top-2 left-2 font-label-mono-sm text-[9px] text-outline">+</span>
+<span class="absolute top-2 right-2 font-label-mono-sm text-[9px] text-outline">+</span>
+<span class="absolute bottom-2 left-2 font-label-mono-sm text-[9px] text-outline">+</span>
+<span class="absolute bottom-2 right-2 font-label-mono-sm text-[9px] text-outline">+</span>
+</div>
+<!-- Subtext Micro telemetry -->
+<div class="mt-space-md pt-space-xs border-t border-surface-container-highest flex items-center justify-between font-label-mono-sm text-label-mono-sm">
+<span class="text-secondary">AURA: COGNITIVE AMBER</span>
+<span class="text-tertiary">PULSE: 72 BPM NOMINAL</span>
+</div>
+</div>
+<!-- System Statement Pill -->
+<div class="mt-space-md w-full max-w-sm bg-surface-container-lowest border border-surface-container-highest p-space-sm flex items-center justify-between">
+<span class="font-label-mono-sm text-label-mono-sm text-outline uppercase">CURRENT SPIRIT FORM</span>
+<span class="font-label-mono-sm text-label-mono-sm font-bold text-on-surface">AUTONOMOUS SENTINEL #042</span>
+</div>
+</div>
+<!-- Four Flat Duotone System States Matrix Strip (Matching Fig. 04 Spec) -->
+<div class="border-b-2 border-surface-container-highest bg-surface-container-lowest">
+<div class="px-space-md py-space-xs bg-surface-container-low border-b border-surface-container-highest flex items-center justify-between">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-outline tracking-wider">CANONICAL DISCIPLINE STATES // MODAL TELEMETRY</span>
+<span class="font-label-mono-sm text-label-mono-sm text-outline">[ FIG. 04 MATRIX ]</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-surface-container-highest">
+<!-- State 1: Active -->
+<div class="p-space-sm bg-surface-container-high flex flex-col justify-between">
+<div>
+<div class="font-label-mono-sm text-[10px] text-primary-container font-bold leading-tight">.01 OPTIMAL</div>
+<div class="font-label-mono-sm text-label-mono-sm font-black text-on-surface leading-tight mt-0.5">HEALTHY 100%</div>
+</div>
+<div class="mt-space-sm pt-space-xs border-t border-surface-container-highest flex items-center justify-between">
+<span class="font-label-mono-sm text-[9px] text-tertiary font-bold">[ ACTIVE ]</span>
+<span class="w-2 h-2 bg-tertiary"></span>
+</div>
+</div>
+<!-- State 2: Deficit -->
+<div class="p-space-sm bg-surface-container-low flex flex-col justify-between">
+<div>
+<div class="font-label-mono-sm text-[10px] text-outline font-bold leading-tight">.02 DEFICIT</div>
+<div class="font-label-mono-sm text-label-mono-sm font-bold text-secondary leading-tight mt-0.5">SICK 45%</div>
+</div>
+<div class="mt-space-sm pt-space-xs border-t border-surface-container-highest flex items-center justify-between">
+<span class="font-label-mono-sm text-[9px] text-outline">[ PENITENCE ]</span>
+<span class="w-2 h-2 bg-secondary-container"></span>
+</div>
+</div>
+<!-- State 3: Critical -->
+<div class="p-space-sm bg-surface-container-low flex flex-col justify-between">
+<div>
+<div class="font-label-mono-sm text-[10px] text-error font-bold leading-tight">.03 CRITICAL</div>
+<div class="font-label-mono-sm text-label-mono-sm font-bold text-outline leading-tight mt-0.5">FADING 15%</div>
+</div>
+<div class="mt-space-sm pt-space-xs border-t border-surface-container-highest flex items-center justify-between">
+<span class="font-label-mono-sm text-[9px] text-error font-bold">[ AT-RISK ]</span>
+<span class="w-2 h-2 bg-error"></span>
+</div>
+</div>
+<!-- State 4: Revived / Consecrated -->
+<div class="p-space-sm bg-primary-container text-on-primary-container flex flex-col justify-between">
+<div>
+<div class="font-label-mono-sm text-[10px] text-on-primary-container font-black leading-tight">.04 REVIVED</div>
+<div class="font-label-mono-sm text-label-mono-sm font-black text-on-primary-container leading-tight mt-0.5">RECON 100%</div>
+</div>
+<div class="mt-space-sm pt-space-xs border-t border-on-primary-container/30 flex items-center justify-between">
+<span class="font-label-mono-sm text-[9px] font-black uppercase text-on-primary-container">[ CONSECRATED ]</span>
+<span class="w-2 h-2 bg-on-primary-container"></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Disciplinary Credentials Dossier Table -->
+<div class="flex-1 flex flex-col justify-between bg-surface-container-lowest">
+<div class="px-space-md py-space-xs bg-surface-container-low border-b border-surface-container-highest">
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-outline tracking-wider">// DISCIPLE IDENTIFIERS &amp; PROTOCOL CREDENTIALS</span>
+</div>
+<div class="divide-y border-b border-surface-container-highest divide-surface-container-highest font-label-mono-md text-label-mono-md">
+<div class="px-space-md py-space-xs flex justify-between items-center hover:bg-surface-container-high transition-none">
+<span class="text-outline uppercase">CALLSIGN</span>
+<span class="text-on-surface font-bold">ARCHON-042</span>
+</div>
+<div class="px-space-md py-space-xs flex justify-between items-center hover:bg-surface-container-high transition-none">
+<span class="text-outline uppercase">ENROLLMENT CYCLE</span>
+<span class="text-on-surface font-bold">2025.W40 // EPOCH III</span>
+</div>
+<div class="px-space-md py-space-xs flex justify-between items-center hover:bg-surface-container-high transition-none">
+<span class="text-outline uppercase">OPERATIONAL ARCHETYPE</span>
+<span class="text-primary-fixed-dim font-bold">COGNITIVE SCHOLAR &amp; BIO-RUNNER</span>
+</div>
+<div class="px-space-md py-space-xs flex justify-between items-center hover:bg-surface-container-high transition-none">
+<span class="text-outline uppercase">PRIMARY RIGOR DOMAIN</span>
+<span class="text-on-surface font-bold">DISTRIBUTED SYSTEMS &amp; ALGORITHMS</span>
+</div>
+<div class="px-space-md py-space-xs flex justify-between items-center hover:bg-surface-container-high transition-none">
+<span class="text-outline uppercase">SECONDARY DOMAIN</span>
+<span class="text-on-surface font-bold">COLD THERMOGENESIS &amp; AEROBIC BASE</span>
+</div>
+</div>
+<div class="p-space-md bg-surface-container-lowest flex items-center justify-between font-label-mono-sm text-label-mono-sm text-outline">
+<span>EXP REVISION CYCLE</span>
+<span class="text-on-surface">2,450 / 3,000 XP (+550 XP TO LVL 13)</span>
+</div>
+</div>
+</div>
+<!-- RIGHT SPREAD COLUMN (7 COLS / 58%) -->
+<div class="lg:col-span-7 bg-surface-container-lowest flex flex-col">
+<!-- Section Header -->
+<div class="p-space-md bg-surface-container-low border-b-2 border-surface-container-highest flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-mono-sm text-label-mono-sm text-primary-container font-bold">// SEC .05-B</span>
+<span class="font-label-mono-sm text-label-mono-sm text-on-surface uppercase font-bold tracking-wider">SKILL MASTERY &amp; PROGRESSION TREES</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-tertiary font-bold">[ 3 PILLARS ACTIVE ]</span>
+</div>
+<!-- Skill Progression Pillars (Swiss Zero-Gutter Grid) -->
+<div class="flex-1 flex flex-col divide-y-2 divide-surface-container-highest">
+<!-- TREE 1: COGNITIVE / ACADEMICS -->
+<div class="p-space-lg bg-surface-container-lowest flex flex-col">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 bg-primary-container"></span>
+<span class="font-headline-sm text-headline-sm uppercase tracking-tight text-on-surface font-bold">PILLAR I // COGNITIVE &amp; ACADEMICS</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="bg-surface-container-high text-on-surface px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">MASTERY LVL 14</span>
+<span class="font-label-mono-sm text-label-mono-sm text-outline">[ 92% ]</span>
+</div>
+</div>
+<!-- Deep Focus Endurance Sub-Item -->
+<div class="space-y-space-sm">
+<div class="bg-surface-container-low border border-surface-container-highest p-space-md">
+<div class="flex justify-between items-center font-label-mono-md text-label-mono-md mb-space-xs">
+<span class="text-on-surface font-bold uppercase">DEEP FOCUS ENDURANCE (ISOLATED WORKFLOW)</span>
+<span class="text-primary-container font-bold">88 / 100 HRS [ MASTER ]</span>
+</div>
+<!-- Segmented Brutalist Progress Bar -->
+<div class="w-full bg-surface-container-lowest h-3.5 border border-surface-container-highest flex gap-0.5 p-0.5">
+<div class="h-full bg-primary-container flex-1"></div>
+<div class="h-full bg-primary-container flex-1"></div>
+<div class="h-full bg-primary-container flex-1"></div>
+<div class="h-full bg-primary-container flex-1"></div>
+<div class="h-full bg-primary-container flex-1"></div>
+<div class="h-full bg-primary-container flex-1"></div>
+<div class="h-full bg-primary-container flex-1"></div>
+<div class="h-full bg-primary-container flex-1"></div>
+<div class="h-full bg-primary-container/40 flex-1"></div>
+<div class="h-full bg-surface-container-highest flex-1"></div>
+</div>
+</div>
+<!-- Algorithm Synthesis & Discrete Systems Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-0 border border-surface-container-highest">
+<div class="p-space-md bg-surface-container border-b md:border-b-0 md:border-r border-surface-container-highest">
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-outline">
+<span>METRIC: ALGORITHM SYNTHESIS</span>
+<span class="text-tertiary font-bold">94% RATE</span>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface font-bold mt-1">94.0<span class="text-sm text-outline font-normal">%</span></div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-1">128/136 LEETCODE HARD VERIFIED</div>
+</div>
+<div class="p-space-md bg-surface-container">
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-outline">
+<span>DISCRETE SYSTEMS PROTOCOL</span>
+<span class="text-on-surface font-bold">[ LVL 4 CLEARED ]</span>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface font-bold mt-1">STAGE IV</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-1">DISTRIBUTED CONSENSUS RAFT / PAXOS</div>
+</div>
+</div>
+</div>
+</div>
+<!-- TREE 2: SOMATIC / PHYSIOLOGY -->
+<div class="p-space-lg bg-surface-container-lowest flex flex-col">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 bg-tertiary"></span>
+<span class="font-headline-sm text-headline-sm uppercase tracking-tight text-on-surface font-bold">PILLAR II // SOMATIC &amp; PHYSIOLOGY</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="bg-surface-container-high text-on-surface px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">MASTERY LVL 11</span>
+<span class="font-label-mono-sm text-label-mono-sm text-outline">[ 84% ]</span>
+</div>
+</div>
+<div class="space-y-space-sm">
+<div class="bg-surface-container-low border border-surface-container-highest p-space-md">
+<div class="flex justify-between items-center font-label-mono-md text-label-mono-md mb-space-xs">
+<span class="text-on-surface font-bold uppercase">ZONE 2 KINETIC VOLUME (MONTHLY TARGET)</span>
+<span class="text-tertiary font-bold">18.5 / 20.0 HRS [ NOMINAL ]</span>
+</div>
+<!-- Segmented Progress Bar -->
+<div class="w-full bg-surface-container-lowest h-3.5 border border-surface-container-highest flex gap-0.5 p-0.5">
+<div class="h-full bg-tertiary flex-1"></div>
+<div class="h-full bg-tertiary flex-1"></div>
+<div class="h-full bg-tertiary flex-1"></div>
+<div class="h-full bg-tertiary flex-1"></div>
+<div class="h-full bg-tertiary flex-1"></div>
+<div class="h-full bg-tertiary flex-1"></div>
+<div class="h-full bg-tertiary flex-1"></div>
+<div class="h-full bg-tertiary flex-1"></div>
+<div class="h-full bg-tertiary flex-1"></div>
+<div class="h-full bg-surface-container-highest flex-1"></div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-0 border border-surface-container-highest">
+<div class="p-space-md bg-surface-container border-b md:border-b-0 md:border-r border-surface-container-highest">
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-outline">
+<span>COLD EXPOSURE ADHERENCE</span>
+<span class="text-tertiary font-bold">28 / 30 SESSIONS</span>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface font-bold mt-1">93.3<span class="text-sm text-outline font-normal">%</span></div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-1">4.5°C SUBMERSION AVERAGE</div>
+</div>
+<div class="p-space-md bg-surface-container">
+<div class="flex justify-between items-center font-label-mono-sm text-label-mono-sm text-outline">
+<span>CIRCADIAN SYNCHRONIZATION</span>
+<span class="text-on-surface font-bold">92% COMPLIANCE</span>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface font-bold mt-1">05:45<span class="text-sm text-outline font-normal"> AM</span></div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-1">WAKE VARIANCE: ±8 MINUTES</div>
+</div>
+</div>
+</div>
+</div>
+<!-- TREE 3: DISCIPLINARY CRAFT & OUTPUT -->
+<div class="p-space-lg bg-surface-container-lowest flex flex-col">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 bg-secondary"></span>
+<span class="font-headline-sm text-headline-sm uppercase tracking-tight text-on-surface font-bold">PILLAR III // DISCIPLINARY CRAFT &amp; OUTPUT</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="bg-surface-container-high text-on-surface px-space-xs font-label-mono-sm text-label-mono-sm font-bold uppercase">MASTERY LVL 12</span>
+<span class="font-label-mono-sm text-label-mono-sm text-outline">[ 88% ]</span>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 border border-surface-container-highest">
+<div class="p-space-md bg-surface-container border-b sm:border-b-0 sm:border-r border-surface-container-highest">
+<div class="font-label-mono-sm text-label-mono-sm text-outline uppercase">PRODUCTION COMMITS</div>
+<div class="font-headline-lg text-headline-lg text-on-surface font-bold mt-1">142</div>
+<div class="font-label-mono-sm text-label-mono-sm text-tertiary mt-1">+18 THIS REVISION</div>
+</div>
+<div class="p-space-md bg-surface-container border-b sm:border-b-0 sm:border-r border-surface-container-highest">
+<div class="font-label-mono-sm text-label-mono-sm text-outline uppercase">SYNTHESIS PAPERS</div>
+<div class="font-headline-lg text-headline-lg text-on-surface font-bold mt-1">19</div>
+<div class="font-label-mono-sm text-label-mono-sm text-secondary mt-1">ARCHIVED IN PROTOCOL</div>
+</div>
+<div class="p-space-md bg-surface-container">
+<div class="font-label-mono-sm text-label-mono-sm text-outline uppercase">ARBITRATION RESOLUTION</div>
+<div class="font-headline-lg text-headline-lg text-primary font-bold mt-1">100%</div>
+<div class="font-label-mono-sm text-label-mono-sm text-tertiary mt-1">NO ACTIVE BREACHES</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SEC .05-C: SYSTEM CONFIGURATION & ACTIONS DECK -->
+<div class="bg-surface-container-low border-t-2 border-surface-container-highest p-space-lg">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-mono-sm text-label-mono-sm text-primary-container font-bold">// SEC .05-C</span>
+<span class="font-label-mono-sm text-label-mono-sm uppercase text-on-surface font-bold tracking-wider">COMMAND OPERATIONS &amp; DOSSIER EXPORT</span>
+</div>
+<span class="font-label-mono-sm text-label-mono-sm text-outline">[ EXECUTION TERMINAL ]</span>
+</div>
+<div class="flex flex-col sm:flex-row gap-space-sm items-stretch">
+<!-- Primary Action Button (Signal Red) -->
+<button class="flex-1 bg-primary-container text-on-primary-container font-label-mono-md text-label-mono-md uppercase px-space-md py-space-md tracking-wider font-bold hover:bg-inverse-surface hover:text-inverse-on-surface transition-none flex items-center justify-center gap-space-sm border border-primary-container cursor-pointer select-none" id="btn-export-dossier" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>EXPORT CANONICAL DOSSIER [PDF/HASH]</span>
+</button>
+<!-- Secondary Action Button -->
+<button class="bg-surface-container text-on-surface border border-surface-container-highest hover:bg-surface-container-highest font-label-mono-md text-label-mono-md uppercase px-space-md py-space-md tracking-wider font-bold transition-none flex items-center justify-center gap-space-sm cursor-pointer select-none" id="btn-recalibrate" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>RECALIBRATE PROTOCOL [STRICT]</span>
+</button>
+<!-- Ghost Action Button -->
+<button class="bg-transparent text-secondary border border-surface-container-highest hover:bg-surface-container hover:text-on-surface font-label-mono-md text-label-mono-md uppercase px-space-md py-space-md tracking-wider font-bold transition-none flex items-center justify-center gap-space-sm cursor-pointer select-none" id="btn-transfer-seals" type="button">
+<span class="material-symbols-outlined text-[18px]">shield</span>
+<span>TRANSFER RECOVERY SEALS</span>
+</button>
+</div>
+<div class="hidden mt-space-sm p-space-xs bg-surface-container-lowest border border-surface-container-highest font-label-mono-sm text-label-mono-sm text-tertiary" id="action-telemetry">
+          // TELEMETRY: EXPORT STAGED TO COGNITIVE LEDGER. SHA-256 VERIFIED.
+        </div>
+</div>
+</div>
+</div>
+<!-- FOOTER DOSSIER STRIP: MONOSPACE TECHNICAL RUNWAY -->
+<footer class="w-full bg-surface-container-lowest border-b-2 border-surface-container-highest px-space-lg py-space-md">
+<div class="flex flex-col md:flex-row items-center justify-between gap-space-sm font-label-mono-sm text-label-mono-sm text-outline">
+<div class="flex items-center gap-space-md">
+<span class="text-on-surface font-bold">// HASH: 0x42F8...BA91</span>
+<span>NODE: US-EAST-01</span>
+<span>AUDIT REGIME: 2026.W14</span>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="text-tertiary font-bold">[ VERIFIED DISCIPLINARY LEDGER ]</span>
+<span class="text-outline-variant font-mono">改善 // ARCHON ED.</span>
+</div>
+</div>
+</footer>
+</div>
+<script>
+  // Ensure Sidebar .05 PROFILE is highlighted as active in the persistent shell
+  (function initProfileNav() {
+    const navLinks = document.querySelectorAll('aside nav a');
+    navLinks.forEach(link => {
+      const path = link.getAttribute('data-path');
+      if (path === 'profile') {
+        link.className = 'flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg bg-primary-container text-on-primary-container font-bold border-l-4 border-on-surface transition-none';
+        const bracket = link.querySelector('span:last-child');
+        if (bracket) bracket.className = 'font-label-mono-sm text-label-mono-sm text-on-primary-container font-bold';
+      } else {
+        link.className = 'flex items-center justify-between px-space-lg py-space-md border-b border-surface-container-highest font-label-mono-lg text-label-mono-lg text-on-surface hover:bg-surface-container-high hover:text-on-surface transition-none';
+        const bracket = link.querySelector('span:last-child');
+        if (bracket) bracket.className = 'font-label-mono-sm text-label-mono-sm text-outline';
+      }
+    });
+
+    // Action button micro-feedback
+    const exportBtn = document.getElementById('btn-export-dossier');
+    const recalibrateBtn = document.getElementById('btn-recalibrate');
+    const telemetry = document.getElementById('action-telemetry');
+
+    if (exportBtn && telemetry) {
+      exportBtn.addEventListener('click', () => {
+        telemetry.classList.remove('hidden');
+        telemetry.textContent = '// EXPORT DISPATCHED: DOSSIER ARCHON-042 [SHA-256 HASH STAGED FOR DOWNLOAD]';
+        setTimeout(() => {
+          telemetry.classList.add('hidden');
+        }, 4000);
+      });
+    }
+
+    if (recalibrateBtn && telemetry) {
+      recalibrateBtn.addEventListener('click', () => {
+        telemetry.classList.remove('hidden');
+        telemetry.textContent = '// PROTOCOL RECALIBRATION: STRICT ZERO-BREACH TOLERANCE ENGAGED FOR CYCLE 43';
+        setTimeout(() => {
+          telemetry.classList.add('hidden');
+        }, 4000);
+      });
+    }
+  })();
+</script></main></div></body></html>
