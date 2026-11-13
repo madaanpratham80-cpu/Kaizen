@@ -3,7 +3,7 @@
 ## 1. Persistence and contracts
 
 - [x] 1.1 Add `User` and `Session` Prisma models, indexes, and the reviewed first migration. Test `auth-migration-empty-db` applies it to a fresh PostgreSQL database and checks the unique keys, foreign key, and expiry index.
-- [ ] 1.2 Pin `@prisma/client` and the Prisma CLI to version 6.19.3 and wire `prisma generate` into setup/build. Test `prisma-client-generation` generates a client and compiles the API from a clean install.
+- [x] 1.2 Pin `@prisma/client` and the Prisma CLI to version 6.19.3 and wire `prisma generate` into setup/build. Test `prisma-client-generation` generates a client and compiles the API from a clean install.
 - [ ] 1.3 Add shared Zod request and public response contracts, including required display name and IANA timezone validation at the registration boundary. Test `auth-contract-validation` covers email, display name, invalid timezone, required fields, and the 72-byte UTF-8 password boundary.
 - [ ] 1.4 Add bcrypt, its types, `cors`, its types, Testing Library, and jsdom with pinned major versions. Enable `cors` only when `NODE_ENV !== "production"`, allowing only the configured local web origin. Production must use the same origin and send no CORS headers. Test `auth-dependency-install` completes a clean install; test `auth-production-no-cors` confirms a cross-origin production request has no `Access-Control-Allow-Origin` header. Record each dependency's purpose and rough size in the implementation summary.
 
