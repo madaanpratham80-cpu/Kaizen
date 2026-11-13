@@ -13,6 +13,7 @@
 ## 4. Commands
 
 - Run `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build` for project verification.
+- `pnpm build` uses the web package's `next build --webpack` script. Keep webpack as the production build gate for this scaffold.
 - `pnpm test:db` is expected to fail until Slice 1 task 3.3 replaces the placeholder with the real PostgreSQL suite. Report the placeholder failure as missing coverage, not a regression or a passing database test.
 - `pnpm test` is expected to fail while `apps/api` has no tests. Slice 1 must add API tests before treating that script as passing coverage.
 
@@ -43,6 +44,7 @@
 - Session tokens: at least 32 random bytes, stored only as a SHA-256 digest, sent in `__Host-kaizen_session` with `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/`. Never log tokens, passwords, cookies or authorization headers.
 - Passwords: bcrypt with an async API, cost factor from config (start at 12), maximum 72 UTF-8 bytes, rejected when longer rather than truncated. Never trim or normalise passwords.
 - Use `helmet`, a restrictive `cors` policy, body size limits, and `express-rate-limit` on authentication endpoints, keyed by account identifier and IP.
+- Enable `cors` only when `NODE_ENV !== "production"`, with an allow-list of the local web origin. Production must use the same origin and send no CORS headers.
 - Login failures return generic messages. Run a dummy bcrypt comparison for unknown accounts.
 - Every query constrains ownership by the authenticated user ID.
 - Expose `/health/live` and `/health/ready`. Neither returns secrets. Handle `SIGTERM` by draining requests and closing the Prisma pool.

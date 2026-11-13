@@ -6,3 +6,26 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  normalizedEmail String    @unique
+  displayName     String
+  passwordHash    String
+  timezone        String
+  createdAt       DateTime  @default(now())
+  sessions        Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  // Hex-encoded SHA-256 digest of the opaque session token, never the raw token.
+  tokenHash String   @unique @db.Char(64)
+  userId    String   @db.Uuid
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([expiresAt])
+}

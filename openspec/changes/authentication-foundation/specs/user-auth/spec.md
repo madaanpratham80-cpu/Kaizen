@@ -7,10 +7,10 @@ Provides account identity and secure browser sessions so each user's private Kai
 ## ADDED Requirements
 
 ### Requirement: Register an account
-The system SHALL accept `POST /api/v1/auth/register` with a valid email, password, and IANA timezone; normalize email for unique identity; and create the user and initial session.
+The system SHALL accept `POST /api/v1/auth/register` with a display name, valid email, password, and IANA timezone; normalize email for unique identity; and create the user and initial session.
 
 #### Scenario: Valid registration
-- **WHEN** an unused email, valid timezone, and password of at least 12 characters and at most 72 UTF-8 bytes are submitted from the allowed origin
+- **WHEN** a display name, unused email, valid timezone, and password of at least 12 characters and at most 72 UTF-8 bytes are submitted from the allowed origin
 - **THEN** the system creates one user, sets a session cookie, and returns `{ data, requestId }` without a password hash or token
 
 #### Scenario: Duplicate or invalid registration
