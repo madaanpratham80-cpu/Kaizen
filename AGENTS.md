@@ -13,7 +13,7 @@
 ## 4. Commands
 
 - Run `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build` for project verification.
-- `pnpm test:db` is expected to fail until Slice 3 adds the real database integration suite. Report that failure as missing coverage, not a regression or a passing database test.
+- `pnpm test:db` is expected to fail until Slice 1 task 3.3 replaces the placeholder with the real PostgreSQL suite. Report the placeholder failure as missing coverage, not a regression or a passing database test.
 - `pnpm test` is expected to fail while `apps/api` has no tests. Slice 1 must add API tests before treating that script as passing coverage.
 
 - Routes call services. Services call domain functions and Prisma. Domain code imports nothing from Express, Next.js or Prisma.

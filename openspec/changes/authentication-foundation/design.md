@@ -8,21 +8,21 @@ See `proposal.md` for motivation and `specs/user-auth/spec.md` for behavior. The
 
 **Goals:** Establish a durable owner identity, a revocable browser session, and a reusable middleware boundary for later private routes. Make security behavior verifiable against real PostgreSQL.
 
-**Non-Goals:** PlayerState, quests, day plans, completion, account recovery, email verification, and private screen data. Login and registration pages only collect credentials and consume the auth API.
+**Non-Goals:** PlayerState, quests, day plans, completion, account recovery, email verification, password change and its session-revocation policy, and private screen data. Login and registration pages only collect credentials and consume the auth API.
 
 ## Decisions
 
 ### Data model and migration
 
-Add `User(id, normalizedEmail, passwordHash, timezone, createdAt)` and `Session(id, tokenHash, userId, expiresAt, createdAt)` with a foreign key, unique email and token digest, and indexes on `Session(userId)` and `Session(expiresAt)`. Add `@prisma/client` to API runtime dependencies at the same major as the Prisma CLI, then run `prisma generate` as part of setup/build. Use Prisma default table and column names because the architecture does not require snake_case. Review the first generated migration and prove it applies to an empty PostgreSQL database. Account creation and initial session insertion share a transaction. User deletion behavior is deferred, so no delete endpoint or cascade policy is promised here. The PDF suggests PlayerState creation with the account; this slice deliberately defers PlayerState and must update that invariant when progression lands.
+Add `User(id, normalizedEmail, passwordHash, timezone, createdAt)` and `Session(id, tokenHash, userId, expiresAt, createdAt)` with a foreign key, unique email and token digest, and indexes on `Session(userId)` and `Session(expiresAt)`. Pin `@prisma/client` and the Prisma CLI to 6.19.3, then run `prisma generate` as part of setup/build. Use Prisma default table and column names because the architecture does not require snake_case. Review the first generated migration and prove it applies to an empty PostgreSQL database. Account creation and initial session insertion share a transaction. User deletion behavior is deferred, so no delete endpoint or cascade policy is promised here. The architecture suggests PlayerState creation with the account; this slice defers PlayerState and must update that invariant when progression lands.
 
 ### Password and session handling
 
-Use asynchronous bcrypt with cost from validated server configuration, default 12. Measure the UTF-8 byte length before hashing; enforce the 12-character minimum without trimming or normalization. Normalize only email, then enforce uniqueness in PostgreSQL. For unknown accounts, compare against a fixed dummy bcrypt hash before returning the same generic credential error. Generate 32 random token bytes, encode for the cookie, store SHA-256 of the raw token, and set a seven-day absolute expiry. A successful login issues a new session; logout removes only the presented row. Avoid logging headers, bodies, cookies, token digests, or passwords. A database uniqueness failure on concurrent registration becomes the same duplicate-account response as a sequential duplicate.
+Use asynchronous bcrypt with cost from validated server configuration, default 12. Measure the UTF-8 byte length before hashing; enforce the 12-character minimum without trimming or normalization. Normalize only email, then enforce uniqueness in PostgreSQL. For unknown accounts, compare against a fixed dummy bcrypt hash before returning the same generic credential error. Generate 32 random token bytes, encode for the cookie, store SHA-256 of the raw token, and set `expiresAt` from the server clock at creation for a seven-day absolute lifetime. A successful login issues a new session; logout removes only the presented row. Avoid logging headers, bodies, cookies, token digests, or passwords. A database uniqueness failure on concurrent registration becomes the same duplicate-account response as a sequential duplicate.
 
 ### HTTP boundary
 
-Mount auth routes under `/api/v1/auth`. Add request IDs, bounded JSON parsing, session lookup, Origin/CSRF protection, Zod validation, service calls, response serialization, and one central error handler in the `AGENTS.md` order. Public register and login skip session lookup and use Origin validation. Express services own Prisma operations; routes contain no SQL. Define request and response schemas in `packages/contracts`. Return `{ data, requestId }` or `{ error: { code, message, details }, requestId }` and `private, no-store` on private responses. Apply `helmet` and a restrictive CORS allowlist. Production uses one origin; local development needs a configured allowed web origin and credentialed requests.
+Mount auth routes under `/api/v1/auth`. Add request IDs, bounded JSON parsing, session lookup, Origin/CSRF protection, Zod validation, service calls, response serialization, and one central error handler in the `AGENTS.md` order. Public register and login skip session lookup and use Origin validation. Express services own Prisma operations; routes contain no SQL. Define request and response schemas in `packages/contracts`. Return `{ data, requestId }` or `{ error: { code, message, details }, requestId }` and `private, no-store` on private responses. Apply `helmet` and configure `cors` to allow only the configured local web origin for separate development processes. Production uses one origin and allows no cross-origin credentialed requests.
 
 ### CSRF and rate limits
 
@@ -30,7 +30,7 @@ Require exact configured Origin on all auth mutations. Derive a stable, session-
 
 ### Web integration
 
-Add minimal `/login` and `/register` Client Components using a typed auth client, credentials included, labelled fields, pending and error states. Do not store session data or CSRF tokens in localStorage. A shared cache or broader private-route shell can follow when private screens arrive.
+Add minimal `/login` and `/register` Client Components using a typed auth client, credentials included, labelled fields, pending and error states. Use Vitest with Testing Library and jsdom for form behavior; verify the complete cookie flow manually in a browser. Do not store session data or CSRF tokens in localStorage. A shared cache or broader private-route shell can follow when private screens arrive.
 
 ## Risks / Trade-offs
 
@@ -41,4 +41,4 @@ Add minimal `/login` and `/register` Client Components using a typed auth client
 
 ## Migration Plan
 
-Generate and review the first migration for `User` and `Session`; apply it to an empty test database before integration tests and to production before enabling auth routes. Roll back application deployment to disable the routes if needed; retain the additive tables and use a later reviewed migration for schema reversal. Keep existing health behavior until database readiness is designed. Keep the root `test:db` placeholder failing until Slice 3 replaces it with the real database suite; run Slice 1 PostgreSQL checks explicitly.
+Generate and review the first migration for `User` and `Session`; apply it to an empty test database before integration tests and to production before enabling auth routes. Replace the root `test:db` placeholder in task 3.3 with the real PostgreSQL suite targeting a disposable database supplied by `DATABASE_URL`. Roll back application deployment to disable the routes if needed; retain the additive tables and use a later reviewed migration for schema reversal. Keep existing health behavior until database readiness is designed.
