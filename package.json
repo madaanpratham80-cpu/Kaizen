@@ -6,7 +6,7 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
-    "test:db": "node -e \"process.stdout.write('Database tests pending: no database schema or integration suite exists yet.\\n')\"",
+    "test:db": "node -e \"console.error('test:db: NOT IMPLEMENTED. No database tests exist yet.'); process.exit(1)\"",
     "build": "pnpm -r build"
   },
   "devDependencies": {

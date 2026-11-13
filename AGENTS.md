@@ -5,6 +5,11 @@
 - Query `graphify-out/graph.json` when it exists. If it is missing, follow the Graphify skill to build the initial graph before using it for project investigation.
 - Verify relevant findings against the source files. Refresh the graph after changing project files it indexes.
 
+## 4. Commands
+
+- Run `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build` for project verification.
+- `pnpm test:db` is expected to fail until Slice 3 adds the real database integration suite. Report that failure as missing coverage, not a regression or a passing database test.
+
 - Routes call services. Services call domain functions and Prisma. Domain code imports nothing from Express, Next.js or Prisma.
 - Pass the transaction client to every write helper. Never write through the global client inside a transaction.
 - Controllers, if used, stay thin. Business logic belongs in services.
