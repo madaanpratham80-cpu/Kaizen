@@ -2,7 +2,7 @@
 
 ## Context
 
-See `proposal.md` for motivation and `specs/user-auth/spec.md` for behavior. The repository has a Next.js and Express scaffold, an empty Prisma schema, shared contracts, and health routes. `docs/architecture/` is absent; the root `KAIZEN_System_Architecture.pdf` pages 5–7 and 12 supply the source design. `AGENTS.md` provides the security and API constraints.
+See `proposal.md` for motivation and `specs/user-auth/spec.md` for behavior. The repository has a Next.js and Express scaffold, an empty Prisma schema, shared contracts, and health routes. `docs/architecture/system-architecture.md` is the authoritative implementation blueprint, with page breaks from the source PDF preserved. `AGENTS.md` sections 1, 9, 10, and 12 govern this design.
 
 ## Goals / Non-Goals
 
@@ -14,7 +14,7 @@ See `proposal.md` for motivation and `specs/user-auth/spec.md` for behavior. The
 
 ### Data model and migration
 
-Add `User(id, normalizedEmail, passwordHash, timezone, createdAt)` and `Session(id, tokenHash, userId, expiresAt, createdAt)` with a foreign key, unique email and token digest, and indexes on `Session(userId)` and `Session(expiresAt)`. Use Prisma default table and column names because the architecture does not require snake_case. Review the generated migration before applying it. Account creation and initial session insertion share a transaction. User deletion behavior is deferred, so no delete endpoint or cascade policy is promised here. The PDF suggests PlayerState creation with the account; this slice deliberately defers PlayerState and must update that invariant when progression lands.
+Add `User(id, normalizedEmail, passwordHash, timezone, createdAt)` and `Session(id, tokenHash, userId, expiresAt, createdAt)` with a foreign key, unique email and token digest, and indexes on `Session(userId)` and `Session(expiresAt)`. Add `@prisma/client` to API runtime dependencies at the same major as the Prisma CLI, then run `prisma generate` as part of setup/build. Use Prisma default table and column names because the architecture does not require snake_case. Review the first generated migration and prove it applies to an empty PostgreSQL database. Account creation and initial session insertion share a transaction. User deletion behavior is deferred, so no delete endpoint or cascade policy is promised here. The PDF suggests PlayerState creation with the account; this slice deliberately defers PlayerState and must update that invariant when progression lands.
 
 ### Password and session handling
 
@@ -41,4 +41,4 @@ Add minimal `/login` and `/register` Client Components using a typed auth client
 
 ## Migration Plan
 
-Generate and review one additive migration for `User` and `Session`; apply it to the test database before integration tests and to production before enabling auth routes. Roll back application deployment to disable the routes if needed; retain the additive tables and use a later reviewed migration for schema reversal. Keep existing health behavior until database readiness is designed.
+Generate and review the first migration for `User` and `Session`; apply it to an empty test database before integration tests and to production before enabling auth routes. Roll back application deployment to disable the routes if needed; retain the additive tables and use a later reviewed migration for schema reversal. Keep existing health behavior until database readiness is designed. Keep the root `test:db` placeholder failing until Slice 3 replaces it with the real database suite; run Slice 1 PostgreSQL checks explicitly.
