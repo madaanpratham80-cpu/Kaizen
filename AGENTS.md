@@ -44,7 +44,7 @@
 - Session tokens: at least 32 random bytes, stored only as a SHA-256 digest, sent in `__Host-kaizen_session` with `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/`. Never log tokens, passwords, cookies or authorization headers.
 - Passwords: bcrypt with an async API, cost factor from config (start at 12), maximum 72 UTF-8 bytes, rejected when longer rather than truncated. Never trim or normalise passwords.
 - Use `helmet`, a restrictive `cors` policy, body size limits, and `express-rate-limit` on authentication endpoints, keyed by account identifier and IP.
-- Enable `cors` only when `NODE_ENV !== "production"`, with an allow-list of the local web origin. Production must use the same origin and send no CORS headers.
+- Enable `cors` only when `NODE_ENV` is explicitly `development` or `test`, with an allow-list of the local web origin. Unset or other values send no CORS headers; production must use the same origin.
 - Login failures return generic messages. Run a dummy bcrypt comparison for unknown accounts.
 - Every query constrains ownership by the authenticated user ID.
 - Expose `/health/live` and `/health/ready`. Neither returns secrets. Handle `SIGTERM` by draining requests and closing the Prisma pool.

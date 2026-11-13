@@ -22,7 +22,7 @@ Use asynchronous bcrypt with cost from validated server configuration, default 1
 
 ### HTTP boundary
 
-Mount auth routes under `/api/v1/auth`. Add request IDs, bounded JSON parsing, session lookup, Origin/CSRF protection, Zod validation, service calls, response serialization, and one central error handler in the `AGENTS.md` order. Public register and login skip session lookup and use Origin validation. Express services own Prisma operations; routes contain no SQL. Define request and response schemas in `packages/contracts`. Return `{ data, requestId }` or `{ error: { code, message, details }, requestId }` and `private, no-store` on private responses. Apply `helmet`. Enable `cors` only when `NODE_ENV !== "production"`, allowing the configured local web origin for separate development processes. Production uses one origin and sends no CORS headers.
+Mount auth routes under `/api/v1/auth`. Add request IDs, bounded JSON parsing, session lookup, Origin/CSRF protection, Zod validation, service calls, response serialization, and one central error handler in the `AGENTS.md` order. Public register and login skip session lookup and use Origin validation. Express services own Prisma operations; routes contain no SQL. Define request and response schemas in `packages/contracts`. Return `{ data, requestId }` or `{ error: { code, message, details }, requestId }` and `private, no-store` on private responses. Apply `helmet`. Enable `cors` only when `NODE_ENV` is explicitly `development` or `test`, allowing the configured local web origin for separate development processes. Unset or other values send no CORS headers; production uses one origin.
 
 ### CSRF and rate limits
 
