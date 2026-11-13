@@ -1,0 +1,116 @@
+{
+  "openspec/config.yaml": {
+    "mtime": 1794562209.5403323,
+    "seen": 1794563079.013561,
+    "ast_hash": "500a0a16229f8fd0848dc7cff85d21e9",
+    "semantic_hash": "500a0a16229f8fd0848dc7cff85d21e9"
+  },
+  ".agents/skills/openspec-apply-change/SKILL.md": {
+    "mtime": 1794562209.5363572,
+    "seen": 1794563079.013563,
+    "ast_hash": "94e3fd46a4b748e5eee8446138c702e8",
+    "semantic_hash": "94e3fd46a4b748e5eee8446138c702e8"
+  },
+  ".agents/skills/openspec-archive-change/SKILL.md": {
+    "mtime": 1794562209.5380697,
+    "seen": 1794563079.0135639,
+    "ast_hash": "a731a04317753e65e999f370ca94dbc3",
+    "semantic_hash": "a731a04317753e65e999f370ca94dbc3"
+  },
+  ".agents/skills/openspec-explore/SKILL.md": {
+    "mtime": 1794562209.5357745,
+    "seen": 1794563079.0135648,
+    "ast_hash": "41b99244c4223f43374489926af1f227",
+    "semantic_hash": "41b99244c4223f43374489926af1f227"
+  },
+  ".agents/skills/openspec-propose/SKILL.md": {
+    "mtime": 1794562209.538428,
+    "seen": 1794563079.0135648,
+    "ast_hash": "5d26d3ba18ead7f2e863b873fc006bf3",
+    "semantic_hash": "5d26d3ba18ead7f2e863b873fc006bf3"
+  },
+  ".agents/skills/openspec-sync-specs/SKILL.md": {
+    "mtime": 1794562209.537636,
+    "seen": 1794563079.013566,
+    "ast_hash": "0ca500d3d9fda21eb222b965d3dd702d",
+    "semantic_hash": "0ca500d3d9fda21eb222b965d3dd702d"
+  },
+  ".agents/skills/openspec-update-change/SKILL.md": {
+    "mtime": 1794562209.537265,
+    "seen": 1794563079.013566,
+    "ast_hash": "f0b21399878fe4f2b711c4473028a797",
+    "semantic_hash": "f0b21399878fe4f2b711c4473028a797"
+  },
+  "AGENTS.md": {
+    "mtime": 1794562554.4329882,
+    "seen": 1794563079.013567,
+    "ast_hash": "0977a489c1157640c69f1ba21244762a",
+    "semantic_hash": "0977a489c1157640c69f1ba21244762a"
+  },
+  "README.md": {
+    "mtime": 1794508892.4820855,
+    "seen": 1794563079.013567,
+    "ast_hash": "0523eb1fa7973d68284ad8178cea1531",
+    "semantic_hash": "0523eb1fa7973d68284ad8178cea1531"
+  },
+  "Competitors/Duolingo/Duolingo_KAIZEN_Relevant_Analysis.pdf": {
+    "mtime": 1794507444.7063441,
+    "seen": 1794563079.013567,
+    "ast_hash": "074be1f0b45cb2c68a9d700644c3699e",
+    "semantic_hash": "074be1f0b45cb2c68a9d700644c3699e"
+  },
+  "Competitors/Focumon/Focumon_System_Architecture_and_Design.pdf": {
+    "mtime": 1794506096.954201,
+    "seen": 1794563079.013568,
+    "ast_hash": "b73c85e65f44ca63a4bf751ec67d43d9",
+    "semantic_hash": "b73c85e65f44ca63a4bf751ec67d43d9"
+  },
+  "Competitors/HabitQuest/HabitQuest_System_Architecture_and_Design.pdf": {
+    "mtime": 1794506096.943086,
+    "seen": 1794563079.013568,
+    "ast_hash": "585cc16941ae5663493a14f836f527f4",
+    "semantic_hash": "585cc16941ae5663493a14f836f527f4"
+  },
+  "Competitors/Habitica/Habitica_System_Architecture_and_Design.pdf": {
+    "mtime": 1794506096.9115725,
+    "seen": 1794563079.013569,
+    "ast_hash": "f6aa87ee97067bd92b5c97774d1656b6",
+    "semantic_hash": "f6aa87ee97067bd92b5c97774d1656b6"
+  },
+  "Competitors/Levelyss/Levelyss_System_Architecture_and_Design.pdf": {
+    "mtime": 1794506096.9224396,
+    "seen": 1794563079.013569,
+    "ast_hash": "403d625c9f8b2c22da583a7426d0e525",
+    "semantic_hash": "403d625c9f8b2c22da583a7426d0e525"
+  },
+  "Competitors/Matiks/Matiks_KAIZEN_Relevant_Analysis.pdf": {
+    "mtime": 1794507444.7133713,
+    "seen": 1794563079.01357,
+    "ast_hash": "4d56df271279fab046c203f5d3fb4e09",
+    "semantic_hash": "4d56df271279fab046c203f5d3fb4e09"
+  },
+  "Competitors/Productivitism/Productivitism_System_Architecture_and_Design.pdf": {
+    "mtime": 1794506096.932813,
+    "seen": 1794563079.01357,
+    "ast_hash": "ca2a306ef1548e9251f7a4dbd034abd9",
+    "semantic_hash": "ca2a306ef1548e9251f7a4dbd034abd9"
+  },
+  "KAIZEN_Feature_List.pdf": {
+    "mtime": 1794507936.5341625,
+    "seen": 1794563079.01357,
+    "ast_hash": "df23f97b7c6f275014f7b71757334d7e",
+    "semantic_hash": "df23f97b7c6f275014f7b71757334d7e"
+  },
+  "KAIZEN_System_Architecture.pdf": {
+    "mtime": 1794514220.0247345,
+    "seen": 1794563079.013571,
+    "ast_hash": "f6e32413870066d03183c60aec464a84",
+    "semantic_hash": "f6e32413870066d03183c60aec464a84"
+  },
+  "KAIZEN_System_Design.pdf": {
+    "mtime": 1794513161.1230998,
+    "seen": 1794563079.013571,
+    "ast_hash": "fe90df362c8b63aa8dd768b1431c6a98",
+    "semantic_hash": "fe90df362c8b63aa8dd768b1431c6a98"
+  }
+}

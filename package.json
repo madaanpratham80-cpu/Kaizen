@@ -1,0 +1,15 @@
+{
+  "name": "kaizen",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "test:db": "node -e \"process.stdout.write('Database tests pending: no database schema or integration suite exists yet.\\n')\"",
+    "build": "pnpm -r build"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.0"
+  }
+}
