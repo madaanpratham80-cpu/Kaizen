@@ -1,4 +1,9 @@
 
+## 1. Approved stack and design source
+
+- The authoritative implementation blueprint is `docs/architecture/system-architecture.md`. The current feature inventory is `docs/architecture/feature-list.md`; the earlier system design is archived at `docs/archive/system-design.md`.
+- Use Next.js App Router for the web process, Express for the API, PostgreSQL with Prisma for persistence, and Zod for shared public contracts.
+
 # Graphify
 
 - Use Graphify (`graphifyy`, CLI `graphify`) as the first source of project context for Kaizen work, including planning, implementation, debugging, review, and documentation.
@@ -9,6 +14,7 @@
 
 - Run `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build` for project verification.
 - `pnpm test:db` is expected to fail until Slice 3 adds the real database integration suite. Report that failure as missing coverage, not a regression or a passing database test.
+- `pnpm test` is expected to fail while `apps/api` has no tests. Slice 1 must add API tests before treating that script as passing coverage.
 
 - Routes call services. Services call domain functions and Prisma. Domain code imports nothing from Express, Next.js or Prisma.
 - Pass the transaction client to every write helper. Never write through the global client inside a transaction.

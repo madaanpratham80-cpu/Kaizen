@@ -145,6 +145,8 @@ The user interface synthesizes **Swiss International Typographic Style**, **tech
 
 ## Architecture & Implementation Principles
 
+The implementation blueprint is [docs/architecture/system-architecture.md](docs/architecture/system-architecture.md), with the feature inventory in [docs/architecture/feature-list.md](docs/architecture/feature-list.md). The earlier system design is preserved in [docs/archive/system-design.md](docs/archive/system-design.md).
+
 - **Atomic Single-Transaction Completion Service:**
   Completing any commitment runs through a single backend transaction that updates task state, calculates XP, evaluates health deltas, updates streak status, and checks milestone seal eligibility simultaneously.
 - **Immutable Event Sourcing:**
