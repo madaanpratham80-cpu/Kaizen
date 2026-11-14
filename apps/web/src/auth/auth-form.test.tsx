@@ -27,6 +27,67 @@ afterEach(() => {
 });
 
 describe('auth-web-form-component', () => {
+  it('recovers a committed registration by retrying only the session read', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(failure('Invalid session.', 401))
+      .mockResolvedValueOnce(reply({ user }, 201))
+      .mockRejectedValueOnce(new TypeError('Offline'))
+      .mockResolvedValueOnce(reply({ user, csrfToken: 'proof' }));
+    vi.stubGlobal('fetch', fetch);
+    render(<AuthForm mode="register" />);
+    fireEvent.change(await screen.findByLabelText('Display name'), {
+      target: { value: user.displayName },
+    });
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: user.email },
+    });
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'valid test password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'Your account was created',
+    );
+    expect(screen.queryByRole('button', { name: 'Create account' })).toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Check session again' }),
+    );
+    await screen.findByText('Your account');
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+      '/api/v1/auth/session',
+      '/api/v1/auth/register',
+      '/api/v1/auth/session',
+      '/api/v1/auth/session',
+    ]);
+  });
+  it('refreshes a stale logout proof and asks before signing out the replacement account', async () => {
+    const replacement = { ...user, displayName: 'Replacement account' };
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(reply({ user, csrfToken: 'old' }))
+      .mockResolvedValueOnce(
+        Response.json(
+          { error: { code: 'CSRF_INVALID', message: 'Invalid CSRF token.' } },
+          { status: 403 },
+        ),
+      )
+      .mockResolvedValueOnce(reply({ user: replacement, csrfToken: 'new' }))
+      .mockResolvedValueOnce(reply({ success: true }));
+    vi.stubGlobal('fetch', fetch);
+    render(<AuthForm mode="login" />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Log out' }));
+    await screen.findByText('Replacement account');
+    expect(await screen.findByRole('alert')).toBeTruthy();
+    expect(fetch).toHaveBeenCalledTimes(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Log out' }));
+    await screen.findByRole('button', { name: 'Log in' });
+    expect(fetch).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/auth/logout',
+      expect.objectContaining({ headers: { 'X-CSRF-Token': 'new' } }),
+    );
+  });
   it('registers with labelled fields, retains password spaces, and keeps credentials out of browser storage', async () => {
     const fetch = vi
       .fn()

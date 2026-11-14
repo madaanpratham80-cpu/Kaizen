@@ -224,7 +224,7 @@ const afterLogout = await auth('session');
 
 The expected result is `[201, 200, 200, 200, 401]`. The browser sends the session cookie automatically, and logout clears it.
 
-Registration and login return `503 AUTH_UNAVAILABLE` if neither secret is configured. Keep `AUTH_BCRYPT_COST` consistent with existing account hashes. Unknown-account checks use the configured cost, while existing accounts use the cost stored in their hashes.
+Registration and login return `503 AUTH_UNAVAILABLE` if neither secret is configured. Before changing `AUTH_BCRYPT_COST`, list every other cost still present in stored hashes in `AUTH_BCRYPT_LEGACY_COSTS` (comma separated). API startup checks stored cost headers and fails if a cost is missing from configuration. Login performs one bcrypt comparison per listed or current cost for both known and unknown accounts. Coordinate cost changes across API writers before restart.
 
 Root verification commands are `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. Run `pnpm test:db` with `DATABASE_URL` exported for an empty disposable database whose name contains `test`. It applies the migration before running the PostgreSQL suite. API liveness is `GET http://localhost:4000/health/live`. Readiness returns HTTP 503 at `/health/ready` until a database check is implemented.
 

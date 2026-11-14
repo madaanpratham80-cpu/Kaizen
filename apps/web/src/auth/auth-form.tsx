@@ -14,6 +14,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
+  const [registrationCommitted, setRegistrationCommitted] = useState(false);
   const busy = useRef(false);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
           return;
         }
         await auth.register(parsed.data);
+        setRegistrationCommitted(true);
       } else {
         const parsed = loginRequestSchema.safeParse(input);
         if (!parsed.success) {
@@ -70,10 +72,19 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         await auth.login(parsed.data);
       }
       form.reset();
-      const current = await auth.session();
+      const current = await auth.session().catch((reason: unknown) => {
+        if (!registering) throw reason;
+        setError(
+          'Your account was created, but we could not check your session.',
+        );
+        return undefined;
+      });
+      if (current === undefined) return;
       if (!current) {
         setError(
-          'The browser did not retain the session. Check your cookie settings.',
+          registering
+            ? 'Your account was created. The browser did not retain the session.'
+            : 'The browser did not retain the session. Check your cookie settings.',
         );
         return;
       }
@@ -105,13 +116,42 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
               disabled={pending}
               onClick={() =>
                 void mutate(async () => {
-                  await auth.logout(session.csrfToken);
-                  setSession(null);
+                  if ((await auth.logout(session.csrfToken)) === 'done') {
+                    setSession(null);
+                    setRegistrationCommitted(false);
+                    return;
+                  }
+                  const current = await auth.session();
+                  setSession(current);
+                  if (current)
+                    setError(
+                      'Your session changed. Check the account and select Log out again.',
+                    );
                 })
               }
             >
               {pending ? 'Logging out…' : 'Log out'}
             </button>
+          </div>
+        ) : registrationCommitted ? (
+          <div className="space-y-4">
+            <button
+              className="auth-button"
+              disabled={pending}
+              onClick={() =>
+                void mutate(async () => {
+                  const current = await auth.session();
+                  setSession(current);
+                  if (!current)
+                    setError('Your account was created. Log in to continue.');
+                })
+              }
+            >
+              Check session again
+            </button>
+            <Link className="block underline" href="/login">
+              Log in
+            </Link>
           </div>
         ) : (
           <form onSubmit={submit} aria-busy={pending}>

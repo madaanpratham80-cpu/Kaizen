@@ -1,7 +1,7 @@
 import { loginRequestSchema, type PublicUser } from '@kaizen/contracts';
 import type { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { bcryptCost } from './bcrypt-config.js';
+import { bcryptComparisonCosts } from './bcrypt-config.js';
 import { createSession } from './sessions.js';
 
 const MAX_PASSWORD_BYTES = 72;
@@ -9,10 +9,10 @@ const MAX_PASSWORD_BYTES = 72;
 const DUMMY_PASSWORD_HASH =
   '$2b$12$5Rk.LqQzUrFp2FdzXZezs.6aBm9aitjYDXJ7k5UsGHhMLEytSvFya';
 
-function dummyHash() {
+function dummyHash(cost: number) {
   // bcrypt reads the work factor from the hash header. The comparison
   // always fails at the account check, so the checksum can stay fixed.
-  const rounds = String(bcryptCost()).padStart(2, '0');
+  const rounds = String(cost).padStart(2, '0');
   return (
     DUMMY_PASSWORD_HASH.slice(0, 4) + rounds + DUMMY_PASSWORD_HASH.slice(6)
   );
@@ -44,10 +44,18 @@ export async function loginAccount(
     where: { normalizedEmail: email },
     select: { id: true, displayName: true, timezone: true, passwordHash: true },
   });
-  const passwordMatches = await bcrypt.compare(
-    password,
-    account?.passwordHash ?? dummyHash(),
-  );
+  const storedCost = account
+    ? bcrypt.getRounds(account.passwordHash)
+    : undefined;
+  let passwordMatches = false;
+  const costs = bcryptComparisonCosts();
+  for (const cost of costs) {
+    const match = await bcrypt.compare(
+      password,
+      account && storedCost === cost ? account.passwordHash : dummyHash(cost),
+    );
+    if (storedCost === cost) passwordMatches = match;
+  }
   if (!account || !passwordMatches) return loginFailed;
 
   const { id, displayName, timezone } = account;

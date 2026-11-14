@@ -8,7 +8,9 @@ import {
 } from '@kaizen/contracts';
 
 const base = process.env.NEXT_PUBLIC_API_BASE_PATH || '/api/v1';
-const errorResponse = z.object({ error: z.object({ message: z.string() }) });
+const errorResponse = z.object({
+  error: z.object({ message: z.string(), code: z.string().optional() }),
+});
 
 async function call<T>(
   path: string,
@@ -28,6 +30,7 @@ async function call<T>(
       parsed.success
         ? parsed.data.error.message
         : 'The request failed. Try again.',
+      parsed.success ? parsed.data.error.code : undefined,
     );
   }
   return schema.parse(body);
@@ -37,6 +40,7 @@ class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly code?: string,
   ) {
     super(message);
   }
@@ -64,15 +68,22 @@ export const auth = {
       throw error;
     }
   },
-  async logout(csrfToken: string) {
+  async logout(csrfToken: string): Promise<'done' | 'stale'> {
     try {
       await call('logout', authLogoutResponseSchema, {
         method: 'POST',
         headers: { 'X-CSRF-Token': csrfToken },
       });
     } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status === 403 &&
+        error.code === 'CSRF_INVALID'
+      )
+        return 'stale';
       if (!(error instanceof ApiError) || error.status !== 401) throw error;
     }
+    return 'done';
   },
 };
 

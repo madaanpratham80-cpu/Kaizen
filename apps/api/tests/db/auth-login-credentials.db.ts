@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
+import { verifyStoredBcryptCosts } from '../../src/services/bcrypt-config.js';
 import { describe, expect, it, vi } from 'vitest';
 import { loginAccount } from '../../src/services/login.js';
 import { useAuthDatabase } from './auth-fixture.js';
@@ -7,6 +8,34 @@ import { useAuthDatabase } from './auth-fixture.js';
 const { prisma, register } = useAuthDatabase();
 
 describe('auth-login-credentials', () => {
+  it('rejects startup preflight for stored costs missing from configuration', async () => {
+    await register();
+    vi.stubEnv('AUTH_BCRYPT_COST', '10');
+    vi.stubEnv('AUTH_BCRYPT_LEGACY_COSTS', '');
+    await expect(verifyStoredBcryptCosts(prisma)).rejects.toThrow(
+      'Stored bcrypt costs',
+    );
+    vi.stubEnv('AUTH_BCRYPT_LEGACY_COSTS', '12');
+    await expect(verifyStoredBcryptCosts(prisma)).resolves.toBeUndefined();
+  });
+  it('does the same bcrypt work for legacy, current, and unknown accounts', async () => {
+    const legacy = await register();
+    vi.stubEnv('AUTH_BCRYPT_COST', '10');
+    vi.stubEnv('AUTH_BCRYPT_LEGACY_COSTS', '12,10');
+    const compare = vi.spyOn(bcrypt, 'compare');
+    for (const [email, password] of [
+      [legacy.user.email, 'wrong password'],
+      [`unknown-${randomUUID()}@example.com`, 'wrong password'],
+      [legacy.user.email, legacy.password],
+    ]) {
+      compare.mockClear();
+      const result = await loginAccount(prisma, { email, password });
+      expect(result.ok).toBe(password === legacy.password);
+      expect(
+        compare.mock.calls.map((call) => bcrypt.getRounds(call[1] as string)),
+      ).toEqual([10, 12]);
+    }
+  });
   it('normalizes email and creates a new session for correct credentials', async () => {
     const account = await register();
     const result = await loginAccount(prisma, {
