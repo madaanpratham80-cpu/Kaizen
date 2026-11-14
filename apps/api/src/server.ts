@@ -1,4 +1,4 @@
-import { app } from './app.js';
+import { app, prisma } from './app.js';
 import pino from 'pino';
 
 const logger = pino();
@@ -10,6 +10,12 @@ const server = app.listen(port, () => {
 
 process.on('SIGTERM', () => {
   server.close(() => {
-    logger.info('API stopped');
+    void prisma.$disconnect().then(
+      () => logger.info('API stopped'),
+      () => {
+        logger.error('Failed to close the database pool');
+        process.exitCode = 1;
+      },
+    );
   });
 });

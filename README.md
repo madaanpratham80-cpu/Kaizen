@@ -195,6 +195,8 @@ pnpm --filter @kaizen/api exec vitest run --config vitest.db.config.ts auth-regi
 
 The API registration service reads `AUTH_BCRYPT_COST` from its environment and defaults to 12.
 
+Set `APP_ORIGIN` to the exact browser origin allowed to make API mutations, and provide `AUTH_CSRF_SECRET` through the API environment for authenticated mutations. Leave `TRUSTED_PROXY_IPS` empty for direct connections. Behind an ingress, list only the exact IP addresses of proxies you control and configure the ingress to discard client-supplied forwarding headers.
+
 The workspace contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
 
 ```

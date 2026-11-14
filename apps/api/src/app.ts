@@ -1,19 +1,67 @@
-import express from 'express';
+import { isIP } from 'node:net';
+import { PrismaClient } from '@prisma/client';
+import express, { type RequestHandler, type Router } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import {
+  assignRequestId,
+  handleHttpError,
+  HttpError,
+  loadSession,
+  protectMutations,
+  redactJson,
+  requireJsonBody,
+} from './http/boundary.js';
+import { createAuthRateLimits } from './http/rate-limits.js';
+import { lookupSession } from './services/sessions.js';
 
 type AppOptions = {
   nodeEnv?: string;
   webOrigin?: string;
+  appOrigin?: string;
+  csrfSecret?: string;
+  trustedProxies?: string;
+  rateLimits?: Parameters<typeof createAuthRateLimits>[0];
+  resolveSession?: (token: string) => ReturnType<typeof lookupSession>;
+  routes?: Router;
 };
+
+export const prisma = new PrismaClient();
+
+function proxyTrust(config: string | undefined) {
+  if (!config) return false;
+  const addresses = config.split(',').map((address) => address.trim());
+  if (addresses.some((address) => !isIP(address))) {
+    throw new Error(
+      'TRUSTED_PROXY_IPS must contain only explicit IP addresses',
+    );
+  }
+  return addresses;
+}
+
+function postOnly(middleware: RequestHandler): RequestHandler {
+  return (req, res, next) =>
+    req.method === 'POST' && req.path === '/'
+      ? middleware(req, res, next)
+      : next();
+}
 
 export function createApp({
   nodeEnv = process.env.NODE_ENV,
   webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000',
+  appOrigin = process.env.APP_ORIGIN,
+  csrfSecret = process.env.AUTH_CSRF_SECRET,
+  trustedProxies = process.env.TRUSTED_PROXY_IPS,
+  rateLimits,
+  resolveSession = (token) => lookupSession(prisma, token),
+  routes,
 }: AppOptions = {}) {
   const app = express();
 
   app.disable('x-powered-by');
+  app.set('trust proxy', proxyTrust(trustedProxies));
+  app.set('json replacer', redactJson);
+  app.use(assignRequestId);
   app.use(helmet());
 
   if (nodeEnv === 'development' || nodeEnv === 'test') {
@@ -32,6 +80,12 @@ export function createApp({
     );
   }
 
+  app.use(requireJsonBody, express.json({ limit: '10kb', inflate: false }));
+  app.use(loadSession(resolveSession), protectMutations(appOrigin, csrfSecret));
+  const limits = createAuthRateLimits(rateLimits);
+  app.use('/api/v1/auth/register', ...limits.register.map(postOnly));
+  app.use('/api/v1/auth/login', ...limits.login.map(postOnly));
+
   app.get('/health/live', (_request, response) => {
     response.json({ status: 'live' });
   });
@@ -39,6 +93,12 @@ export function createApp({
   app.get('/health/ready', (_request, response) => {
     response.status(503).json({ status: 'unready' });
   });
+
+  if (routes) app.use(routes);
+  app.use((_req, _res, next) =>
+    next(new HttpError(404, 'NOT_FOUND', 'Resource not found.')),
+  );
+  app.use(handleHttpError);
 
   return app;
 }
