@@ -181,11 +181,21 @@ Detailed technical teardowns are available in the [`Competitors/`](./Competitors
 
 ### Local scaffold setup
 
-Install Node.js 20.9 or later and pnpm 11. Run `pnpm install` from the repository root. Copy `apps/web/.env.example` to `apps/web/.env.local` and `apps/api/.env.example` to `apps/api/.env`. Start the processes with `pnpm --filter @kaizen/web dev` and `pnpm --filter @kaizen/api dev`. The web app runs on port 3000 and the API defaults to port 4000. A PostgreSQL URL is shown in the API example, but no database schema or connection is wired yet.
+Install the Node.js version in `.nvmrc` and pnpm 11. Run `pnpm install` and `pnpm --filter @kaizen/contracts build` from the repository root. Copy `apps/web/.env.example` to `apps/web/.env.local` and `apps/api/.env.example` to `apps/api/.env`. Start the processes with `pnpm --filter @kaizen/web dev` and `pnpm --filter @kaizen/api dev`. The web app runs on port 3000 and the API defaults to port 4000.
 
 Root verification commands are `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. `test:db` currently reports that database tests are pending. API liveness is `GET http://localhost:4000/health/live`; readiness is `GET http://localhost:4000/health/ready` and returns HTTP 503 until a database check is implemented.
 
-The workspace contains `apps/web` (Next.js App Router), `apps/api` (Express), and `packages/contracts` (shared Zod contracts). Feature modules and Prisma models will be added in later work.
+To verify the registration service, export `DATABASE_URL` for a fresh, disposable PostgreSQL database whose name contains `test`, then run:
+
+```sh
+pnpm --filter @kaizen/contracts build
+bash apps/api/tests/db/auth-migration-empty-db.sh
+pnpm --filter @kaizen/api exec vitest run --config vitest.db.config.ts auth-register-postgres
+```
+
+The API registration service reads `AUTH_BCRYPT_COST` from its environment and defaults to 12.
+
+The workspace contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
 
 ```
 .
