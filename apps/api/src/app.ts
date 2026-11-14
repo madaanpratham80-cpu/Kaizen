@@ -53,7 +53,7 @@ export function createApp({
   nodeEnv = process.env.NODE_ENV,
   webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000',
   appOrigin = process.env.APP_ORIGIN,
-  csrfSecret = process.env.AUTH_CSRF_SECRET,
+  csrfSecret = process.env.SESSION_SECRET || process.env.AUTH_CSRF_SECRET,
   trustedProxies = process.env.TRUSTED_PROXY_IPS,
   rateLimits,
   resolveSession = (token) => lookupSession(database, token),

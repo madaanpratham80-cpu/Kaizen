@@ -18,7 +18,7 @@
 - [x] 3.1 Add request ID, bounded body parsing, session lookup, exact Origin/CSRF checks, validation, serialization, and central error handling in the required order. Test `auth-http-boundary` with Supertest for response envelopes, malformed bodies, and disallowed origins.
 - [x] 3.2 Add separate per-instance account and IP rate limits for auth attempts and explicit proxy-trust configuration. Test `auth-rate-limits` with Supertest for both keys and the 429 response.
 - [x] 3.3 Wire register, login, logout, and session routes with secure cookie issuance and clearing. Replace the `test:db` placeholder with a real PostgreSQL suite targeting the disposable database in `DATABASE_URL`; before any database operation, `auth-test-db-url-guard` must make it exit non-zero when `DATABASE_URL` is unset or its database name lacks `test`. It must run `auth-migration-empty-db`, `auth-register-postgres`, `auth-session-lifecycle-postgres`, and `auth-routes-two-accounts` with two users for session ownership, `private, no-store`, missing CSRF, and logout isolation, and no longer exit 1 by design.
-- [ ] 3.4 Update API `.env.example` and README for allowed origin, CSRF secret, bcrypt cost, migration, generation, and secure local cookie setup. Manually verify `auth-local-setup` by following the documented commands and exercising the browser cookie flow; record the steps and observed result.
+- [x] 3.4 Update API `.env.example` and README for allowed origin, CSRF secret, bcrypt cost, migration, generation, and secure local cookie setup. Manually verify `auth-local-setup` by following the documented commands and exercising the browser cookie flow; record the steps and observed result.
 
 ## 4. Minimal web entry and integration
 

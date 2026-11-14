@@ -179,23 +179,52 @@ Detailed technical teardowns are available in the [`Competitors/`](./Competitors
 
 ## Repository Structure
 
-### Local scaffold setup
+### Local auth setup
 
-Install the Node.js version in `.nvmrc` and pnpm 11. Run `pnpm install` and `pnpm --filter @kaizen/contracts build` from the repository root. Copy `apps/web/.env.example` to `apps/web/.env.local` and `apps/api/.env.example` to `apps/api/.env`. Start the processes with `pnpm --filter @kaizen/web dev` and `pnpm --filter @kaizen/api dev`. The web app runs on port 3000 and the API defaults to port 4000.
+Install the Node.js version in `.nvmrc`, pnpm 11, and PostgreSQL. From the repository root, copy `apps/api/.env.example` to `apps/api/.env`. Set `DATABASE_URL` to a local database you have created and set `SESSION_SECRET` to the output of `openssl rand -hex 32`. Keep the secret on the API server. It signs session-bound CSRF proofs. `AUTH_CSRF_SECRET` is accepted as a fallback for existing setups.
 
-Root verification commands are `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. `test:db` currently reports that database tests are pending. API liveness is `GET http://localhost:4000/health/live`; readiness is `GET http://localhost:4000/health/ready` and returns HTTP 503 until a database check is implemented.
+For separate local web and API processes, use `NODE_ENV=development` and set both `APP_ORIGIN` and `WEB_ORIGIN` to `http://localhost:3000`. Leave `TRUSTED_PROXY_IPS` empty for direct connections. Behind an ingress, list only exact IP addresses of proxies you control and configure the ingress to discard client-supplied forwarding headers. `AUTH_BCRYPT_COST` defaults to 12.
 
-To verify the registration service, export `DATABASE_URL` for a fresh, disposable PostgreSQL database whose name contains `test`, then run:
+From the repository root, run:
 
 ```sh
+pnpm install --frozen-lockfile
 pnpm --filter @kaizen/contracts build
-bash apps/api/tests/db/auth-migration-empty-db.sh
-pnpm --filter @kaizen/api exec vitest run --config vitest.db.config.ts auth-register-postgres
+pnpm --filter @kaizen/api exec prisma migrate deploy
+pnpm --filter @kaizen/api build
+node --env-file=apps/api/.env apps/api/dist/server.js
 ```
 
-The API registration service reads `AUTH_BCRYPT_COST` from its environment and defaults to 12.
+The API build generates Prisma Client. In a second terminal run `pnpm --filter @kaizen/web dev` and open `http://localhost:3000` in Chrome. Use the literal `localhost` hostname for both processes so Chrome's localhost exception allows Secure cookies. Use HTTPS with one origin in production.
 
-Set `APP_ORIGIN` to the exact browser origin allowed to make API mutations, and provide `AUTH_CSRF_SECRET` through the API environment for authenticated mutations. Leave `TRUSTED_PROXY_IPS` empty for direct connections. Behind an ingress, list only the exact IP addresses of proxies you control and configure the ingress to discard client-supplied forwarding headers.
+Run this in the browser console to check the cookie flow before the login and registration pages are available:
+
+```js
+const auth = async (path, options = {}) => {
+  const response = await fetch(`http://localhost:4000/api/v1/auth/${path}`, {
+    credentials: 'include',
+    ...options,
+  });
+  return { status: response.status, body: await response.json() };
+};
+const email = `local-${crypto.randomUUID()}@example.com`;
+const password = 'local browser test password';
+const json = { 'Content-Type': 'application/json' };
+const register = await auth('register', {
+  method: 'POST',
+  headers: json,
+  body: JSON.stringify({ email, password, displayName: 'Local test', timezone: 'UTC' }),
+});
+const login = await auth('login', { method: 'POST', headers: json, body: JSON.stringify({ email, password }) });
+const session = await auth('session');
+const logout = await auth('logout', { method: 'POST', headers: { 'X-CSRF-Token': session.body.data.csrfToken } });
+const afterLogout = await auth('session');
+[register.status, login.status, session.status, logout.status, afterLogout.status];
+```
+
+The expected result is `[201, 200, 200, 200, 401]`. The browser sends the session cookie automatically, and logout clears it.
+
+Root verification commands are `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. Run `pnpm test:db` with `DATABASE_URL` exported for an empty disposable database whose name contains `test`. It applies the migration before running the PostgreSQL suite. API liveness is `GET http://localhost:4000/health/live`. Readiness returns HTTP 503 at `/health/ready` until a database check is implemented.
 
 The workspace contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
 
