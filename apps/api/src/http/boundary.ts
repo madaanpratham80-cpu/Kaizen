@@ -12,7 +12,7 @@ import type {
 } from 'express';
 import type { lookupSession } from '../services/sessions.js';
 
-const SESSION_COOKIE = '__Host-kaizen_session';
+export const SESSION_COOKIE = '__Host-kaizen_session';
 const MUTATIONS = new Set(['POST', 'PATCH', 'DELETE', 'PUT']);
 const PUBLIC_AUTH_PATHS = new Set([
   '/api/v1/auth/register',
@@ -23,6 +23,7 @@ const PRIVATE_FIELDS = new Set([
   'tokenHash',
   'password',
   'sessionToken',
+  'token',
 ]);
 
 export class HttpError extends Error {
@@ -79,12 +80,16 @@ export function loadSession(
           const tokenHash = createHash('sha256')
             .update(Buffer.from(token, 'base64url'))
             .digest('hex');
-          req.auth = { user: result.user, session: { tokenHash } };
+          req.auth = { user: result.user, session: { tokenHash, token } };
         }
       }
     }
     next();
   };
+}
+
+export function csrfProof(secret: string, tokenHash: string) {
+  return createHmac('sha256', secret).update(tokenHash).digest('base64url');
 }
 
 export function protectMutations(
@@ -101,10 +106,7 @@ export function protectMutations(
     if (req.auth && !isPublicAuth(req)) {
       const provided = req.get('X-CSRF-Token');
       const expected =
-        csrfSecret &&
-        createHmac('sha256', csrfSecret)
-          .update(req.auth.session.tokenHash)
-          .digest('base64url');
+        csrfSecret && csrfProof(csrfSecret, req.auth.session.tokenHash);
       if (
         !provided ||
         !expected ||

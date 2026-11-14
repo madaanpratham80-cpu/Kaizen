@@ -13,9 +13,11 @@ import {
   requireJsonBody,
 } from './http/boundary.js';
 import { createAuthRateLimits } from './http/rate-limits.js';
+import { createAuthRoutes } from './http/auth-routes.js';
 import { lookupSession } from './services/sessions.js';
 
 type AppOptions = {
+  database?: PrismaClient;
   nodeEnv?: string;
   webOrigin?: string;
   appOrigin?: string;
@@ -47,13 +49,14 @@ function postOnly(middleware: RequestHandler): RequestHandler {
 }
 
 export function createApp({
+  database = prisma,
   nodeEnv = process.env.NODE_ENV,
   webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000',
   appOrigin = process.env.APP_ORIGIN,
   csrfSecret = process.env.AUTH_CSRF_SECRET,
   trustedProxies = process.env.TRUSTED_PROXY_IPS,
   rateLimits,
-  resolveSession = (token) => lookupSession(prisma, token),
+  resolveSession = (token) => lookupSession(database, token),
   routes,
 }: AppOptions = {}) {
   const app = express();
@@ -94,7 +97,8 @@ export function createApp({
     response.status(503).json({ status: 'unready' });
   });
 
-  if (routes) app.use(routes);
+  if (nodeEnv === 'test' && routes) app.use(routes);
+  app.use('/api/v1/auth', createAuthRoutes(database, csrfSecret));
   app.use((_req, _res, next) =>
     next(new HttpError(404, 'NOT_FOUND', 'Resource not found.')),
   );

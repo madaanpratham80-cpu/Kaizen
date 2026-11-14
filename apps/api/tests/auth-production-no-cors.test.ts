@@ -1,9 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
+import { Router } from 'express';
 
 import { createApp } from '../src/app.js';
 
 describe('auth-production-no-cors', () => {
+  it('does not mount injected test routes in production', async () => {
+    const routes = Router();
+    routes.get('/probe', (_req, res) => res.sendStatus(200));
+    await request(createApp({ nodeEnv: 'production', routes }))
+      .get('/probe')
+      .expect(404);
+  });
   it('sends no CORS headers for a cross-origin production request', async () => {
     const response = await request(createApp({ nodeEnv: 'production' }))
       .get('/health/live')
