@@ -195,9 +195,9 @@ pnpm --filter @kaizen/api build
 node --env-file=apps/api/.env apps/api/dist/server.js
 ```
 
-The API build generates Prisma Client. In a second terminal run `pnpm --filter @kaizen/web dev` and open `http://localhost:3000` in Chrome. Use the literal `localhost` hostname for both processes so Chrome's localhost exception allows Secure cookies. Use HTTPS with one origin in production.
+The API build generates Prisma Client. In a second terminal copy `apps/web/.env.example` to `apps/web/.env.local`, run `pnpm --filter @kaizen/web dev`, and open `http://localhost:3000/register` or `http://localhost:3000/login` in Chrome. Use the literal `localhost` hostname for both processes so Chrome's localhost exception allows Secure cookies. Use HTTPS with one origin and `NEXT_PUBLIC_API_BASE_PATH=/api/v1` in production.
 
-Run this in the browser console to check the cookie flow before the login and registration pages are available:
+To check the HTTP flow directly, run this in the browser console on the local web app:
 
 ```js
 const auth = async (path, options = {}) => {
@@ -223,6 +223,8 @@ const afterLogout = await auth('session');
 ```
 
 The expected result is `[201, 200, 200, 200, 401]`. The browser sends the session cookie automatically, and logout clears it.
+
+Registration and login return `503 AUTH_UNAVAILABLE` if neither secret is configured. Keep `AUTH_BCRYPT_COST` consistent with existing account hashes. Unknown-account checks use the configured cost, while existing accounts use the cost stored in their hashes.
 
 Root verification commands are `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. Run `pnpm test:db` with `DATABASE_URL` exported for an empty disposable database whose name contains `test`. It applies the migration before running the PostgreSQL suite. API liveness is `GET http://localhost:4000/health/live`. Readiness returns HTTP 503 at `/health/ready` until a database check is implemented.
 

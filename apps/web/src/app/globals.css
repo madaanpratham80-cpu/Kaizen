@@ -1,1 +1,13 @@
 @import 'tailwindcss';
+
+@layer components {
+  .auth-label {
+    @apply block font-semibold;
+  }
+  .auth-label input {
+    @apply mt-1 block w-full border border-current bg-white p-2 font-normal;
+  }
+  .auth-button {
+    @apply border border-[#121110] bg-[#121110] px-4 py-2 text-[#F5F0E6] disabled:opacity-60;
+  }
+}

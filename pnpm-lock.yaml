@@ -90,6 +90,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@kaizen/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       next:
         specifier: ^16.0.0
         version: 16.4.6(@babel/core@7.29.13(supports-color@7.2.0))(@types/node@24.19.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)

@@ -5,10 +5,11 @@
     "dev": "next dev",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "build": "next build --webpack"
   },
   "dependencies": {
+    "@kaizen/contracts": "workspace:*",
     "next": "^16.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

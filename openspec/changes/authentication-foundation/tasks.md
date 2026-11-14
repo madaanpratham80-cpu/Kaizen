@@ -22,5 +22,5 @@
 
 ## 4. Minimal web entry and integration
 
-- [ ] 4.1 Add `/login` and `/register` pages with typed API calls, labelled controls, and pending/error states. Test `auth-web-form-component` with Vitest, Testing Library, and jsdom for both forms and absence of localStorage writes; record a manual browser check of the cookie flow in the implementation summary as part of `auth-local-setup`.
+- [x] 4.1 Add `/login` and `/register` pages with typed API calls, labelled controls, and pending/error states. Test `auth-web-form-component` with Vitest, Testing Library, and jsdom for both forms and absence of localStorage writes; record a manual browser check of the cookie flow in the implementation summary as part of `auth-local-setup`.
 - [ ] 4.2 Run `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. Test `auth-root-script-check` records all five results; `pnpm test` and the real `pnpm test:db` suite must pass. The build gate is `pnpm build` using `next build --webpack` from `apps/web/package.json`; the Turbopack build path is not required.
