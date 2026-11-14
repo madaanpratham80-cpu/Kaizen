@@ -65,6 +65,10 @@ export function createApp({
   app.set('trust proxy', proxyTrust(trustedProxies));
   app.set('json replacer', redactJson);
   app.use(assignRequestId);
+  app.use('/api/v1/auth', (_req, res, next) => {
+    res.set('Cache-Control', 'private, no-store');
+    next();
+  });
   app.use(helmet());
 
   if (nodeEnv === 'development' || nodeEnv === 'test') {

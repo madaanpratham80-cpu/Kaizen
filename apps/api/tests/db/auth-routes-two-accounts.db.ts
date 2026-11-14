@@ -16,9 +16,12 @@ const client = request(
 );
 const base = '/api/v1/auth';
 
-function assertCookie(response: {
-  headers: Record<string, string | string[] | undefined>;
-}) {
+function assertCookie(
+  response: {
+    headers: Record<string, string | string[] | undefined>;
+  },
+  issued = true,
+) {
   const cookies = response.headers['set-cookie'];
   if (!Array.isArray(cookies)) throw new Error('Expected Set-Cookie');
   expect(cookies).toHaveLength(1);
@@ -27,6 +30,7 @@ function assertCookie(response: {
     expect(cookies[0].split('; ')).toContain(flag);
   }
   expect(cookies[0]).not.toMatch(/(?:^|; )Domain=/i);
+  if (issued) expect(cookies[0].split('; ')).toContain('Max-Age=604800');
   return cookies[0].split(';')[0];
 }
 
@@ -100,7 +104,9 @@ it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owne
       .post(`${base}/logout`)
       .set('Origin', origin)
       .set('Cookie', firstCookie);
-  const missing = await logout().expect(403);
+  const missing = await logout()
+    .expect(403)
+    .expect('Cache-Control', 'private, no-store');
   expect(missing.body.error.code).toBe('CSRF_INVALID');
   await logout()
     .set('X-CSRF-Token', secondSession.body.data.csrfToken)
@@ -108,7 +114,7 @@ it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owne
   const revoked = await logout()
     .set('X-CSRF-Token', firstSession.body.data.csrfToken)
     .expect(200);
-  expect(assertCookie(revoked)).toBe('__Host-kaizen_session=');
+  expect(assertCookie(revoked, false)).toBe('__Host-kaizen_session=');
   await client.get(`${base}/session`).set('Cookie', firstCookie).expect(401);
   await client.get(`${base}/session`).set('Cookie', secondCookie).expect(200);
   expect(await prisma.session.count({ where: { userId: first.user.id } })).toBe(
@@ -116,5 +122,69 @@ it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owne
   );
   expect(
     await prisma.session.count({ where: { userId: second.user.id } }),
+  ).toBe(1);
+});
+
+it('returns 401 for expired, malformed, and duplicate session cookies', async () => {
+  const account = await register();
+  const cookie = `__Host-kaizen_session=${account.sessionToken}`;
+  for (const invalid of [
+    '__Host-kaizen_session=malformed',
+    `${cookie}; ${cookie}`,
+  ]) {
+    const response = await client
+      .get(`${base}/session`)
+      .set('Cookie', invalid)
+      .expect(401);
+    expect(response.body.error.code).toBe('SESSION_INVALID');
+  }
+  await prisma.session.updateMany({
+    where: { userId: account.user.id },
+    data: { expiresAt: new Date(0) },
+  });
+  const expired = await client
+    .get(`${base}/session`)
+    .set('Cookie', cookie)
+    .expect(401);
+  expect(expired.body.error.code).toBe('SESSION_INVALID');
+});
+
+it('fails closed before creating accounts or sessions without the CSRF secret', async () => {
+  const account = await register();
+  const unavailable = request(
+    createApp({
+      nodeEnv: 'production',
+      appOrigin: origin,
+      csrfSecret: '',
+      database: prisma,
+    }),
+  );
+  const email = `route-${randomUUID()}@example.com`;
+  for (const [path, body] of [
+    [
+      'register',
+      {
+        email,
+        password: account.password,
+        displayName: 'Student',
+        timezone: 'UTC',
+      },
+    ],
+    ['login', { email: account.user.email, password: account.password }],
+  ] as const) {
+    const response = await unavailable
+      .post(`${base}/${path}`)
+      .set('Origin', origin)
+      .send(body)
+      .expect(503)
+      .expect('Cache-Control', 'private, no-store');
+    expect(response.body.error.code).toBe('AUTH_UNAVAILABLE');
+    expect(response.headers['set-cookie']).toBeUndefined();
+  }
+  expect(await prisma.user.count({ where: { normalizedEmail: email } })).toBe(
+    0,
+  );
+  expect(
+    await prisma.session.count({ where: { userId: account.user.id } }),
   ).toBe(1);
 });

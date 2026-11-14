@@ -31,16 +31,23 @@ function requireSession(req: Request) {
 
 export function createAuthRoutes(prisma: PrismaClient, secret?: string) {
   const routes = Router();
-  routes.use((_req, res, next) => {
-    res.set('Cache-Control', 'private, no-store');
-    next();
-  });
+  function requireSecret() {
+    if (!secret) {
+      throw new HttpError(
+        503,
+        'AUTH_UNAVAILABLE',
+        'Authentication is unavailable.',
+      );
+    }
+    return secret;
+  }
 
   function accountHandler(
     service: typeof registerAccount | typeof loginAccount,
     status: number,
   ) {
     return async (req: Request, res: Response) => {
+      requireSecret();
       const result = await service(prisma, req.body);
       if (!result.ok)
         throw new HttpError(result.status, result.code, result.message);
@@ -60,17 +67,11 @@ export function createAuthRoutes(prisma: PrismaClient, secret?: string) {
   routes.post('/login', accountHandler(loginAccount, 200));
   routes.get('/session', (req, res) => {
     const auth = requireSession(req);
-    if (!secret)
-      throw new HttpError(
-        503,
-        'AUTH_UNAVAILABLE',
-        'Authentication is unavailable.',
-      );
     res.json(
       authSessionResponseSchema.parse({
         data: {
           user: auth.user,
-          csrfToken: csrfProof(secret, auth.session.tokenHash),
+          csrfToken: csrfProof(requireSecret(), auth.session.tokenHash),
         },
         requestId: req.requestId,
       }),

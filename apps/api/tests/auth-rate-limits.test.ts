@@ -53,6 +53,7 @@ describe('auth-rate-limits', () => {
         requestId: blocked.headers['x-request-id'],
       });
       expect(blocked.body.requestId).toEqual(expect.any(String));
+      expect(blocked.headers['cache-control']).toBe('private, no-store');
       await attempt(path, 'another@example.com', '192.0.2.12').expect(200);
       await attempt(
         path === register ? login : register,

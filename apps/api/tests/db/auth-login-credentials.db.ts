@@ -30,39 +30,48 @@ describe('auth-login-credentials', () => {
     expect(sessions.some((session) => session.tokenHash === digest)).toBe(true);
   });
 
-  it('uses bcrypt for unknown emails and returns the same failure as a wrong password', async () => {
-    const account = await register();
-    const { passwordHash } = await prisma.user.findUniqueOrThrow({
-      where: { id: account.user.id },
-      select: { passwordHash: true },
-    });
-    const compare = vi.spyOn(bcrypt, 'compare');
-    const password = 'wrong password';
-    const wrong = await loginAccount(prisma, {
-      email: account.user.email,
-      password,
-    });
-    const unknown = await loginAccount(prisma, {
-      email: `unknown-${randomUUID()}@example.com`,
-      password,
-    });
+  it.each([10, 12])(
+    'matches unknown-email bcrypt work to configured cost %i',
+    async (cost) => {
+      const account = await register();
+      vi.stubEnv('AUTH_BCRYPT_COST', String(cost));
+      const hash = await bcrypt.hash(account.password, cost);
+      await prisma.user.update({
+        where: { id: account.user.id },
+        data: { passwordHash: hash },
+      });
+      const { passwordHash } = await prisma.user.findUniqueOrThrow({
+        where: { id: account.user.id },
+        select: { passwordHash: true },
+      });
+      const compare = vi.spyOn(bcrypt, 'compare');
+      const password = 'wrong password';
+      const wrong = await loginAccount(prisma, {
+        email: account.user.email,
+        password,
+      });
+      const unknown = await loginAccount(prisma, {
+        email: `unknown-${randomUUID()}@example.com`,
+        password,
+      });
 
-    expect(unknown).toEqual(wrong);
-    expect(wrong).toEqual({
-      ok: false,
-      status: 401,
-      code: 'LOGIN_FAILED',
-      message: 'Invalid email or password.',
-    });
-    expect(compare).toHaveBeenCalledTimes(2);
-    expect(compare).toHaveBeenNthCalledWith(1, password, passwordHash);
-    const dummyHash = compare.mock.calls[1][1];
-    expect(dummyHash).not.toBe(passwordHash);
-    expect(bcrypt.getRounds(dummyHash as string)).toBe(12);
-    expect(
-      await prisma.session.count({ where: { userId: account.user.id } }),
-    ).toBe(1);
-  });
+      expect(unknown).toEqual(wrong);
+      expect(wrong).toEqual({
+        ok: false,
+        status: 401,
+        code: 'LOGIN_FAILED',
+        message: 'Invalid email or password.',
+      });
+      expect(compare).toHaveBeenCalledTimes(2);
+      expect(compare).toHaveBeenNthCalledWith(1, password, passwordHash);
+      const dummyHash = compare.mock.calls[1][1];
+      expect(dummyHash).not.toBe(passwordHash);
+      expect(bcrypt.getRounds(dummyHash as string)).toBe(cost);
+      expect(
+        await prisma.session.count({ where: { userId: account.user.id } }),
+      ).toBe(1);
+    },
+  );
 
   it('passes password spaces unchanged to bcrypt and rejects the trimmed version', async () => {
     const account = await register();

@@ -2,9 +2,8 @@ import { createHash, randomBytes } from 'node:crypto';
 import { registerRequestSchema, type PublicUser } from '@kaizen/contracts';
 import { Prisma, type PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { z } from 'zod';
+import { bcryptCost } from './bcrypt-config.js';
 
-const bcryptCostSchema = z.coerce.number().int().min(4).max(31).default(12);
 const SESSION_TOKEN_BYTES = 32;
 const SESSION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 const TRANSACTION_WAIT_MS = 2_000;
@@ -40,8 +39,7 @@ export async function registerAccount(
   }
 
   const { email, displayName, password, timezone } = registration.data;
-  const cost = bcryptCostSchema.parse(process.env.AUTH_BCRYPT_COST);
-  const passwordHash = await bcrypt.hash(password, cost);
+  const passwordHash = await bcrypt.hash(password, bcryptCost());
   const tokenBytes = randomBytes(SESSION_TOKEN_BYTES);
   const tokenHash = createHash('sha256').update(tokenBytes).digest('hex');
 

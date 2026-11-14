@@ -1,12 +1,22 @@
 import { loginRequestSchema, type PublicUser } from '@kaizen/contracts';
 import type { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { bcryptCost } from './bcrypt-config.js';
 import { createSession } from './sessions.js';
 
 const MAX_PASSWORD_BYTES = 72;
 // Generated once from random input at the default bcrypt cost of 12.
 const DUMMY_PASSWORD_HASH =
   '$2b$12$5Rk.LqQzUrFp2FdzXZezs.6aBm9aitjYDXJ7k5UsGHhMLEytSvFya';
+
+function dummyHash() {
+  // bcrypt reads the work factor from the hash header. The comparison
+  // always fails at the account check, so the checksum can stay fixed.
+  const rounds = String(bcryptCost()).padStart(2, '0');
+  return (
+    DUMMY_PASSWORD_HASH.slice(0, 4) + rounds + DUMMY_PASSWORD_HASH.slice(6)
+  );
+}
 
 const loginFailed = {
   ok: false,
@@ -36,7 +46,7 @@ export async function loginAccount(
   });
   const passwordMatches = await bcrypt.compare(
     password,
-    account?.passwordHash ?? DUMMY_PASSWORD_HASH,
+    account?.passwordHash ?? dummyHash(),
   );
   if (!account || !passwordMatches) return loginFailed;
 
