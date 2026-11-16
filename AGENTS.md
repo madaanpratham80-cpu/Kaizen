@@ -3,6 +3,7 @@
 
 - The authoritative implementation blueprint is `docs/architecture/system-architecture.md`. The current feature inventory is `docs/architecture/feature-list.md`; the earlier system design is archived at `docs/archive/system-design.md`.
 - Use Next.js App Router for the web process, Express for the API, PostgreSQL with Prisma for persistence, and Zod for shared public contracts.
+- JavaScript ESM with JSDoc on public functions.
 
 # Graphify
 
@@ -12,7 +13,7 @@
 
 ## 4. Commands
 
-- Run `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build` for project verification.
+- Run `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build` for project verification.
 - `pnpm build` uses the web package's `next build --webpack` script. Keep webpack as the production build gate for this scaffold.
 - Run `pnpm test:db` against an empty disposable PostgreSQL database whose name contains `test`.
 - `pnpm test` is expected to fail while `apps/api` has no tests. Slice 1 must add API tests before treating that script as passing coverage.
@@ -23,7 +24,7 @@
 
 ## 7. Code quality
 
-- TypeScript strict mode. No `any` without a comment explaining why.
+- No implicit globals. Always use strict ESM imports.
 - Small functions with one job. Descriptive names. No dead code, no commented-out code, no magic numbers; use named constants.
 - Comments explain why, not what.
 - ESLint and Prettier are the style source of truth. Do not disable rules to make code pass.
@@ -63,7 +64,7 @@
 ## 11. Web (Next.js)
 
 - App Router. Use Server Components for static layout; use Client Components for private screen data, mutations, charts and animation. Do not fetch private data in Server Components in the pilot.
-- One typed API client and one shared query cache. Never persist personal query data in `localStorage`.
+- One JSDoc-documented API client with Zod validation and one shared query cache. Never persist personal query data in `localStorage`.
 - Every mutation disables its action while pending, reuses its operation ID on retry, and renders values only from the committed API response. Never award XP optimistically.
 - Discard responses with an older `stateVersion`.
 - Refetch Today, Habits, Profile and Progress together after a completion.
@@ -88,14 +89,14 @@
 ## 14. Commits
 
 - Small, scoped commits in the form `type(scope): message`, for example `feat(api): add completion transaction`.
-- Each commit passes typecheck and tests.
+- Each commit passes lint and tests.
 - Reference the OpenSpec change name and task ID in the commit body.
 
 ## 15. Definition of done
 
 - [ ] Behaviour matches the OpenSpec task and the architecture document
 - [ ] Invariants in section 2 still hold, and relevant tests cover them
-- [ ] Typecheck, lint, unit tests, database tests (where relevant) and build all ran and passed
+- [ ] Lint, unit tests, database tests (where relevant) and build all ran and passed
 - [ ] No unused code, imports or dependencies
 - [ ] README and `.env.example` updated if setup, scripts or env vars changed
 - [ ] Summary delivered in 10 lines or fewer, including commands run and their results

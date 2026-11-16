@@ -226,11 +226,11 @@ The expected result is `[201, 200, 200, 200, 401]`. The browser sends the sessio
 
 Registration and login return `503 AUTH_UNAVAILABLE` if neither secret is configured. Before changing `AUTH_BCRYPT_COST`, list every other cost still present in stored hashes in `AUTH_BCRYPT_LEGACY_COSTS` (comma separated). API startup checks stored cost headers and fails if a cost is missing from configuration. Login performs one bcrypt comparison per listed or current cost for both known and unknown accounts. Coordinate cost changes across API writers before restart.
 
-Root verification commands are `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. Run `pnpm test:db` with `DATABASE_URL` exported for an empty disposable database whose name contains `test`. It applies the migration before running the PostgreSQL suite. API liveness is `GET http://localhost:4000/health/live`. Readiness returns HTTP 503 at `/health/ready` until a database check is implemented.
+Root verification commands are `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. Run `pnpm test:db` with `DATABASE_URL` exported for an empty disposable database whose name contains `test`. It applies the migrations before running the PostgreSQL suite. API liveness is `GET http://localhost:4000/health/live`. Readiness returns HTTP 503 at `/health/ready` until a database check is implemented.
 
 The quest and calendar migration uses PostgreSQL's `btree_gist` extension to enforce non-overlapping date ranges. Provision it before deploying if the migration role cannot create extensions.
 
-The workspace contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
+The workspace uses JavaScript ESM and JSDoc. It contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
 
 ```
 .
