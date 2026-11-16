@@ -1,15 +1,20 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { loginRequestSchema, registerRequestSchema } from '@kaizen/contracts';
-import { auth, errorMessage } from './client';
+import { auth, errorMessage } from './client.js';
 
-export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
+/**
+ * @param {{ mode: 'login' | 'register' }} props
+ * @returns {import('react').ReactElement}
+ */
+export function AuthForm({ mode }) {
   const registering = mode === 'register';
   const label = registering ? 'Create account' : 'Log in';
-  const [session, setSession] =
-    useState<Awaited<ReturnType<typeof auth.session>>>(null);
+  const [session, setSession] = useState(
+    /** @type {Awaited<ReturnType<typeof auth.session>>} */ (null),
+  );
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
@@ -25,7 +30,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         (value) => {
           if (!controller.signal.aborted) setSession(value);
         },
-        (reason: unknown) => {
+        (reason) => {
           if (!controller.signal.aborted) setError(errorMessage(reason));
         },
       )
@@ -35,7 +40,8 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     return () => controller.abort();
   }, [revision]);
 
-  async function mutate(action: () => Promise<void>) {
+  /** @param {() => Promise<void>} action */
+  async function mutate(action) {
     if (busy.current) return;
     busy.current = true;
     setPending(true);
@@ -50,7 +56,8 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     }
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  /** @param {import('react').FormEvent<HTMLFormElement>} event */
+  function submit(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const input = Object.fromEntries(new FormData(form));
@@ -72,7 +79,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         await auth.login(parsed.data);
       }
       form.reset();
-      const current = await auth.session().catch((reason: unknown) => {
+      const current = await auth.session().catch((reason) => {
         if (!registering) throw reason;
         setError(
           'Your account was created, but we could not check your session.',

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+/** @returns {import('react').ReactElement} */
 export default function Home() {
   return (
     <main className="mx-auto max-w-lg space-y-5 p-6 sm:py-16">

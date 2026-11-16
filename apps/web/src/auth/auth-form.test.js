@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { createElement } from 'react';
 import {
   cleanup,
   fireEvent,
@@ -7,7 +8,7 @@ import {
   waitFor,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AuthForm } from './auth-form';
+import { AuthForm } from './auth-form.jsx';
 
 const user = {
   id: '09d5a188-cc9f-47d4-8e1e-848c51b51e86',
@@ -15,9 +16,9 @@ const user = {
   displayName: 'Student',
   timezone: 'UTC',
 };
-const reply = (data: unknown, status = 200) =>
+const reply = (data, status = 200) =>
   Response.json({ data, requestId: 'test' }, { status });
-const failure = (message: string, status: number) =>
+const failure = (message, status) =>
   Response.json({ error: { message }, requestId: 'test' }, { status });
 
 afterEach(() => {
@@ -35,7 +36,7 @@ describe('auth-web-form-component', () => {
       .mockRejectedValueOnce(new TypeError('Offline'))
       .mockResolvedValueOnce(reply({ user, csrfToken: 'proof' }));
     vi.stubGlobal('fetch', fetch);
-    render(<AuthForm mode="register" />);
+    render(createElement(AuthForm, { mode: 'register' }));
     fireEvent.change(await screen.findByLabelText('Display name'), {
       target: { value: user.displayName },
     });
@@ -75,7 +76,7 @@ describe('auth-web-form-component', () => {
       .mockResolvedValueOnce(reply({ user: replacement, csrfToken: 'new' }))
       .mockResolvedValueOnce(reply({ success: true }));
     vi.stubGlobal('fetch', fetch);
-    render(<AuthForm mode="login" />);
+    render(createElement(AuthForm, { mode: 'login' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Log out' }));
     await screen.findByText('Replacement account');
     expect(await screen.findByRole('alert')).toBeTruthy();
@@ -97,7 +98,7 @@ describe('auth-web-form-component', () => {
       .mockResolvedValueOnce(reply({ success: true }));
     vi.stubGlobal('fetch', fetch);
     const write = vi.spyOn(Storage.prototype, 'setItem');
-    render(<AuthForm mode="register" />);
+    render(createElement(AuthForm, { mode: 'register' }));
     fireEvent.change(await screen.findByLabelText('Display name'), {
       target: { value: user.displayName },
     });
@@ -135,16 +136,13 @@ describe('auth-web-form-component', () => {
   });
 
   it('shows the login pending state and the API error', async () => {
-    let finish!: (response: Response) => void;
-    const pending = new Promise<Response>((resolve) => {
-      finish = resolve;
-    });
+    const { promise: pending, resolve: finish } = Promise.withResolvers();
     const fetch = vi
       .fn()
       .mockResolvedValueOnce(failure('Invalid session.', 401))
       .mockReturnValueOnce(pending);
     vi.stubGlobal('fetch', fetch);
-    render(<AuthForm mode="login" />);
+    render(createElement(AuthForm, { mode: 'login' }));
     fireEvent.change(await screen.findByLabelText('Email'), {
       target: { value: user.email },
     });
@@ -170,7 +168,7 @@ describe('auth-web-form-component', () => {
       .fn()
       .mockResolvedValue(reply({ user, csrfToken: 'proof' }));
     vi.stubGlobal('fetch', fetch);
-    render(<AuthForm mode="login" />);
+    render(createElement(AuthForm, { mode: 'login' }));
     await screen.findByText('Your account');
     await waitFor(() =>
       expect(fetch).toHaveBeenCalledWith(
