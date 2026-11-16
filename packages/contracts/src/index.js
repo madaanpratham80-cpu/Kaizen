@@ -13,9 +13,13 @@ export {
   createQuestSchema,
   editQuestSchema,
   listQuestsSchema,
+  prioritySchema,
   questCategorySchema,
   questDifficultySchema,
   questIdSchema,
+  questListQuerySchema,
+  questUpdateSchema,
+  quickQuestSchema,
 } from './quests.js';
 
 /** @typedef {import('./auth.js').LoginRequest} LoginRequest */

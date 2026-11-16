@@ -7,6 +7,7 @@ import {
 } from '@kaizen/contracts';
 import { dateColumn, localDateAt } from '../domain/calendar.js';
 import { readServerClock, withPlayerLock } from './player-lock.js';
+import { questFields, QUEST_RULE_VERSION } from '../domain/quest-rules.js';
 
 /** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
 /** @typedef {{ userId: string }} Owner */
@@ -30,28 +31,11 @@ export class QuestCatalogError extends Error {
     this.code = code;
   }
 }
-const RULE_VERSION = 1;
-const pillars = {
-  Academic: 'Cognitive',
-  Physical: 'Physical',
-  Productivity: 'Craft',
-  Language: 'Craft',
-};
 /**
  * @param {string} date
  */
 function utcDate(date) {
   return new Date(`${date}T00:00:00.000Z`);
-}
-/**
- * @param {QuestInput} input
- */
-function questFields(input) {
-  return {
-    title: input.title,
-    category: input.category,
-    pillar: pillars[input.category],
-  };
 }
 /**
  * @param {QuestInput} input
@@ -68,7 +52,7 @@ function scheduleFields(input, effectiveFrom) {
         : [],
     difficulty: input.difficulty,
     target: input.target,
-    ruleVersion: RULE_VERSION,
+    ruleVersion: QUEST_RULE_VERSION,
   };
 }
 /**
@@ -136,7 +120,10 @@ function ownedQuest(owner, id) {
  */
 export async function getQuest(prisma, owner, id) {
   const quest = await prisma.quest.findUnique({
-    where: ownedQuest(owner, questIdSchema.parse(id)),
+    where: {
+      ...ownedQuest(owner, questIdSchema.parse(id)),
+      schedules: { some: { userId: owner.userId } },
+    },
   });
   if (!quest)
     throw new QuestCatalogError(404, 'QUEST_NOT_FOUND', 'Quest not found.');
@@ -149,9 +136,23 @@ export async function getQuest(prisma, owner, id) {
  * @returns {Promise<{quests: import('@prisma/client').Quest[], nextCursor: string | null}>}
  */
 export async function listQuests(prisma, owner, input = {}) {
-  const { after, limit } = listQuestsSchema.parse(input);
+  const { after, limit, category, archived } = listQuestsSchema.parse(input);
   const rows = await prisma.quest.findMany({
-    where: { userId: owner.userId, id: after ? { gt: after } : undefined },
+    where: {
+      userId: owner.userId,
+      id: after ? { gt: after } : undefined,
+      category,
+      archivedAt:
+        archived === undefined ? undefined : archived ? { not: null } : null,
+      schedules: { some: { userId: owner.userId } },
+    },
+    include: {
+      schedules: {
+        where: { userId: owner.userId },
+        orderBy: { effectiveFrom: 'desc' },
+        take: 1,
+      },
+    },
     orderBy: { id: 'asc' },
     take: limit + 1,
   });

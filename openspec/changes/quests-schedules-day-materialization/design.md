@@ -23,6 +23,8 @@ Slice 1 stores accounts and sessions. Use the architecture's data ownership and 
 - Keep Today and catalog reads side-effect free. Calendar sync returns 202 with Retry-After until today's plan is ready. Today reads committed PlayerState values and supplies a recovery hint only when existing history supports one.
 - Create Quick Quests and unplanned occurrences atomically on an eligible current day. Resolve existing owner-scoped IDs before checking current-day eligibility so a retry after midnight can return the original occurrence. Compare the original creation input on replay and return a conflict on changed input. If a globally unique ID belongs to another owner, return a generic conflict without exposing that owner's resource. Leave planned count, priority and progression unchanged.
 - Change priority under the owner lock only for an owned planned occurrence on the requested day while priority is unlocked and the deadline has not passed.
+- The API uses `archive: true` on quest patches for effective-date archival. Quest lists accept `after`, `limit`, `category`, and `archived` (whether an archive cutoff has been set).
+- The pilot limit is 20 new Quick Quests per owned day. Matching retries return the existing occurrence even when the limit has been reached or that day has ended.
 - The migration and services get separate commits. Apply the migration and account backfill before releasing registration changes that create PlayerState transactionally. Coordinate API writers during rollout so registration cannot create accounts between backfill and the updated release.
 
 ## Risks / Trade-offs

@@ -8,9 +8,9 @@ import {
   plainDate,
 } from '../domain/calendar.js';
 import { readServerClock, withPlayerLock } from './player-lock.js';
+import { REWARD_XP } from '../domain/quest-rules.js';
 const BATCH_LIMIT = 30;
 const RETRY_AFTER_SECONDS = 1;
-const REWARD_XP = { EASY: 10, MEDIUM: 20, HARD: 35 };
 const restInput = z.strictObject({
   effectiveFrom: z.iso.date(),
   restWeekdays: z

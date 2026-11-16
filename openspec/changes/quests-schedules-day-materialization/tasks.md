@@ -22,8 +22,8 @@ Apply each step only after its review and approval. Keep the schema, catalog, ca
 
 ## 4. Routes
 
-- [ ] 4.1 Wire `POST /calendar/sync` and `GET /today`. Verify `calendar-routes` via Supertest covers 200, 202 with Retry-After, continuation to readiness, and a read-only Today response with plan, priority, health, XP, streak and recovery hint.
-- [ ] 4.2 Wire `GET /quests`, `POST /quests`, and `PATCH /quests/:id`. Verify `quest-routes` via Supertest covers each endpoint, query and body validation, stale versions, and effective-date archive.
-- [ ] 4.3 Wire `POST /quick-quests` with client-generated IDs. Verify `quick-quest-routes` via Supertest covers first creation, concurrent and repeated matching requests, replay across midnight, changed-input and cross-owner ID conflicts, and unchanged XP, health, streak and planned count.
-- [ ] 4.4 Wire `PATCH /day-plans/:id/priority` before priority lock. Verify `priority-routes` via Supertest covers valid selection, expired or locked days, unplanned occurrences, and wrong-day references.
-- [ ] 4.5 Verify `slice-2-routes-two-accounts` via Supertest and real PostgreSQL covers every endpoint, foreign IDs and unchanged foreign state, owner isolation for collection reads and calendar sync, and existing session, Origin and CSRF enforcement. Run all five root checks against the supported disposable database setup and commit Step 4 separately.
+- [x] 4.1 Wire `POST /calendar/sync` and `GET /today`. Verify `calendar-routes` via Supertest covers 200, 202 with Retry-After, continuation to readiness, and a read-only Today response with plan, priority, health, XP, streak and recovery hint.
+- [x] 4.2 Wire `GET /quests`, `POST /quests`, and `PATCH /quests/:id`. Verify `quest-routes` via Supertest covers each endpoint, query and body validation, stale versions, and effective-date archive.
+- [x] 4.3 Wire `POST /quick-quests` with client-generated IDs. Verify `quick-quest-routes` via Supertest covers first creation, concurrent and repeated matching requests, replay across midnight, changed-input and cross-owner ID conflicts, and unchanged XP, health, streak and planned count.
+- [x] 4.4 Wire `PATCH /day-plans/:id/priority` before priority lock. Verify `priority-routes` via Supertest covers valid selection, expired or locked days, unplanned occurrences, and wrong-day references.
+- [x] 4.5 Verify `slice-2-routes-two-accounts` via Supertest and real PostgreSQL covers every endpoint, foreign IDs and unchanged foreign state, owner isolation for collection reads and calendar sync, and existing session, Origin and CSRF enforcement. Run the root checks in `AGENTS.md` section 4 with the supported disposable database setup and commit Step 4 separately.

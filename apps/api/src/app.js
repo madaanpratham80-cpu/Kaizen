@@ -14,6 +14,7 @@ import {
 } from './http/boundary.js';
 import { createAuthRateLimits } from './http/rate-limits.js';
 import { createAuthRoutes } from './http/auth-routes.js';
+import { createCalendarRoutes } from './http/calendar-routes.js';
 import { lookupSession } from './services/sessions.js';
 /** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
 /** @typedef {import('express').RequestHandler} RequestHandler */
@@ -96,6 +97,7 @@ export function createApp({
   });
   if (nodeEnv === 'test' && routes) app.use(routes);
   app.use('/api/v1/auth', createAuthRoutes(database, csrfSecret));
+  app.use('/api/v1', createCalendarRoutes(database));
   app.use((_req, _res, next) =>
     next(new HttpError(404, 'NOT_FOUND', 'Resource not found.')),
   );

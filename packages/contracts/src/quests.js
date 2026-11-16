@@ -9,17 +9,17 @@ export const questCategorySchema = z.enum([
 ]);
 export const questDifficultySchema = z.enum(['EASY', 'MEDIUM', 'HARD']);
 const localDateSchema = z.iso.date();
-const questFields = {
+const occurrenceFields = {
   title: z.string().trim().min(1).max(120),
   category: questCategorySchema,
   difficulty: questDifficultySchema,
   target: z.number().int().min(0).max(2_147_483_647),
-  effectiveFrom: localDateSchema,
 };
 const version = z.number().int().min(1).max(2_147_483_647);
 
 export const createQuestSchema = z.strictObject({
-  ...questFields,
+  ...occurrenceFields,
+  effectiveFrom: localDateSchema,
   recurrence: z.discriminatedUnion('kind', [
     z.strictObject({ kind: z.literal('DAILY') }),
     z.strictObject({
@@ -46,4 +46,31 @@ export const archiveQuestSchema = z.strictObject({
 export const listQuestsSchema = z.strictObject({
   after: questIdSchema.optional(),
   limit: z.number().int().min(1).max(100).default(25),
+  category: questCategorySchema.optional(),
+  archived: z.boolean().optional(),
 });
+
+export const questListQuerySchema = listQuestsSchema.extend({
+  limit: z
+    .string()
+    .regex(/^[1-9][0-9]{0,2}$/)
+    .transform(Number)
+    .pipe(listQuestsSchema.shape.limit)
+    .optional(),
+  archived: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
+});
+
+export const questUpdateSchema = z.union([
+  editQuestSchema,
+  archiveQuestSchema.extend({ archive: z.literal(true) }),
+]);
+
+export const quickQuestSchema = z.strictObject({
+  id: questIdSchema.transform((id) => id.toLowerCase()),
+  ...occurrenceFields,
+});
+
+export const prioritySchema = z.strictObject({ occurrenceId: questIdSchema });
