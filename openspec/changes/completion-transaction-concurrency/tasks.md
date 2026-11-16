@@ -8,7 +8,7 @@
 
 ## 2. Progression domain
 
-- [ ] 2.1 Write and commit `progression-domain` tests first. Record the expected red run. Cover N=0, partial completion and close, health clamps at 0 and 100, allowance tracked at the cap, level boundaries, Quick Quest exclusions, seal thresholds and repeated eligibility, and REST/EMPTY between ACTIVE days and after a miss.
+- [x] 2.1 Write and commit `progression-domain` tests first. Record the expected red run. Cover N=0, partial completion and close, health clamps at 0 and 100, allowance tracked at the cap, level boundaries, Quick Quest exclusions, seal thresholds and repeated eligibility, and REST/EMPTY between ACTIVE days and after a miss.
 - [ ] 2.2 Implement pure XP, health gain and close, level, streak, and seal functions without Express or Prisma imports. Verify `progression-domain` passes and commit the implementation separately.
 
 ## 3. Completion service
