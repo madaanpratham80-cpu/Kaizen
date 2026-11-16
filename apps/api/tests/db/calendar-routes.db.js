@@ -3,6 +3,7 @@ import request from 'supertest';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import { createApp } from '../../src/app.js';
+import { syncCalendar } from '../../src/services/calendar.js';
 import { SESSION_COOKIE } from '../../src/http/boundary.js';
 import { useAuthDatabase } from './auth-fixture.js';
 
@@ -36,6 +37,7 @@ const newQuick = () => ({ ...fields, id: randomUUID() });
 afterEach(async () => {
   const where = { userId: { in: owners } };
   await prisma.$transaction([
+    prisma.progressEvent.deleteMany({ where }),
     prisma.dayPlan.updateMany({ where, data: { priorityId: null } }),
     prisma.questOccurrence.deleteMany({ where }),
     prisma.dayPlan.deleteMany({ where }),
@@ -117,9 +119,9 @@ describe('calendar-routes', () => {
       orderBy: { localDate: 'asc' },
     });
     expect(plans).toHaveLength(33);
-    await prisma.dayPlan.update({
-      where: { id: plans.at(-2).id },
-      data: { status: 'MISSED', closedAt: plans.at(-2).deadlineUtc },
+    expect(plans.at(-2)).toMatchObject({
+      status: 'MISSED',
+      closedAt: expect.any(Date),
     });
     const today = await owner
       .send('get', '/today')
@@ -128,11 +130,11 @@ describe('calendar-routes', () => {
     expect(today.body.data).toMatchObject({
       plan: { id: sync.body.data.plan.id, plannedCount: 1 },
       priority: { title: 'Read' },
-      health: 70,
+      health: 65,
       totalXp: 0,
       currentStreak: 0,
       bestStreak: 0,
-      stateVersion: 0,
+      stateVersion: 32,
       recoveryHint: {
         code: 'SMALL_COMMITMENT',
         occurrenceId: today.body.data.priority.id,
@@ -140,6 +142,47 @@ describe('calendar-routes', () => {
     });
     expect(await prisma.dayPlan.count({ where })).toBe(33);
     expect(today.body.requestId).toBe(today.headers['x-request-id']);
+  });
+
+  it('keeps a pre-opened Today in catch-up until earlier plans finish closing', async () => {
+    const owner = await account(32);
+    const where = { userId: owner.userId };
+    await syncCalendar(prisma, owner);
+    expect(await syncCalendar(prisma, owner)).toMatchObject({
+      status: 'ready',
+    });
+    const before = await owner.send('get', '/today').expect(200);
+    expect(before.body.data).toMatchObject({
+      status: 'catching-up',
+      plan: { id: expect.any(String) },
+    });
+    await owner
+      .send('post', '/calendar/sync')
+      .expect(202)
+      .expect('Retry-After', '1');
+    expect(await prisma.progressEvent.count({ where })).toBe(30);
+    await owner.send('post', '/calendar/sync').expect(200);
+    const events = await prisma.progressEvent.findMany({
+      where,
+      orderBy: { sequence: 'asc' },
+      select: { kind: true, day: { select: { localDate: true } } },
+    });
+    expect(events).toHaveLength(32);
+    expect(
+      events.map(({ kind, day: closedDay }) => [kind, closedDay.localDate]),
+    ).toEqual(
+      Array.from({ length: 32 }, (_, index) => [
+        'DAY_CLOSE',
+        instant(day(index - 32)),
+      ]),
+    );
+    const ready = await owner.send('get', '/today').expect(200);
+    expect(ready.body.data).toMatchObject({
+      status: 'ready',
+      plan: { id: before.body.data.plan.id },
+      health: 70,
+      stateVersion: 32,
+    });
   });
 });
 
@@ -230,6 +273,7 @@ describe('quick-quest-routes', () => {
       .send('post', '/quick-quests')
       .send({ ...quick, title: 'Changed' })
       .expect(409);
+    expect(await prisma.playerState.findUnique({ where })).toEqual(initial);
     await prisma.dayPlan.update({
       where: { id: firstDay.id },
       data: {
@@ -240,13 +284,20 @@ describe('quick-quest-routes', () => {
     });
     const nextDay = await owner.send('post', '/calendar/sync').expect(200);
     expect(nextDay.body.data.plan.id).not.toBe(firstDay.id);
+    const afterClose = await prisma.playerState.findUnique({ where });
+    expect(afterClose).toMatchObject({
+      totalXp: initial.totalXp,
+      health: initial.health,
+      currentStreak: initial.currentStreak,
+      stateVersion: initial.stateVersion + 1,
+    });
     const replay = await owner
       .send('post', '/quick-quests')
       .send(quick)
       .expect(200);
     expect(replay.body.data).toEqual(a.body.data);
     expect(await prisma.questOccurrence.count({ where })).toBe(1);
-    expect(await prisma.playerState.findUnique({ where })).toEqual(initial);
+    expect(await prisma.playerState.findUnique({ where })).toEqual(afterClose);
     expect(
       await prisma.dayPlan.findUnique({ where: { id: firstDay.id } }),
     ).toMatchObject({ plannedCount: 0, priorityId: null, status: 'EMPTY' });

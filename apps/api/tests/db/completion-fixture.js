@@ -109,9 +109,16 @@ export async function waitForBlocked(
   const limit = performance.now() + 3_000;
   do {
     const rows = await observer.$queryRaw`
-      SELECT pid FROM pg_stat_activity
-      WHERE wait_event_type = 'Lock' AND ${blocker}::integer = ANY(pg_blocking_pids(pid))
-        AND query LIKE ${queryPattern}
+      WITH RECURSIVE blocked(pid) AS (
+        SELECT ${blocker}::integer
+        UNION
+        SELECT activity.pid
+        FROM pg_stat_activity activity
+        JOIN blocked ON blocked.pid = ANY(pg_blocking_pids(activity.pid))
+        WHERE activity.wait_event_type = 'Lock'
+      )
+      SELECT activity.pid FROM pg_stat_activity activity JOIN blocked USING (pid)
+      WHERE activity.pid <> ${blocker}::integer AND activity.query LIKE ${queryPattern}
     `;
     if (rows.length >= count) return rows;
     await setTimeout(10);

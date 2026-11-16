@@ -8,7 +8,9 @@ import {
   quickQuestSchema,
   z,
 } from '@kaizen/contracts';
-import { CalendarError, syncCalendar } from '../services/calendar.js';
+import { CalendarError } from '../services/calendar.js';
+import { syncProgressCalendar } from '../services/calendar-sync.js';
+import { ProgressionError } from '../services/progression-store.js';
 import { changePriority, createQuickQuest } from '../services/day-actions.js';
 import {
   archiveQuest,
@@ -39,7 +41,7 @@ export function createCalendarRoutes(database) {
   }
   route('post', '/calendar/sync', async (req, res, owner) => {
     empty.parse(req.body === undefined ? {} : req.body);
-    const result = await syncCalendar(database, owner);
+    const result = await syncProgressCalendar(database, owner);
     if (result.status === 'catching-up')
       res.set('Retry-After', String(result.retryAfterSeconds));
     sendData(res, result, result.status === 'ready' ? 200 : 202);
@@ -93,7 +95,11 @@ export function createCalendarRoutes(database) {
       return next(
         new HttpError(400, 'INVALID_INPUT', 'Invalid request input.'),
       );
-    if (error instanceof CalendarError || error instanceof QuestCatalogError) {
+    if (
+      error instanceof CalendarError ||
+      error instanceof QuestCatalogError ||
+      error instanceof ProgressionError
+    ) {
       return next(new HttpError(error.status, error.code, error.message));
     }
     next(error);

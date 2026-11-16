@@ -1,5 +1,6 @@
 import { CalendarError } from './calendar.js';
 import { readServerClock } from './player-lock.js';
+import { oldestOverdueDay } from './progression-store.js';
 
 /**
  * @param {import('@prisma/client').Prisma.TransactionClient} tx
@@ -82,8 +83,9 @@ export function readToday(prisma, { userId }) {
         occurrences,
         now,
       );
+      const overdue = plan && (await oldestOverdueDay(tx, userId, now));
       return {
-        status: plan ? 'ready' : 'catching-up',
+        status: plan && !overdue ? 'ready' : 'catching-up',
         plan,
         occurrences,
         priority,
