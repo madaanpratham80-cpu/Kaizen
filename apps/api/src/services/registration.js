@@ -44,6 +44,7 @@ export async function registerAccount(prisma, input) {
             displayName,
             passwordHash,
             timezone,
+            playerState: { create: {} },
             sessions: {
               create: {
                 tokenHash,

@@ -13,12 +13,12 @@ Apply each step only after its review and approval. Keep the schema, catalog, ca
 
 ## 3. Calendar service
 
-- [ ] 3.1 Initialize PlayerState in the registration transaction with the architecture's defaults. Verify `player-state-registration` covers existing-account backfill, reconciliation of registrations between staged changes, one state row per new account, and full rollback if initialization fails.
-- [ ] 3.2 Add the owned planned-rest preference service. Verify `day-preference-history` covers effective boundaries, overlap rejection, and unchanged rules for earlier and opened dates.
+- [x] 3.1 Initialize PlayerState in the registration transaction with the architecture's defaults. Verify `player-state-registration` covers existing-account backfill, reconciliation of registrations between staged changes, one state row per new account, and full rollback if initialization fails.
+- [x] 3.2 Add the owned planned-rest preference service. Verify `day-preference-history` covers effective boundaries, overlap rejection, and unchanged rules for earlier and opened dates.
 
-- [ ] 3.3 Resolve IANA day boundaries and select historical schedule and rest rules. Verify `day-materialization-calendar` covers UTC, Asia/Kolkata, 23- and 25-hour DST days, REST, EMPTY, archive cutoffs, and schedule edits before and after opening.
-- [ ] 3.4 Snapshot N planned occurrences atomically with deterministic priority. Backfill elapsed dates chronologically and open today. Verify `day-materialization-postgres` covers seven-day absence, no future day opening, same-day planned priority, retries and concurrent calls, midnight races, immutable snapshots, and resuming bounded work without gaps or duplicates.
-- [ ] 3.5 Persist and apply pending timezone transitions at the next unopened boundary. Verify `calendar-timezone-transition` covers east and west changes, previous deadlines, no reopening of completed dates, excused gaps across multiple catch-up batches and restart, no plans or penalties for skipped dates, race-safe transition activation, and migration of any added storage. Commit Step 3 with its tests.
+- [x] 3.3 Resolve IANA day boundaries and select historical schedule and rest rules. Verify `day-materialization-calendar` covers UTC, Asia/Kolkata, 23- and 25-hour DST days, REST, EMPTY, archive cutoffs, and schedule edits before and after opening.
+- [x] 3.4 Snapshot N planned occurrences atomically with deterministic priority. Backfill elapsed dates chronologically and open today. Verify `day-materialization-postgres` covers seven-day absence, no future day opening, same-day planned priority, retries and concurrent calls, midnight races, immutable snapshots, and resuming bounded work without gaps or duplicates.
+- [x] 3.5 Persist and apply pending timezone transitions at the next unopened boundary. Verify `calendar-timezone-transition` covers east and west changes, previous deadlines, no reopening of completed dates, excused gaps across multiple catch-up batches and restart, no plans or penalties for skipped dates, race-safe transition activation, and migration of any added storage. Commit Step 3 with its tests.
 
 ## 4. Routes
 

@@ -25,12 +25,8 @@ afterEach(async () => {
 async function owner(withState = true) {
   const { user } = await register();
   owners.add(user.id);
-  if (withState)
-    await prisma.playerState.upsert({
-      where: { userId: user.id },
-      create: { userId: user.id },
-      update: {},
-    });
+  if (!withState)
+    await prisma.playerState.delete({ where: { userId: user.id } });
   return { userId: user.id };
 }
 function date(offset) {

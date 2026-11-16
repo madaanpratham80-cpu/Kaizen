@@ -230,6 +230,8 @@ Root verification commands are `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pn
 
 The quest and calendar migration uses PostgreSQL's `btree_gist` extension to enforce non-overlapping date ranges. Provision it before deploying if the migration role cannot create extensions.
 
+When deploying calendar services over the earlier schema release, stop old registration writers before applying the calendar transition migration. It reconciles missing player state rows. Start the updated API after migration so future registrations create their player state atomically.
+
 The workspace uses JavaScript ESM and JSDoc. It contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
 
 ```

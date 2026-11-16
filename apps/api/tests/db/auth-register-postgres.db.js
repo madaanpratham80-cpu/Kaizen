@@ -58,6 +58,7 @@ afterEach(async () => {
   const normalizedEmail = { in: [...emails] };
   await prisma.$transaction([
     prisma.session.deleteMany({ where: { user: { normalizedEmail } } }),
+    prisma.playerState.deleteMany({ where: { user: { normalizedEmail } } }),
     prisma.user.deleteMany({ where: { normalizedEmail } }),
   ]);
   emails.clear();

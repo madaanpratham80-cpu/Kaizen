@@ -8,17 +8,33 @@ datasource db {
 }
 
 model User {
-  id              String                 @id @default(uuid()) @db.Uuid
-  normalizedEmail String                 @unique
-  displayName     String
-  passwordHash    String
-  timezone        String
-  createdAt       DateTime               @default(now())
-  sessions        Session[]
-  playerState     PlayerState?
-  quests          Quest[]
-  dayPlans        DayPlan[]
-  dayPreferences  DayPreferenceVersion[]
+  id                  String                       @id @default(uuid()) @db.Uuid
+  normalizedEmail     String                       @unique
+  displayName         String
+  passwordHash        String
+  timezone            String
+  createdAt           DateTime                     @default(now())
+  sessions            Session[]
+  playerState         PlayerState?
+  quests              Quest[]
+  dayPlans            DayPlan[]
+  dayPreferences      DayPreferenceVersion[]
+  timezoneTransitions CalendarTimezoneTransition[]
+}
+
+model CalendarTimezoneTransition {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  fromTimezone String
+  toTimezone   String
+  lastOldDate  DateTime  @db.Date
+  firstNewDate DateTime  @db.Date
+  gapStartsAt  DateTime
+  effectiveAt  DateTime
+  appliedAt    DateTime?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, appliedAt])
 }
 
 enum DayStatus {

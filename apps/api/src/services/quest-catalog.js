@@ -5,6 +5,9 @@ import {
   listQuestsSchema,
   questIdSchema,
 } from '@kaizen/contracts';
+import { dateColumn, localDateAt } from '../domain/calendar.js';
+import { readServerClock, withPlayerLock } from './player-lock.js';
+
 /** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
 /** @typedef {{ userId: string }} Owner */
 /** @typedef {import('zod').infer<typeof createQuestSchema>} QuestInput */
@@ -28,9 +31,6 @@ export class QuestCatalogError extends Error {
   }
 }
 const RULE_VERSION = 1;
-const LOCK_TIMEOUT = '2s';
-const TRANSACTION_WAIT_MS = 2_000;
-const TRANSACTION_TIMEOUT_MS = 5_000;
 const pillars = {
   Academic: 'Cognitive',
   Physical: 'Physical',
@@ -78,27 +78,22 @@ function scheduleFields(input, effectiveFrom) {
  * @param {(tx: Tx, now: Date, timezone: string) => Promise<T>} write
  */
 function writeQuest(prisma, owner, write) {
-  return prisma.$transaction(
+  return withPlayerLock(
+    prisma,
+    owner.userId,
+    () =>
+      new QuestCatalogError(
+        503,
+        'PLAYER_STATE_UNAVAILABLE',
+        'Player state is temporarily unavailable.',
+      ),
     async (tx) => {
-      await tx.$queryRaw`SELECT set_config('lock_timeout', ${LOCK_TIMEOUT}, true)`;
-      const [player] = await tx.$queryRaw`
-      SELECT "userId" FROM "PlayerState" WHERE "userId" = ${owner.userId}::uuid FOR UPDATE
-    `;
-      if (!player) {
-        throw new QuestCatalogError(
-          503,
-          'PLAYER_STATE_UNAVAILABLE',
-          'Player state is temporarily unavailable.',
-        );
-      }
       const { timezone } = await tx.user.findUniqueOrThrow({
         where: { id: owner.userId },
         select: { timezone: true },
       });
-      const [clock] = await tx.$queryRaw`SELECT clock_timestamp() AS now`;
-      return write(tx, clock.now, timezone);
+      return write(tx, await readServerClock(tx), timezone);
     },
-    { maxWait: TRANSACTION_WAIT_MS, timeout: TRANSACTION_TIMEOUT_MS },
   );
 }
 /**
@@ -109,17 +104,7 @@ function writeQuest(prisma, owner, write) {
  * @param {string} timezone
  */
 async function eligibleDate(tx, owner, input, now, timezone) {
-  const { year, month, day } = Object.fromEntries(
-    new Intl.DateTimeFormat('en', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-      .formatToParts(now)
-      .map(({ type, value }) => [type, value]),
-  );
-  const localToday = utcDate(`${year.padStart(4, '0')}-${month}-${day}`);
+  const localToday = dateColumn(localDateAt(now, timezone));
   const date = utcDate(input);
   if (
     date <= localToday ||

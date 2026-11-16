@@ -57,6 +57,9 @@ it('registers via HTTP and issues a cookie without returning credentials in JSON
       prisma.session.deleteMany({
         where: { user: { normalizedEmail: email } },
       }),
+      prisma.playerState.deleteMany({
+        where: { user: { normalizedEmail: email } },
+      }),
       prisma.user.deleteMany({ where: { normalizedEmail: email } }),
     ]);
   }
