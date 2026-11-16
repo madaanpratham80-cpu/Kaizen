@@ -1,4 +1,5 @@
 export { z } from 'zod';
+export { completionRequestSchema } from './completion.js';
 export {
   authAccountResponseSchema,
   authLogoutResponseSchema,

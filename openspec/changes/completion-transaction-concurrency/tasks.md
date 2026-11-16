@@ -13,7 +13,7 @@
 
 ## 3. Completion service
 
-- [ ] 3.1 Implement the seven-step completion transaction from the architecture: authenticate, lock PlayerState, deduplicate by operation ID, validate the owned occurrence and deadline, apply progress, evaluate seals, and commit. Use the shared lock order, finite transaction and lock-wait timeouts, and bounded retries. Perform request hashing and external work before the transaction. Verify identical replay after deadline and during a new backlog, new attempts gated by catch-up, deadline after lock wait, foreign ownership, and lock timeout behavior using real PostgreSQL. Commit the completion service separately.
+- [x] 3.1 Implement the seven-step completion transaction from the architecture: authenticate, lock PlayerState, deduplicate by operation ID, validate the owned occurrence and deadline, apply progress, evaluate seals, and commit. Use the shared lock order, finite transaction and lock-wait timeouts, and bounded retries. Perform request hashing and external work before the transaction. Verify identical replay after deadline and during a new backlog, new attempts gated by catch-up, deadline after lock wait, foreign ownership, and lock timeout behavior using real PostgreSQL. Commit the completion service separately.
 
 ## 4. PostgreSQL concurrency tests
 

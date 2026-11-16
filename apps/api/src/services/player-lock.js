@@ -18,7 +18,7 @@ export function withPlayerLock(prisma, userId, missing, work) {
       if (!owner) throw missing();
       return work(tx);
     },
-    { maxWait: 2_000, timeout: 5_000 },
+    { maxWait: 2_000, timeout: 5_000, isolationLevel: 'ReadCommitted' },
   );
 }
 /**
