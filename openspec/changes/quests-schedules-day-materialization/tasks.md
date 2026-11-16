@@ -6,8 +6,8 @@
 
 ## 2. Quest catalog service
 
-- [ ] 2.1 Implement owned quest create, read, edit, and effective-date archive with shared Zod inputs and atomic `expectedVersion` checks. Verify `quest-catalog-postgres` covers create, read, edit, archive, concurrent edit conflict, missing PlayerState with no writes, stale and repeated archives with no side effects, and separate foreign read, edit, and archive cases that return the missing-resource result without changing foreign data.
-- [ ] 2.2 Append schedules atomically with catalog changes and reject dates that are today, past, opened, or at or before an already queued start. Verify `quest-schedule-history` covers adjacent ranges, overlapping ranges rejected within a quest, distinct owned quests allowed on the same dates, concurrent changes, rollback of the prior range and version bump on rejection, and exact archive cutoff behavior including queued rules and preserved history. Commit the catalog service and its tests together.
+- [x] 2.1 Implement owned quest create, read, edit, and effective-date archive with shared Zod inputs and atomic `expectedVersion` checks. Verify `quest-catalog-postgres` covers create, read, edit, archive, concurrent edit conflict, missing PlayerState with no writes, stale and repeated archives with no side effects, and separate foreign read, edit, and archive cases that return the missing-resource result without changing foreign data.
+- [x] 2.2 Append schedules atomically with catalog changes and reject dates that are today, past, opened, or at or before an already queued start. Verify `quest-schedule-history` covers adjacent ranges, overlapping ranges rejected within a quest, distinct owned quests allowed on the same dates, concurrent changes, rollback of the prior range and version bump on rejection, and exact archive cutoff behavior including queued rules and preserved history. Commit the catalog service and its tests together.
 
 Apply each step only after its review and approval. Keep the schema, catalog, calendar, and route commits separate.
 

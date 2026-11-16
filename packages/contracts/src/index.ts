@@ -9,3 +9,12 @@ export {
   registerRequestSchema,
 } from './auth.js';
 export type { LoginRequest, PublicUser, RegisterRequest } from './auth.js';
+export {
+  archiveQuestSchema,
+  createQuestSchema,
+  editQuestSchema,
+  listQuestsSchema,
+  questCategorySchema,
+  questDifficultySchema,
+  questIdSchema,
+} from './quests.js';
