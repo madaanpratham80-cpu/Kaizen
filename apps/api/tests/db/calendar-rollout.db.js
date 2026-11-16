@@ -12,7 +12,7 @@ const migration = (name) =>
     'utf8',
   );
 
-it('backfills accounts created before and between the two Slice 2 migrations', () => {
+it('backfills Slice 2 accounts and preserves existing player state through the Slice 3 upgrade', () => {
   const schema = `calendar_rollout_${randomUUID().replaceAll('-', '')}`;
   const url = new URL(process.env.DATABASE_URL);
   url.searchParams.delete('schema');
@@ -54,12 +54,18 @@ it('backfills accounts created before and between the two Slice 2 migrations', (
       FROM "User" JOIN "PlayerState" ON "User".id = "PlayerState"."userId"
       ORDER BY "normalizedEmail";
       SELECT count(*) FROM "Session";
+      UPDATE "PlayerState" SET "stateVersion" = 17, "nextEventSequence" = 42, "totalXp" = 230
+      WHERE "userId" = '${before}';
+      ${migration('20261116000200_completion_ledger')}
+      SELECT "stateVersion", "nextEventSequence", "totalXp", health
+      FROM "PlayerState" WHERE "userId" = '${before}';
     `).split('\n'),
     ).toEqual([
       '1',
       'before@example.com|55|0|1',
       'between@example.com|70|0|1',
       '2',
+      '17|42|230|55',
     ]);
   } finally {
     psql(`DROP SCHEMA IF EXISTS ${schema} CASCADE;`);

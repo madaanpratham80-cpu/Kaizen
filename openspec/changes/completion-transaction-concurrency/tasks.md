@@ -2,9 +2,9 @@
 
 ## 1. Schema additions
 
-- [ ] 1.1 After the Slice 2 schema lands, add `ProgressEvent`, `CompletionReceipt`, `UserAchievement`, and `Achievement`. Add missing `PlayerState.stateVersion` and `nextEventSequence` fields, preserving existing values. Include owner-consistent references, versioned achievement definitions and unlock snapshots, owner-scoped uniqueness, counter checks, and ledger lookup indexes. Review the Prisma schema and SQL together.
-- [ ] 1.2 Create a new additive migration. Verify `slice-3-migration` on empty disposable PostgreSQL and on a Slice 2 database with existing player state. Check counter defaults, preservation and invalid-value rejection. Verify owner-scoped uniqueness for sequence, award key, operation ID and achievement code, including rejection of duplicate unlocks across definition versions. Check independent reuse across owners, undefined achievement versions, negative unlock bonuses, cross-owner and mismatched day/occurrence references, and award uniqueness after receipt deletion.
-- [ ] 1.3 Run the root verification commands in `AGENTS.md` section 4, including `pnpm test:db` against empty disposable PostgreSQL. Record results and commit schema, migration, and their tests separately from service work.
+- [x] 1.1 After the Slice 2 schema lands, add `ProgressEvent`, `CompletionReceipt`, `UserAchievement`, and `Achievement`. Add missing `PlayerState.stateVersion` and `nextEventSequence` fields, preserving existing values. Include owner-consistent references, versioned achievement definitions and unlock snapshots, owner-scoped uniqueness, counter checks, and ledger lookup indexes. Review the Prisma schema and SQL together.
+- [x] 1.2 Create a new additive migration. Verify `slice-3-migration` on empty disposable PostgreSQL and on a Slice 2 database with existing player state. Check counter defaults, preservation and invalid-value rejection. Verify owner-scoped uniqueness for sequence, award key, operation ID and achievement code, including rejection of duplicate unlocks across definition versions. Check independent reuse across owners, undefined achievement versions, negative unlock bonuses, cross-owner and mismatched day/occurrence references, and award uniqueness after receipt deletion.
+- [x] 1.3 Run the root verification commands in `AGENTS.md` section 4, including `pnpm test:db` against empty disposable PostgreSQL. Record results and commit schema, migration, and their tests separately from service work.
 
 ## 2. Progression domain
 
