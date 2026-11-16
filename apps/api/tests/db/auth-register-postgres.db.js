@@ -12,7 +12,6 @@ import {
   vi,
 } from 'vitest';
 import { registerAccount } from '../../src/services/registration.js';
-
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
   throw new Error('auth-register-postgres: DATABASE_URL is required');
@@ -27,24 +26,21 @@ if (
     'auth-register-postgres: expected a PostgreSQL database name containing test',
   );
 }
-
 const prisma = new PrismaClient({ datasourceUrl: databaseUrl });
-const emails = new Set<string>();
+const emails = new Set();
 const conflict = {
   ok: false,
   status: 409,
   code: 'REGISTRATION_CONFLICT',
   message: 'Unable to complete registration.',
 };
-
 function registration(password = 'a long test password') {
   const email = `registration-${randomUUID()}@example.com`;
   emails.add(email);
   return { email, password, displayName: 'Test student', timezone: 'UTC' };
 }
-
 beforeAll(async () => {
-  const [connection] = await prisma.$queryRaw<{ name: string }[]>`
+  const [connection] = await prisma.$queryRaw`
     SELECT current_database() AS name
   `;
   if (connection?.name !== databaseName) {
@@ -53,11 +49,9 @@ beforeAll(async () => {
     );
   }
 });
-
 beforeEach(() => {
   vi.stubEnv('AUTH_BCRYPT_COST', '12');
 });
-
 afterEach(async () => {
   vi.unstubAllEnvs();
   if (emails.size === 0) return;
@@ -68,9 +62,7 @@ afterEach(async () => {
   ]);
   emails.clear();
 });
-
 afterAll(() => prisma.$disconnect());
-
 describe('auth-register-postgres', () => {
   it('creates one normalized user and one session with only the digest', async () => {
     const input = registration();
@@ -99,7 +91,6 @@ describe('auth-register-postgres', () => {
       createHash('sha256').update(tokenBytes).digest('hex'),
     );
   });
-
   it('returns a generic 409 for duplicate normalized email', async () => {
     const input = registration();
     expect((await registerAccount(prisma, input)).ok).toBe(true);
@@ -115,7 +106,6 @@ describe('auth-register-postgres', () => {
       }),
     ).toBe(1);
   });
-
   it('creates exactly one user and session for concurrent requests', async () => {
     const input = registration();
     const results = await Promise.all([
@@ -133,7 +123,6 @@ describe('auth-register-postgres', () => {
       }),
     ).toBe(1);
   });
-
   it('auth-password-byte-boundary accepts 72 UTF-8 bytes and rejects 73', async () => {
     const input = registration('€'.repeat(24));
     const oversized = registration(`${input.password}a`);
@@ -148,7 +137,6 @@ describe('auth-register-postgres', () => {
       await prisma.user.count({ where: { normalizedEmail: oversized.email } }),
     ).toBe(0);
   });
-
   it('verifies the stored hash against the original spaced password only', async () => {
     const input = registration('  exact submitted password  ');
     expect((await registerAccount(prisma, input)).ok).toBe(true);
@@ -165,7 +153,6 @@ describe('auth-register-postgres', () => {
       verify.mockRestore();
     }
   });
-
   it('rejects a short password without creating an account', async () => {
     const input = registration('too-short');
     expect(await registerAccount(prisma, input)).toMatchObject({

@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { loginAccount } from '../../src/services/login.js';
 import { lookupSession, revokeSession } from '../../src/services/sessions.js';
 import { useAuthDatabase } from './auth-fixture.js';
-
 const { prisma, register } = useAuthDatabase();
 const invalid = {
   ok: false,
@@ -11,7 +10,6 @@ const invalid = {
   code: 'SESSION_INVALID',
   message: 'Invalid session.',
 };
-
 describe('auth-session-lifecycle-postgres', () => {
   it('resolves both registration and login tokens to the public user', async () => {
     const account = await register();
@@ -20,14 +18,12 @@ describe('auth-session-lifecycle-postgres', () => {
       password: account.password,
     });
     if (!login.ok) throw new Error('Expected successful login');
-
     for (const token of [account.sessionToken, login.sessionToken]) {
       expect(await lookupSession(prisma, token)).toEqual({
         ok: true,
         user: account.user,
       });
     }
-
     const user = await prisma.user.findUniqueOrThrow({
       where: { id: account.user.id },
       include: { sessions: true },
@@ -43,7 +39,6 @@ describe('auth-session-lifecycle-postgres', () => {
       expect(stored).not.toContain(token);
     }
   });
-
   it('expires a login session at the seven-day server-clock boundary', async () => {
     const account = await register();
     const start = Date.UTC(2026, 0, 1);
@@ -54,7 +49,6 @@ describe('auth-session-lifecycle-postgres', () => {
     });
     if (!login.ok) throw new Error('Expected successful login');
     const expiry = Date.UTC(2026, 0, 8);
-
     clock.mockReturnValue(expiry - 1);
     expect(await lookupSession(prisma, login.sessionToken)).toEqual({
       ok: true,
@@ -65,7 +59,6 @@ describe('auth-session-lifecycle-postgres', () => {
     clock.mockReturnValue(expiry + 1);
     expect(await lookupSession(prisma, login.sessionToken)).toEqual(invalid);
   });
-
   it('isolates two users and revokes only the presented session owned by the caller', async () => {
     const first = await register();
     const second = await register();
@@ -74,7 +67,6 @@ describe('auth-session-lifecycle-postgres', () => {
       password: first.password,
     });
     if (!login.ok) throw new Error('Expected successful login');
-
     expect(await lookupSession(prisma, first.sessionToken)).toEqual({
       ok: true,
       user: first.user,
@@ -89,7 +81,6 @@ describe('auth-session-lifecycle-postgres', () => {
       ok: true,
       user: second.user,
     });
-
     expect(
       await revokeSession(prisma, first.user.id, first.sessionToken),
     ).toEqual({

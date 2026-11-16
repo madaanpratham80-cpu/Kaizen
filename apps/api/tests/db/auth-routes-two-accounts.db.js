@@ -3,7 +3,6 @@ import request from 'supertest';
 import { expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { useAuthDatabase } from './auth-fixture.js';
-
 const { prisma, register } = useAuthDatabase();
 const origin = 'https://kaizen.example';
 const client = request(
@@ -15,13 +14,7 @@ const client = request(
   }),
 );
 const base = '/api/v1/auth';
-
-function assertCookie(
-  response: {
-    headers: Record<string, string | string[] | undefined>;
-  },
-  issued = true,
-) {
+function assertCookie(response, issued = true) {
   const cookies = response.headers['set-cookie'];
   if (!Array.isArray(cookies)) throw new Error('Expected Set-Cookie');
   expect(cookies).toHaveLength(1);
@@ -33,7 +26,6 @@ function assertCookie(
   if (issued) expect(cookies[0].split('; ')).toContain('Max-Age=604800');
   return cookies[0].split(';')[0];
 }
-
 it('registers via HTTP and issues a cookie without returning credentials in JSON', async () => {
   const email = `route-${randomUUID()}@example.com`;
   try {
@@ -69,7 +61,6 @@ it('registers via HTTP and issues a cookie without returning credentials in JSON
     ]);
   }
 });
-
 it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owners', async () => {
   const first = await register();
   const second = await register();
@@ -98,7 +89,6 @@ it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owne
   expect(secondSession.body.data.csrfToken).not.toBe(
     firstSession.body.data.csrfToken,
   );
-
   const logout = () =>
     client
       .post(`${base}/logout`)
@@ -124,7 +114,6 @@ it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owne
     await prisma.session.count({ where: { userId: second.user.id } }),
   ).toBe(1);
 });
-
 it('returns 401 for expired, malformed, and duplicate session cookies', async () => {
   const account = await register();
   const cookie = `__Host-kaizen_session=${account.sessionToken}`;
@@ -148,7 +137,6 @@ it('returns 401 for expired, malformed, and duplicate session cookies', async ()
     .expect(401);
   expect(expired.body.error.code).toBe('SESSION_INVALID');
 });
-
 it('fails closed before creating accounts or sessions without the CSRF secret', async () => {
   const account = await register();
   const unavailable = request(
@@ -171,7 +159,7 @@ it('fails closed before creating accounts or sessions without the CSRF secret', 
       },
     ],
     ['login', { email: account.user.email, password: account.password }],
-  ] as const) {
+  ]) {
     const response = await unavailable
       .post(`${base}/${path}`)
       .set('Origin', origin)

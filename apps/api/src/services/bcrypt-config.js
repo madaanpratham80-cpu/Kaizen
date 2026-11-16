@@ -1,12 +1,15 @@
 import { z } from 'zod';
-import type { PrismaClient } from '@prisma/client';
-
+/** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
 const bcryptCostSchema = z.coerce.number().int().min(4).max(31).default(12);
-
+/**
+ * @returns {number}
+ */
 export function bcryptCost() {
   return bcryptCostSchema.parse(process.env.AUTH_BCRYPT_COST);
 }
-
+/**
+ * @returns {number[]}
+ */
 export function bcryptComparisonCosts() {
   const configured = process.env.AUTH_BCRYPT_LEGACY_COSTS?.trim();
   const legacy = configured
@@ -14,10 +17,13 @@ export function bcryptComparisonCosts() {
     : [];
   return [...new Set([bcryptCost(), ...legacy])].sort((a, b) => a - b);
 }
-
-export async function verifyStoredBcryptCosts(prisma: PrismaClient) {
+/**
+ * @param {PrismaClient} prisma
+ * @returns {Promise<void>}
+ */
+export async function verifyStoredBcryptCosts(prisma) {
   const costs = bcryptComparisonCosts();
-  const stored = await prisma.$queryRaw<{ cost: string | null }[]>`
+  const stored = await prisma.$queryRaw`
     SELECT DISTINCT substring("passwordHash" FROM '^[$]2[aby][$]([0-9]{2})[$]') AS cost
     FROM "User"
   `;

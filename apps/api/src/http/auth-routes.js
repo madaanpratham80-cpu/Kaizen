@@ -3,33 +3,33 @@ import {
   authLogoutResponseSchema,
   authSessionResponseSchema,
 } from '@kaizen/contracts';
-import type { PrismaClient } from '@prisma/client';
-import {
-  Router,
-  type CookieOptions,
-  type Request,
-  type Response,
-} from 'express';
+import { Router } from 'express';
 import { loginAccount } from '../services/login.js';
 import { registerAccount } from '../services/registration.js';
 import { revokeSession } from '../services/sessions.js';
 import { csrfProof, HttpError, SESSION_COOKIE } from './boundary.js';
-
+/** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
 const cookieOptions = {
   secure: true,
   httpOnly: true,
   sameSite: 'lax',
   path: '/',
-} satisfies CookieOptions;
+};
 const SESSION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
-
-function requireSession(req: Request) {
+/**
+ * @param {import('./boundary.js').KaizenRequest} req
+ */
+function requireSession(req) {
   if (!req.auth)
     throw new HttpError(401, 'SESSION_INVALID', 'Invalid session.');
   return req.auth;
 }
-
-export function createAuthRoutes(prisma: PrismaClient, secret?: string) {
+/**
+ * @param {PrismaClient} prisma
+ * @param {string} [secret]
+ * @returns {import('express').Router}
+ */
+export function createAuthRoutes(prisma, secret) {
   const routes = Router();
   function requireSecret() {
     if (!secret) {
@@ -41,12 +41,8 @@ export function createAuthRoutes(prisma: PrismaClient, secret?: string) {
     }
     return secret;
   }
-
-  function accountHandler(
-    service: typeof registerAccount | typeof loginAccount,
-    status: number,
-  ) {
-    return async (req: Request, res: Response) => {
+  function accountHandler(service, status) {
+    return async (req, res) => {
       requireSecret();
       const result = await service(prisma, req.body);
       if (!result.ok)
@@ -62,7 +58,6 @@ export function createAuthRoutes(prisma: PrismaClient, secret?: string) {
       res.status(status).json(body);
     };
   }
-
   routes.post('/register', accountHandler(registerAccount, 201));
   routes.post('/login', accountHandler(loginAccount, 200));
   routes.get('/session', (req, res) => {

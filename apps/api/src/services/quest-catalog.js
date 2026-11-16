@@ -4,30 +4,29 @@ import {
   editQuestSchema,
   listQuestsSchema,
   questIdSchema,
-  type z,
 } from '@kaizen/contracts';
-import type { Prisma, PrismaClient } from '@prisma/client';
-
-type Owner = { userId: string };
-type QuestInput = z.infer<typeof createQuestSchema>;
-type Tx = Prisma.TransactionClient;
-type QuestErrorCode =
-  | 'QUEST_NOT_FOUND'
-  | 'QUEST_VERSION_CONFLICT'
-  | 'QUEST_ARCHIVED'
-  | 'INVALID_EFFECTIVE_DATE'
-  | 'SCHEDULE_CONFLICT'
-  | 'PLAYER_STATE_UNAVAILABLE';
+/** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
+/** @typedef {{ userId: string }} Owner */
+/** @typedef {import('zod').infer<typeof createQuestSchema>} QuestInput */
+/** @typedef {import('@prisma/client').Prisma.TransactionClient} Tx */
+/**
+ * @typedef {(
+ *   'QUEST_NOT_FOUND' | 'QUEST_VERSION_CONFLICT' | 'QUEST_ARCHIVED' |
+ *   'INVALID_EFFECTIVE_DATE' | 'SCHEDULE_CONFLICT' | 'PLAYER_STATE_UNAVAILABLE'
+ * )} QuestErrorCode
+ */
 export class QuestCatalogError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: QuestErrorCode,
-    message: string,
-  ) {
+  /**
+   * @param {number} status
+   * @param {QuestErrorCode} code
+   * @param {string} message
+   */
+  constructor(status, code, message) {
     super(message);
+    this.status = status;
+    this.code = code;
   }
 }
-
 const RULE_VERSION = 1;
 const LOCK_TIMEOUT = '2s';
 const TRANSACTION_WAIT_MS = 2_000;
@@ -37,21 +36,28 @@ const pillars = {
   Physical: 'Physical',
   Productivity: 'Craft',
   Language: 'Craft',
-} as const;
-
-function utcDate(date: string) {
+};
+/**
+ * @param {string} date
+ */
+function utcDate(date) {
   return new Date(`${date}T00:00:00.000Z`);
 }
-
-function questFields(input: QuestInput) {
+/**
+ * @param {QuestInput} input
+ */
+function questFields(input) {
   return {
     title: input.title,
     category: input.category,
     pillar: pillars[input.category],
   };
 }
-
-function scheduleFields(input: QuestInput, effectiveFrom: Date) {
+/**
+ * @param {QuestInput} input
+ * @param {Date} effectiveFrom
+ */
+function scheduleFields(input, effectiveFrom) {
   return {
     ...questFields(input),
     effectiveFrom,
@@ -65,16 +71,17 @@ function scheduleFields(input: QuestInput, effectiveFrom: Date) {
     ruleVersion: RULE_VERSION,
   };
 }
-
-function writeQuest<T>(
-  prisma: PrismaClient,
-  owner: Owner,
-  write: (tx: Tx, now: Date, timezone: string) => Promise<T>,
-) {
+/**
+ * @template T
+ * @param {PrismaClient} prisma
+ * @param {Owner} owner
+ * @param {(tx: Tx, now: Date, timezone: string) => Promise<T>} write
+ */
+function writeQuest(prisma, owner, write) {
   return prisma.$transaction(
     async (tx) => {
       await tx.$queryRaw`SELECT set_config('lock_timeout', ${LOCK_TIMEOUT}, true)`;
-      const [player] = await tx.$queryRaw<{ userId: string }[]>`
+      const [player] = await tx.$queryRaw`
       SELECT "userId" FROM "PlayerState" WHERE "userId" = ${owner.userId}::uuid FOR UPDATE
     `;
       if (!player) {
@@ -88,22 +95,20 @@ function writeQuest<T>(
         where: { id: owner.userId },
         select: { timezone: true },
       });
-      const [clock] = await tx.$queryRaw<
-        { now: Date }[]
-      >`SELECT clock_timestamp() AS now`;
+      const [clock] = await tx.$queryRaw`SELECT clock_timestamp() AS now`;
       return write(tx, clock.now, timezone);
     },
     { maxWait: TRANSACTION_WAIT_MS, timeout: TRANSACTION_TIMEOUT_MS },
   );
 }
-
-async function eligibleDate(
-  tx: Tx,
-  owner: Owner,
-  input: string,
-  now: Date,
-  timezone: string,
-) {
+/**
+ * @param {Tx} tx
+ * @param {Owner} owner
+ * @param {string} input
+ * @param {Date} now
+ * @param {string} timezone
+ */
+async function eligibleDate(tx, owner, input, now, timezone) {
   const { year, month, day } = Object.fromEntries(
     new Intl.DateTimeFormat('en', {
       timeZone: timezone,
@@ -131,16 +136,20 @@ async function eligibleDate(
   }
   return date;
 }
-
-function ownedQuest(owner: Owner, id: string) {
+/**
+ * @param {Owner} owner
+ * @param {string} id
+ */
+function ownedQuest(owner, id) {
   return { userId_id: { userId: owner.userId, id } };
 }
-
-export async function getQuest(
-  prisma: Pick<Tx, 'quest'>,
-  owner: Owner,
-  id: string,
-) {
+/**
+ * @param {Pick<Tx, 'quest'>} prisma
+ * @param {Owner} owner
+ * @param {string} id
+ * @returns {Promise<import('@prisma/client').Quest>}
+ */
+export async function getQuest(prisma, owner, id) {
   const quest = await prisma.quest.findUnique({
     where: ownedQuest(owner, questIdSchema.parse(id)),
   });
@@ -148,12 +157,13 @@ export async function getQuest(
     throw new QuestCatalogError(404, 'QUEST_NOT_FOUND', 'Quest not found.');
   return quest;
 }
-
-export async function listQuests(
-  prisma: PrismaClient,
-  owner: Owner,
-  input: unknown = {},
-) {
+/**
+ * @param {PrismaClient} prisma
+ * @param {Owner} owner
+ * @param {unknown} [input]
+ * @returns {Promise<{quests: import('@prisma/client').Quest[], nextCursor: string | null}>}
+ */
+export async function listQuests(prisma, owner, input = {}) {
   const { after, limit } = listQuestsSchema.parse(input);
   const rows = await prisma.quest.findMany({
     where: { userId: owner.userId, id: after ? { gt: after } : undefined },
@@ -166,13 +176,14 @@ export async function listQuests(
     nextCursor: rows.length > limit ? (quests.at(-1)?.id ?? null) : null,
   };
 }
-
-export async function getQuestSchedule(
-  prisma: PrismaClient,
-  owner: Owner,
-  id: string,
-  date: string,
-) {
+/**
+ * @param {PrismaClient} prisma
+ * @param {Owner} owner
+ * @param {string} id
+ * @param {string} date
+ * @returns {Promise<import('@prisma/client').ScheduleVersion | null>}
+ */
+export async function getQuestSchedule(prisma, owner, id, date) {
   const { effectiveFrom } = createQuestSchema
     .pick({ effectiveFrom: true })
     .parse({ effectiveFrom: date });
@@ -194,11 +205,11 @@ export async function getQuestSchedule(
     orderBy: { effectiveFrom: 'desc' },
   });
 }
-
-function checkVersion(
-  quest: Awaited<ReturnType<typeof getQuest>>,
-  expectedVersion: number,
-) {
+/**
+ * @param {Awaited<ReturnType<typeof getQuest>>} quest
+ * @param {number} expectedVersion
+ */
+function checkVersion(quest, expectedVersion) {
   if (quest.version !== expectedVersion) {
     throw new QuestCatalogError(
       409,
@@ -214,12 +225,13 @@ function checkVersion(
     );
   }
 }
-
-export function createQuest(
-  prisma: PrismaClient,
-  owner: Owner,
-  rawInput: unknown,
-) {
+/**
+ * @param {PrismaClient} prisma
+ * @param {Owner} owner
+ * @param {unknown} rawInput
+ * @returns {Promise<import('@prisma/client').Quest>}
+ */
+export function createQuest(prisma, owner, rawInput) {
   const input = createQuestSchema.parse(rawInput);
   return writeQuest(prisma, owner, async (tx, now, timezone) => {
     const date = await eligibleDate(
@@ -238,13 +250,14 @@ export function createQuest(
     });
   });
 }
-
-export function editQuest(
-  prisma: PrismaClient,
-  owner: Owner,
-  id: string,
-  rawInput: unknown,
-) {
+/**
+ * @param {PrismaClient} prisma
+ * @param {Owner} owner
+ * @param {string} id
+ * @param {unknown} rawInput
+ * @returns {Promise<import('@prisma/client').Quest>}
+ */
+export function editQuest(prisma, owner, id, rawInput) {
   const input = editQuestSchema.parse(rawInput);
   return writeQuest(prisma, owner, async (tx, now, timezone) => {
     const quest = await getQuest(tx, owner, id);
@@ -287,13 +300,14 @@ export function editQuest(
     });
   });
 }
-
-export function archiveQuest(
-  prisma: PrismaClient,
-  owner: Owner,
-  id: string,
-  rawInput: unknown,
-) {
+/**
+ * @param {PrismaClient} prisma
+ * @param {Owner} owner
+ * @param {string} id
+ * @param {unknown} rawInput
+ * @returns {Promise<import('@prisma/client').Quest>}
+ */
+export function archiveQuest(prisma, owner, id, rawInput) {
   const input = archiveQuestSchema.parse(rawInput);
   return writeQuest(prisma, owner, async (tx, now, timezone) => {
     const quest = await getQuest(tx, owner, id);

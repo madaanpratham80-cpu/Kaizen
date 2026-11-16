@@ -1,8 +1,7 @@
 import { expect, it } from 'vitest';
 import { useAuthDatabase } from './auth-fixture.js';
-
 const { prisma, register } = useAuthDatabase();
-const date = (day: number) => new Date(Date.UTC(2026, 10, day));
+const date = (day) => new Date(Date.UTC(2026, 10, day));
 const snapshot = {
   title: 'Read',
   category: 'Academic',
@@ -10,8 +9,7 @@ const snapshot = {
   difficulty: 'EASY',
   target: 1,
   ruleVersion: 1,
-} as const;
-
+};
 it('slice-2-migration enforces ownership, ranges, uniqueness and value checks', async () => {
   const first = (await register()).user.id;
   const second = (await register()).user.id;
@@ -66,7 +64,6 @@ it('slice-2-migration enforces ownership, ranges, uniqueness and value checks', 
     await expect(
       prisma.scheduleVersion.create({ data: { ...rule, userId: second } }),
     ).rejects.toMatchObject({ code: 'P2003' });
-
     const rest = {
       userId: first,
       effectiveFrom: date(1),
@@ -82,7 +79,6 @@ it('slice-2-migration enforces ownership, ranges, uniqueness and value checks', 
         data: { ...rest, effectiveFrom: date(3) },
       }),
     ).rejects.toThrow('DayPreferenceVersion_no_overlap');
-
     const plan = {
       userId: first,
       localDate: date(1),
@@ -90,7 +86,7 @@ it('slice-2-migration enforces ownership, ranges, uniqueness and value checks', 
       startsAtUtc: date(1),
       deadlineUtc: date(2),
       status: 'OPEN',
-    } as const;
+    };
     const day = await prisma.dayPlan.create({ data: plan });
     const later = await prisma.dayPlan.create({
       data: {
@@ -144,8 +140,7 @@ it('slice-2-migration enforces ownership, ranges, uniqueness and value checks', 
       where: { id: day.id },
       data: { priorityId: created.id },
     });
-
-    const indexes = await prisma.$queryRaw<{ indexname: string }[]>`
+    const indexes = await prisma.$queryRaw`
       SELECT indexname FROM pg_indexes WHERE schemaname = 'public'
     `;
     expect(indexes.map(({ indexname }) => indexname)).toEqual(

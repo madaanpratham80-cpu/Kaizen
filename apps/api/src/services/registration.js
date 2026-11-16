@@ -1,33 +1,27 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { registerRequestSchema, type PublicUser } from '@kaizen/contracts';
-import { Prisma, type PrismaClient } from '@prisma/client';
+import { registerRequestSchema } from '@kaizen/contracts';
+import { Prisma } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { bcryptCost } from './bcrypt-config.js';
-
+/** @typedef {import('@kaizen/contracts').PublicUser} PublicUser */
+/** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
 const SESSION_TOKEN_BYTES = 32;
 const SESSION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 const TRANSACTION_WAIT_MS = 2_000;
 const TRANSACTION_TIMEOUT_MS = 5_000;
-
-type RegistrationResult =
-  | { ok: true; user: PublicUser; sessionToken: string }
-  | {
-      ok: false;
-      status: 400;
-      code: 'INVALID_REGISTRATION';
-      message: string;
-    }
-  | {
-      ok: false;
-      status: 409;
-      code: 'REGISTRATION_CONFLICT';
-      message: string;
-    };
-
-export async function registerAccount(
-  prisma: PrismaClient,
-  input: unknown,
-): Promise<RegistrationResult> {
+/**
+ * @typedef {(
+ *   { ok: true, user: PublicUser, sessionToken: string } |
+ *   { ok: false, status: 400, code: 'INVALID_REGISTRATION', message: string } |
+ *   { ok: false, status: 409, code: 'REGISTRATION_CONFLICT', message: string }
+ * )} RegistrationResult
+ */
+/**
+ * @param {PrismaClient} prisma
+ * @param {unknown} input
+ * @returns {Promise<RegistrationResult>}
+ */
+export async function registerAccount(prisma, input) {
   const registration = registerRequestSchema.safeParse(input);
   if (!registration.success) {
     return {
@@ -37,12 +31,10 @@ export async function registerAccount(
       message: 'Invalid registration details.',
     };
   }
-
   const { email, displayName, password, timezone } = registration.data;
   const passwordHash = await bcrypt.hash(password, bcryptCost());
   const tokenBytes = randomBytes(SESSION_TOKEN_BYTES);
   const tokenHash = createHash('sha256').update(tokenBytes).digest('hex');
-
   try {
     const user = await prisma.$transaction(
       (tx) =>
@@ -63,7 +55,6 @@ export async function registerAccount(
         }),
       { maxWait: TRANSACTION_WAIT_MS, timeout: TRANSACTION_TIMEOUT_MS },
     );
-
     return {
       ok: true,
       user: { ...user, email },

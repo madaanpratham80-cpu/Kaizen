@@ -1,9 +1,9 @@
 import { loginRequestSchema } from '@kaizen/contracts';
-import type { Request } from 'express';
-import { ipKeyGenerator, rateLimit, type Options } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
 import { HttpError } from './boundary.js';
 
+/** @typedef {import('express').RequestHandler} RequestHandler */
 const emailSchema = loginRequestSchema.pick({ email: true });
 const positiveInteger = z
   .number()
@@ -17,20 +17,23 @@ const configSchema = z.object({
   loginAccount: positiveInteger.default(10),
   loginIp: positiveInteger.default(50),
 });
-
-function accountKey(req: Request) {
+/**
+ * @param {import('express').Request} req
+ */
+function accountKey(req) {
   const parsed = emailSchema.safeParse({ email: req.body?.email });
   return parsed.success ? parsed.data.email : undefined;
 }
-
-export function createAuthRateLimits(
-  config: Partial<z.input<typeof configSchema>> = {},
-) {
+/**
+ * @param {Partial<import('zod').input<typeof configSchema>>} [config]
+ * @returns {{register: RequestHandler[], login: RequestHandler[]}}
+ */
+export function createAuthRateLimits(config = {}) {
   const { windowMs, registerAccount, registerIp, loginAccount, loginIp } =
     configSchema.parse(config);
-  const options: Partial<Options> = {
+  const options = {
     windowMs,
-    standardHeaders: 'draft-7' as const,
+    standardHeaders: 'draft-7',
     legacyHeaders: false,
     handler: (_req, _res, next) =>
       next(
@@ -41,7 +44,7 @@ export function createAuthRateLimits(
         ),
       ),
   };
-  function forOperation(accountLimit: number, ipLimit: number) {
+  function forOperation(accountLimit, ipLimit) {
     return [
       rateLimit({
         ...options,

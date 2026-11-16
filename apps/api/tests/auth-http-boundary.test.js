@@ -4,12 +4,10 @@ import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
 import { sendData } from '../src/http/boundary.js';
-
 const origin = 'https://kaizen.example';
 const idPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-
-function fixture(options: Parameters<typeof createApp>[0] = {}) {
+function fixture(options = {}) {
   const routes = Router();
   const handler = vi.fn((req, res) => {
     expect(req.requestId).toMatch(idPattern);
@@ -34,7 +32,6 @@ function fixture(options: Parameters<typeof createApp>[0] = {}) {
     handler,
   };
 }
-
 describe('auth-http-boundary', () => {
   it('generates a request ID before dispatch and serializes only public fields', async () => {
     const { client, handler } = fixture();
@@ -47,7 +44,6 @@ describe('auth-http-boundary', () => {
       requestId: response.headers['x-request-id'],
     });
   });
-
   it('uses the central error envelope without exposing internal messages', async () => {
     const { client } = fixture();
     const response = await client.get('/error');
@@ -61,7 +57,6 @@ describe('auth-http-boundary', () => {
     });
     expect(response.body.requestId).toMatch(idPattern);
   });
-
   it.each([
     [
       'oversized JSON',
@@ -86,7 +81,6 @@ describe('auth-http-boundary', () => {
     expect(response.body.requestId).toMatch(idPattern);
     expect(handler).not.toHaveBeenCalled();
   });
-
   it.each(['https://elsewhere.example', undefined])(
     'rejects a mutation with origin %s',
     async (requestOrigin) => {
@@ -105,7 +99,6 @@ describe('auth-http-boundary', () => {
       expect(handler).not.toHaveBeenCalled();
     },
   );
-
   it('loads a valid cookie session and requires its CSRF proof for mutations', async () => {
     const bytes = Buffer.alloc(32, 1);
     const token = bytes.toString('base64url');
@@ -141,7 +134,6 @@ describe('auth-http-boundary', () => {
       .expect(200);
     expect(resolveSession).toHaveBeenCalledWith(token);
     expect(response.body.data.authenticated).toBe(true);
-
     resolveSession.mockResolvedValueOnce({
       ok: false,
       code: 'SESSION_INVALID',

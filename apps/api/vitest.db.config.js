@@ -1,7 +1,6 @@
 import { defineConfig } from 'vitest/config';
-
 export default defineConfig({
   test: {
-    include: ['tests/db/**/*.db.ts'],
+    include: ['tests/db/**/*.db.js'],
   },
 });

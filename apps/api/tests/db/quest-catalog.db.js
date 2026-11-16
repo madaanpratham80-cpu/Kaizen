@@ -9,10 +9,8 @@ import {
   listQuests,
 } from '../../src/services/quest-catalog.js';
 import { useAuthDatabase } from './auth-fixture.js';
-
-const owners = new Set<string>();
+const owners = new Set();
 const { prisma, register } = useAuthDatabase();
-
 // Delete catalog dependents before the auth fixture deletes the users.
 afterEach(async () => {
   const where = { userId: { in: [...owners] } };
@@ -24,7 +22,6 @@ afterEach(async () => {
   ]);
   owners.clear();
 });
-
 async function owner(withState = true) {
   const { user } = await register();
   owners.add(user.id);
@@ -36,13 +33,11 @@ async function owner(withState = true) {
     });
   return { userId: user.id };
 }
-
-function date(offset: number) {
+function date(offset) {
   const value = new Date();
   value.setUTCDate(value.getUTCDate() + offset);
   return value.toISOString().slice(0, 10);
 }
-
 function input(offset = 5) {
   return {
     title: 'Read',
@@ -53,7 +48,6 @@ function input(offset = 5) {
     effectiveFrom: date(offset),
   };
 }
-
 describe('quest-catalog-postgres', () => {
   it('creates and reads an owned quest and paginates the owned collection', async () => {
     const first = await owner();
@@ -77,7 +71,6 @@ describe('quest-catalog-postgres', () => {
       [quest.id, otherOwnQuest.id].sort(),
     );
   });
-
   it('fails safely when the owner has no player state', async () => {
     const account = await owner(false);
     await expect(createQuest(prisma, account, input())).rejects.toMatchObject({
@@ -86,7 +79,6 @@ describe('quest-catalog-postgres', () => {
     });
     expect(await prisma.quest.count({ where: account })).toBe(0);
   });
-
   it('returns the same missing-resource result for foreign reads, edits and archives', async () => {
     const first = await owner();
     const second = await owner();
@@ -111,7 +103,6 @@ describe('quest-catalog-postgres', () => {
       }),
     ).toBe(1);
   });
-
   it('commits exactly one concurrent edit for the same expected version', async () => {
     const account = await owner();
     const quest = await createQuest(prisma, account, input());
@@ -142,7 +133,6 @@ describe('quest-catalog-postgres', () => {
     ).toBe(2);
   });
 });
-
 describe('quest-schedule-history', () => {
   it('preserves adjacent history and cuts off queued rules on exactly the archive date', async () => {
     const account = await owner();
@@ -200,7 +190,6 @@ describe('quest-schedule-history', () => {
       }),
     ).toBe(2);
   });
-
   it('rejects elapsed, current and already opened effective dates', async () => {
     const account = await owner();
     const startsAtUtc = new Date(`${date(5)}T00:00:00.000Z`);
@@ -221,7 +210,6 @@ describe('quest-schedule-history', () => {
     }
     expect(await prisma.quest.count({ where: account })).toBe(0);
   });
-
   it('rolls back the prior interval close when the version increment fails', async () => {
     const account = await owner();
     const quest = await createQuest(prisma, account, input());

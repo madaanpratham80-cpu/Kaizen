@@ -3,11 +3,9 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
 import { sendData } from '../src/http/boundary.js';
-
 const origin = 'https://kaizen.example';
 const register = '/api/v1/auth/register';
 const login = '/api/v1/auth/login';
-
 function fixture(trustedProxies = '') {
   const routes = Router();
   routes.post([register, login], (_req, res) =>
@@ -26,14 +24,13 @@ function fixture(trustedProxies = '') {
       routes,
     }),
   );
-  return (path: string, email: string, forwardedFor: string) =>
+  return (path, email, forwardedFor) =>
     client
       .post(path)
       .set('Origin', origin)
       .set('X-Forwarded-For', forwardedFor)
       .send({ email });
 }
-
 describe('auth-rate-limits', () => {
   it.each([register, login])(
     'limits normalized accounts across IPs at %s',
@@ -62,7 +59,6 @@ describe('auth-rate-limits', () => {
       ).expect(200);
     },
   );
-
   it.each([register, login])(
     'limits by socket IP despite rotating forwarded IPs at %s',
     async (path) => {
@@ -77,7 +73,6 @@ describe('auth-rate-limits', () => {
       expect(blocked.body.error.code).toBe('RATE_LIMITED');
     },
   );
-
   it.each(['true', '1', '0.0.0.0/0'])(
     'rejects unsafe proxy configuration %s',
     (trustedProxies) => {

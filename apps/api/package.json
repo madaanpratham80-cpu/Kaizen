@@ -3,12 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "node --watch src/server.js",
     "postinstall": "prisma generate",
-    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "build": "prisma generate && tsc"
+    "build": "prisma generate && find src -name '*.js' -print0 | xargs -0 -n 1 node --check && mkdir -p dist && cp -R src/. dist/"
   },
   "dependencies": {
     "@kaizen/contracts": "workspace:*",
@@ -23,19 +22,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@types/express": "^5.0.0",
-    "@types/bcrypt": "6.0.0",
-    "@types/cors": "2.8.19",
-    "@types/node": "^24.0.0",
-    "@types/supertest": "^6.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
     "prisma": "6.19.3",
     "supertest": "^7.0.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.9.0",
-    "typescript-eslint": "^8.0.0",
     "vitest": "^4.0.0"
   }
 }
