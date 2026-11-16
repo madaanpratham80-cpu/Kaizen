@@ -228,6 +228,8 @@ Registration and login return `503 AUTH_UNAVAILABLE` if neither secret is config
 
 Root verification commands are `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. Run `pnpm test:db` with `DATABASE_URL` exported for an empty disposable database whose name contains `test`. It applies the migration before running the PostgreSQL suite. API liveness is `GET http://localhost:4000/health/live`. Readiness returns HTTP 503 at `/health/ready` until a database check is implemented.
 
+The quest and calendar migration uses PostgreSQL's `btree_gist` extension to enforce non-overlapping date ranges. Provision it before deploying if the migration role cannot create extensions.
+
 The workspace contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
 
 ```

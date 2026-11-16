@@ -2,7 +2,7 @@
 
 ## 1. Schema and migration
 
-- [ ] 1.1 Add `PlayerState`, `Quest`, `ScheduleVersion`, `DayPlan`, `QuestOccurrence`, and `DayPreferenceVersion` with one additive migration and an existing-account PlayerState backfill. Verify `slice-2-migration` on both empty PostgreSQL and a Slice 1 database with existing accounts. Check lookup indexes, account/session preservation, one baseline per account, nonempty ordered ranges, overlap rejection per owned quest or rest preference owner, overlapping dates allowed for distinct owned quests, owner-consistent foreign keys, unique owner/date and quest/day pairs, deadlines after starts, and priority references limited to the same owned day. The later day service checks that priority is planned. Commit schema and migration separately from services.
+- [x] 1.1 Add `PlayerState`, `Quest`, `ScheduleVersion`, `DayPlan`, `QuestOccurrence`, and `DayPreferenceVersion` with one additive migration and an existing-account PlayerState backfill. Verify `slice-2-migration` on both empty PostgreSQL and a Slice 1 database with existing accounts. Check lookup indexes, account/session preservation, one baseline per account, nonempty ordered ranges, overlap rejection per owned quest or rest preference owner, overlapping dates allowed for distinct owned quests, owner-consistent foreign keys, unique owner/date and quest/day pairs, deadlines after starts, and priority references limited to the same owned day. The later day service checks that priority is planned. Commit schema and migration separately from services.
 
 ## 2. Quest catalog service
 

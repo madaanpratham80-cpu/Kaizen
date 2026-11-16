@@ -8,13 +8,141 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(uuid()) @db.Uuid
-  normalizedEmail String    @unique
+  id              String                 @id @default(uuid()) @db.Uuid
+  normalizedEmail String                 @unique
   displayName     String
   passwordHash    String
   timezone        String
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime               @default(now())
   sessions        Session[]
+  playerState     PlayerState?
+  quests          Quest[]
+  dayPlans        DayPlan[]
+  dayPreferences  DayPreferenceVersion[]
+}
+
+enum DayStatus {
+  OPEN
+  ACTIVE
+  MISSED
+  REST
+  EMPTY
+}
+
+enum OccurrenceStatus {
+  PENDING
+  COMPLETED
+}
+
+enum QuestDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model PlayerState {
+  userId            String    @id @db.Uuid
+  totalXp           Int       @default(0)
+  health            Int       @default(70)
+  currentStreak     Int       @default(0)
+  bestStreak        Int       @default(0)
+  lastFinalizedDate DateTime? @db.Date
+  stateVersion      Int       @default(0)
+  nextEventSequence Int       @default(1)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+}
+
+model Quest {
+  id                   String            @id @default(uuid()) @db.Uuid
+  userId               String            @db.Uuid
+  title                String
+  category             String
+  pillar               String
+  archivedAt           DateTime?
+  archiveEffectiveDate DateTime?         @db.Date
+  version              Int               @default(1)
+  user                 User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  schedules            ScheduleVersion[]
+  occurrences          QuestOccurrence[]
+
+  @@unique([userId, id])
+  @@index([userId, archivedAt])
+}
+
+model ScheduleVersion {
+  id            String          @id @default(uuid()) @db.Uuid
+  userId        String          @db.Uuid
+  questId       String          @db.Uuid
+  effectiveFrom DateTime        @db.Date
+  effectiveTo   DateTime?       @db.Date
+  recurrence    String
+  weekdays      Int[]           @default([])
+  title         String
+  category      String
+  pillar        String
+  difficulty    QuestDifficulty
+  target        Int
+  ruleVersion   Int
+  quest         Quest           @relation(fields: [userId, questId], references: [userId, id], onDelete: Restrict)
+
+  @@unique([userId, questId, effectiveFrom])
+}
+
+model DayPreferenceVersion {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  effectiveFrom DateTime  @db.Date
+  effectiveTo   DateTime? @db.Date
+  restWeekdays  Int[]     @default([])
+  user          User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, effectiveFrom])
+}
+
+model DayPlan {
+  id                  String            @id @default(uuid()) @db.Uuid
+  userId              String            @db.Uuid
+  localDate           DateTime          @db.Date
+  timezoneSnapshot    String
+  startsAtUtc         DateTime
+  deadlineUtc         DateTime
+  status              DayStatus
+  priorityId          String?           @db.Uuid
+  priorityLockedAt    DateTime?
+  plannedCount        Int               @default(0)
+  healthGainAccounted Int               @default(0)
+  streakApplied       Boolean           @default(false)
+  closedAt            DateTime?
+  user                User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  occurrences         QuestOccurrence[] @relation("PlanOccurrences")
+  priority            QuestOccurrence?  @relation("PlanPriority", fields: [userId, id, priorityId], references: [userId, dayPlanId, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([userId, localDate])
+  @@unique([userId, id])
+}
+
+model QuestOccurrence {
+  id          String           @id @default(uuid()) @db.Uuid
+  userId      String           @db.Uuid
+  questId     String           @db.Uuid
+  dayPlanId   String           @db.Uuid
+  planned     Boolean
+  status      OccurrenceStatus @default(PENDING)
+  completedAt DateTime?
+  title       String
+  category    String
+  pillar      String
+  difficulty  QuestDifficulty
+  target      Int
+  rewardXp    Int
+  ruleVersion Int
+  quest       Quest            @relation(fields: [userId, questId], references: [userId, id], onDelete: Restrict)
+  dayPlan     DayPlan          @relation("PlanOccurrences", fields: [userId, dayPlanId], references: [userId, id], onDelete: Restrict)
+  priorityFor DayPlan[]        @relation("PlanPriority")
+
+  @@unique([questId, dayPlanId])
+  @@unique([userId, dayPlanId, id])
+  @@index([dayPlanId, status])
 }
 
 model Session {
