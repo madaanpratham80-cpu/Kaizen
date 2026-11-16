@@ -70,6 +70,6 @@ export const authLogoutResponseSchema = z.strictObject({
   requestId: z.string().min(1),
 });
 
-export type RegisterRequest = z.infer<typeof registerRequestSchema>;
-export type LoginRequest = z.infer<typeof loginRequestSchema>;
-export type PublicUser = z.infer<typeof publicUserSchema>;
+/** @typedef {import('zod').infer<typeof registerRequestSchema>} RegisterRequest */
+/** @typedef {import('zod').infer<typeof loginRequestSchema>} LoginRequest */
+/** @typedef {import('zod').infer<typeof publicUserSchema>} PublicUser */

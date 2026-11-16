@@ -8,7 +8,6 @@ export {
   publicUserSchema,
   registerRequestSchema,
 } from './auth.js';
-export type { LoginRequest, PublicUser, RegisterRequest } from './auth.js';
 export {
   archiveQuestSchema,
   createQuestSchema,
@@ -18,3 +17,7 @@ export {
   questDifficultySchema,
   questIdSchema,
 } from './quests.js';
+
+/** @typedef {import('./auth.js').LoginRequest} LoginRequest */
+/** @typedef {import('./auth.js').PublicUser} PublicUser */
+/** @typedef {import('./auth.js').RegisterRequest} RegisterRequest */
