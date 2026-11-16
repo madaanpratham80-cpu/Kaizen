@@ -1,5 +1,9 @@
 import { createHash } from 'node:crypto';
-import { completionRequestSchema, z } from '@kaizen/contracts';
+import {
+  completionRequestSchema,
+  occurrenceIdSchema,
+  z,
+} from '@kaizen/contracts';
 import {
   completionXp,
   eligibleSeals,
@@ -19,7 +23,6 @@ const identity = z.object({
   userId: z.uuid(),
   tokenHash: z.string().regex(/^[a-f0-9]{64}$/),
 });
-const occurrenceIdSchema = z.uuid().transform((value) => value.toLowerCase());
 const sessionInvalid = () =>
   new ProgressionError(401, 'SESSION_INVALID', 'Invalid session.');
 const occurrenceNotFound = () =>

@@ -22,4 +22,4 @@
 
 ## 5. Completion route
 
-- [ ] 5.1 Wire `POST /occurrences/:id/complete` under `/api/v1`. Validate the occurrence ID and required `operationId` with shared contracts, enforce existing session, Origin and CSRF checks, and return committed progression deltas, seals and `stateVersion`. Verify `completion-route-ownership` with Supertest and two PostgreSQL accounts, including foreign IDs returning the missing-resource result with no foreign writes, omitted operation ID, success and changed-input 409. Run all five root checks and commit the route separately.
+- [x] 5.1 Wire `POST /occurrences/:id/complete` under `/api/v1`. Validate the occurrence ID and required `operationId` with shared contracts, enforce existing session, Origin and CSRF checks, and return committed progression deltas, seals and `stateVersion`. Verify `completion-route-ownership` with Supertest and two PostgreSQL accounts, including foreign IDs returning the missing-resource result with no foreign writes, omitted operation ID, success and changed-input 409. Run the root checks in `AGENTS.md` section 4 and commit the route separately.

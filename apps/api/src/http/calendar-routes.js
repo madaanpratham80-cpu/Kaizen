@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import {
+  completionRequestSchema,
   createQuestSchema,
+  occurrenceIdSchema,
   prioritySchema,
   questIdSchema,
   questListQuerySchema,
@@ -10,6 +12,7 @@ import {
 } from '@kaizen/contracts';
 import { CalendarError } from '../services/calendar.js';
 import { syncProgressCalendar } from '../services/calendar-sync.js';
+import { completeOccurrence } from '../services/completion.js';
 import { ProgressionError } from '../services/progression-store.js';
 import { changePriority, createQuickQuest } from '../services/day-actions.js';
 import {
@@ -89,6 +92,24 @@ export function createCalendarRoutes(database) {
     const id = questIdSchema.parse(req.params.id);
     const { occurrenceId } = prioritySchema.parse(req.body);
     sendData(res, await changePriority(database, owner, id, occurrenceId));
+  });
+  route('post', '/occurrences/:id/complete', async (req, res, owner) => {
+    const id = occurrenceIdSchema.parse(req.params.id);
+    const input = completionRequestSchema.parse(req.body);
+    const result = await completeOccurrence(
+      database,
+      {
+        ...owner,
+        tokenHash: req.auth.session.tokenHash,
+      },
+      id,
+      input,
+    );
+    if (result.status === 'catching-up') {
+      res.set('Retry-After', String(result.retryAfterSeconds));
+      return sendData(res, result, 202);
+    }
+    sendData(res, result);
   });
   router.use((error, _req, _res, next) => {
     if (error instanceof z.ZodError)
