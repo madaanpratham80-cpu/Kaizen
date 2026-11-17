@@ -17,10 +17,12 @@
 ## 3. Five screens
 
 - [x] 3.1 Add the typed API client, account-scoped cache, shared screen states, and signed-in route proxy. Verify response validation, bounded Retry-After polling with cleanup, cache isolation, and fail-closed session checks. This task delivers the shell only. The pages are implemented in the screen tasks, with shared states verified in 3.5.
-- [ ] 3.2 Build Today and Quests. Today shows character state, health, streak, daily priority, remaining quests, committed completion feedback, and recovery guidance. Quests shows personal quests, filters, difficulty, and XP. Verify pending actions, operation ID reuse, older response rejection, and coordinated refresh after completion. Manually check both screens and record each result in this group's commit body.
+- [x] 3.2 Build Today and Quests. Today shows character state, health, streak, daily priority, remaining quests, committed completion feedback, and recovery guidance. Quests shows personal quests, filters, difficulty, and XP. Verify pending actions, operation ID reuse, older response rejection, and coordinated refresh after completion. Chrome verified both route guards, Today retrying a dropped receipt with one reward, and Quests creating, editing with Enter, and filtering. Copy each result into its screen's commit body after review.
 - [ ] 3.3 Build Habits with the seven-day grid, per-habit streaks, and completion rate. Build Progress with heatmap, sequence-paginated ledger, seals, and pillar growth. Verify historical rendering, unavailable compliance, and paging. Manually check both screens and record each result in this group's commit body.
 - [ ] 3.4 Build Profile with character, level, rank, goals, and achievement archive. Verify committed values and empty archive behavior. Manually check Profile and record the result in its separate commit body.
 - [ ] 3.5 Verify all five screens in the browser, covering the required screen states, keyboard navigation, reduced motion, refresh, and account switching. Record the relevant checks in each screen group's commit body. Run all five root scripts, including the real PostgreSQL suite against an empty disposable database.
+
+  Browser evidence from 3.2: Chrome created the quest through the Quests form. Before opening Today, the browser harness used `psql` against its disposable PostgreSQL database to move the schedule's effective date to today. This fixture set up the planned-quest completion check. The Today screen then completed the quest through the normal API flow.
 
 ## 4. GSAP character feedback
 

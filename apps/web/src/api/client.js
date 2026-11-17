@@ -1,8 +1,15 @@
 import {
   calendarSyncResponseSchema,
+  completionRequestSchema,
+  completionResponseSchema,
+  createQuestSchema,
+  editQuestSchema,
   habitsResponseSchema,
   profileResponseSchema,
+  occurrenceIdSchema,
   progressResponseSchema,
+  questIdSchema,
+  questMutationResponseSchema,
   questsResponseSchema,
   todayResponseSchema,
 } from '@kaizen/contracts';
@@ -11,6 +18,7 @@ import { requestApi } from '../auth/client.js';
 const MAX_SYNC_ATTEMPTS = 4;
 const MAX_RETRY_SECONDS = 10;
 const MS_PER_SECOND = 1000;
+const MUTATION_TIMEOUT_MS = 15000;
 
 /**
  * @template T
@@ -21,6 +29,27 @@ const MS_PER_SECOND = 1000;
  */
 async function read(path, schema, signal) {
   const { body } = await requestApi(path, schema, { signal });
+  return body.data;
+}
+
+/**
+ * @template T
+ * @param {string} path
+ * @param {import('@kaizen/contracts').z.ZodType<{data: T}>} schema
+ * @param {'POST' | 'PATCH'} method
+ * @param {unknown} payload
+ * @param {{csrfToken: string, signal: AbortSignal}} options
+ * @returns {Promise<T>}
+ */
+async function mutate(path, schema, method, payload, { csrfToken, signal }) {
+  signal.throwIfAborted();
+  const { body } = await requestApi(path, schema, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.any([signal, AbortSignal.timeout(MUTATION_TIMEOUT_MS)]),
+  });
+  signal.throwIfAborted();
   return body.data;
 }
 
@@ -76,6 +105,44 @@ export const screenApi = {
     read(`progress${search(query)}`, progressResponseSchema, signal),
   /** @param {AbortSignal} [signal] */
   profile: (signal) => read('profile', profileResponseSchema, signal),
+  /**
+   * @param {string} occurrenceId
+   * @param {string} operationId
+   * @param {{csrfToken: string, signal: AbortSignal}} options
+   */
+  complete: (occurrenceId, operationId, options) =>
+    mutate(
+      `occurrences/${occurrenceIdSchema.parse(occurrenceId)}/complete`,
+      completionResponseSchema,
+      'POST',
+      completionRequestSchema.parse({ operationId }),
+      options,
+    ),
+  /**
+   * @param {import('@kaizen/contracts').z.infer<typeof createQuestSchema>} input
+   * @param {{csrfToken: string, signal: AbortSignal}} options
+   */
+  createQuest: (input, options) =>
+    mutate(
+      'quests',
+      questMutationResponseSchema,
+      'POST',
+      createQuestSchema.parse(input),
+      options,
+    ),
+  /**
+   * @param {string} id
+   * @param {import('@kaizen/contracts').z.infer<typeof editQuestSchema>} input
+   * @param {{csrfToken: string, signal: AbortSignal}} options
+   */
+  editQuest: (id, input, options) =>
+    mutate(
+      `quests/${questIdSchema.parse(id)}`,
+      questMutationResponseSchema,
+      'PATCH',
+      editQuestSchema.parse(input),
+      options,
+    ),
   /**
    * @param {string} csrfToken Session-bound CSRF proof.
    * @param {{signal: AbortSignal, onCatchUp?: (seconds: number) => void}} options

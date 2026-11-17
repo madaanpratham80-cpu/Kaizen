@@ -88,6 +88,34 @@ export const calendarSyncResponseSchema = envelope(
   ]),
 );
 
+export const completionResponseSchema = envelope(
+  z.union([
+    z.strictObject({
+      status: z.literal('catching-up'),
+      retryAfterSeconds: version,
+    }),
+    z.strictObject({
+      status: z.enum(['completed', 'alreadyCompleted']),
+      occurrence: z.strictObject({
+        id,
+        status: z.literal('COMPLETED'),
+        completedAt: instant,
+      }),
+      xpDelta: count,
+      healthDelta: z.int(),
+      eventIds: z.array(id),
+      seals: z.array(
+        z.strictObject({
+          code: z.string().min(1),
+          ruleVersion: version,
+          bonusXp: count,
+        }),
+      ),
+      ...progression,
+    }),
+  ]),
+);
+
 const schedule = z.strictObject({
   id,
   userId: id,
@@ -109,6 +137,9 @@ const quest = z.strictObject({
 });
 export const questsResponseSchema = envelope(
   z.strictObject({ quests: z.array(quest), nextCursor: id.nullable() }),
+);
+export const questMutationResponseSchema = envelope(
+  quest.omit({ schedules: true }),
 );
 
 const habitOccurrence = z.strictObject({

@@ -118,6 +118,9 @@ export function AuthForm({ mode }) {
               Signed in as <strong>{session.user.displayName}</strong>
             </p>
             <p>{session.user.email}</p>
+            <Link className="block underline" href="/today">
+              Open Today
+            </Link>
             <button
               className="auth-button"
               disabled={pending}

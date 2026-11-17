@@ -37,9 +37,11 @@ export {
 
 export {
   calendarSyncResponseSchema,
+  completionResponseSchema,
   habitsResponseSchema,
   profileResponseSchema,
   progressResponseSchema,
+  questMutationResponseSchema,
   questsResponseSchema,
   todayResponseSchema,
 } from './screen-responses.js';
