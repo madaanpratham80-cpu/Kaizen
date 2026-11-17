@@ -8,7 +8,7 @@ Calendar catch-up relies on browser traffic. The pilot needs hourly finalization
 
 - Add an hourly day-finalization CLI with bounded per-account catch-up.
 - Add a separate CLI for batched deletion of expired sessions.
-- Document scheduling and verify the jobs against PostgreSQL.
+- Document scheduling, harden the production ingress and API process, and verify performance and recovery against disposable PostgreSQL.
 
 ## Capabilities
 
@@ -22,4 +22,4 @@ None.
 
 ## Impact
 
-Adds API job entry points and scheduling instructions. Reuses the calendar, progression ledger, and session tables. Deployment rollout and load benchmarks are outside these two steps.
+Adds API job entry points and scheduling instructions. Reuses the calendar, progression ledger, and session tables. Adds production ingress configuration and repeatable local performance and recovery checks.

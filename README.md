@@ -226,11 +226,17 @@ The expected result is `[201, 200, 200, 200, 401]`. The browser sends the sessio
 
 Registration and login return `503 AUTH_UNAVAILABLE` if neither secret is configured. Before changing `AUTH_BCRYPT_COST`, list every other cost still present in stored hashes in `AUTH_BCRYPT_LEGACY_COSTS` (comma separated). API startup checks stored cost headers and fails if a cost is missing from configuration. Login performs one bcrypt comparison per listed or current cost for both known and unknown accounts. Coordinate cost changes across API writers before restart.
 
-Root verification commands are `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. Run `pnpm test:db` with `DATABASE_URL` exported for an empty disposable database whose name contains `test`. It applies the migrations before running the PostgreSQL suite. API liveness is `GET http://localhost:4000/health/live`. Readiness returns HTTP 503 at `/health/ready` until a database check is implemented.
+Root verification commands are `pnpm lint`, `pnpm test`, `pnpm test:db`, and `pnpm build`. Run `pnpm test:db` with `DATABASE_URL` exported for an empty disposable database whose name contains `test`. It applies the migrations before running the PostgreSQL suite. API liveness is `GET http://localhost:4000/health/live`. Readiness at `/health/ready` returns HTTP 503 during shutdown or when the bounded database check fails.
 
 The quest and calendar migration uses PostgreSQL's `btree_gist` extension to enforce non-overlapping date ranges. Provision it before deploying if the migration role cannot create extensions.
 
 When deploying calendar services over the earlier schema release, stop old registration writers before applying the calendar transition migration. It reconciles missing player state rows. Start the updated API after migration so future registrations create their player state atomically.
+
+### Production ingress and database roles
+
+Install `deploy/nginx/kaizen.conf` in the Nginx HTTP context after replacing its example hostname and TLS certificate paths. Route public traffic only through that listener and keep the two application ports private. Set `APP_ORIGIN` to the HTTPS origin, `TRUSTED_PROXY_IPS=127.0.0.1` for the co-located configuration, and `NEXT_PUBLIC_API_BASE_PATH=/api/v1` when building the web app. Probers on the API host can reach Express directly at `/health/live` and `/health/ready`.
+
+Provide `MIGRATION_DATABASE_URL` only to the deployment step and run `pnpm --filter @kaizen/api db:migrate` before starting the application. Provision the migration role as schema owner. Give the separate runtime role access to the application tables and omit DDL, schema creation, and migration history permissions. Provide its connection URL as `DATABASE_URL` to the API and jobs. Set `DEPLOYMENT_VERSION` to the released image or commit identifier.
 
 ### Scheduled maintenance
 

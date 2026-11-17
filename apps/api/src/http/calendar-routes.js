@@ -1,3 +1,4 @@
+import { recordRoute } from './request-logs.js';
 import { Router } from 'express';
 import {
   completionRequestSchema,
@@ -49,6 +50,7 @@ export function createCalendarRoutes(database, reauthenticate) {
   function route(method, path, handler, middleware = []) {
     router[method](
       path,
+      recordRoute,
       (req, res, next) => {
         res.set('Cache-Control', 'private, no-store');
         if (!req.auth)

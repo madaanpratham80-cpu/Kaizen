@@ -28,3 +28,21 @@ The system SHALL offer a separate CLI that removes expired sessions in bounded b
 
 - **WHEN** expired and active sessions coexist
 - **THEN** cleanup removes eligible expired sessions and preserves active sessions
+
+### Requirement: Operate the API behind hardened ingress
+
+The deployment SHALL use HTTPS, bounded database readiness, structured redacted request logs, graceful shutdown, and distinct runtime and migration database credentials.
+
+#### Scenario: The database is unavailable
+
+- **WHEN** bounded database readiness fails
+- **THEN** readiness reports 503 while liveness remains independent of the database
+
+### Requirement: Verify pilot performance and recoverability
+
+The pilot SHALL measure warm Today and annual heatmap latency with 20 concurrent sessions over a 100-account, 365-day dataset and rehearse database backup and restore with ledger reconciliation.
+
+#### Scenario: Restore the seeded database
+
+- **WHEN** a logical backup is restored into an isolated empty database
+- **THEN** the restored ledger reconciles with PlayerState and matches the seeded database

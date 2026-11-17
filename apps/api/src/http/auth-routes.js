@@ -1,3 +1,4 @@
+import { recordRoute } from './request-logs.js';
 import {
   authAccountResponseSchema,
   authLogoutResponseSchema,
@@ -58,9 +59,9 @@ export function createAuthRoutes(prisma, secret) {
       res.status(status).json(body);
     };
   }
-  routes.post('/register', accountHandler(registerAccount, 201));
-  routes.post('/login', accountHandler(loginAccount, 200));
-  routes.get('/session', (req, res) => {
+  routes.post('/register', recordRoute, accountHandler(registerAccount, 201));
+  routes.post('/login', recordRoute, accountHandler(loginAccount, 200));
+  routes.get('/session', recordRoute, (req, res) => {
     const auth = requireSession(req);
     res.json(
       authSessionResponseSchema.parse({
@@ -76,7 +77,7 @@ export function createAuthRoutes(prisma, secret) {
       }),
     );
   });
-  routes.post('/logout', async (req, res) => {
+  routes.post('/logout', recordRoute, async (req, res) => {
     const auth = requireSession(req);
     await revokeSession(prisma, auth.user.id, auth.session.token);
     res.clearCookie(SESSION_COOKIE, sessionCookieOptions);

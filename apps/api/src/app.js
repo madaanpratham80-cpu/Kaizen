@@ -1,3 +1,4 @@
+import pino from 'pino';
 import { isIP } from 'node:net';
 import { PrismaClient } from '@prisma/client';
 import express from 'express';
@@ -15,11 +16,13 @@ import {
 import { createAuthRateLimits } from './http/rate-limits.js';
 import { createAuthRoutes } from './http/auth-routes.js';
 import { createCalendarRoutes } from './http/calendar-routes.js';
+import { databaseReady } from './ops/readiness.js';
+import { recordRoute, requestLogs } from './http/request-logs.js';
 import { lookupSession } from './services/sessions.js';
 /** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
 /** @typedef {import('express').RequestHandler} RequestHandler */
 /** @typedef {import('express').Router} Router */
-/** @typedef {{ database?: PrismaClient; nodeEnv?: string; webOrigin?: string; appOrigin?: string; csrfSecret?: string; trustedProxies?: string; rateLimits?: Parameters<typeof createAuthRateLimits>[0]; resolveSession?: (token: string) => ReturnType<typeof lookupSession>; routes?: Router; }} AppOptions */
+/** @typedef {{ database?: PrismaClient; nodeEnv?: string; webOrigin?: string; appOrigin?: string; csrfSecret?: string; trustedProxies?: string; rateLimits?: Parameters<typeof createAuthRateLimits>[0]; resolveSession?: (token: string) => ReturnType<typeof lookupSession>; routes?: Router; logger?: import('pino').Logger; deploymentVersion?: string; canServe?: () => boolean; }} AppOptions */
 export const prisma = new PrismaClient();
 /**
  * @param {string | undefined} config
@@ -58,17 +61,20 @@ export function createApp({
   rateLimits,
   resolveSession = (token) => lookupSession(database, token),
   routes,
+  logger = pino({ level: process.env.NODE_ENV === 'test' ? 'silent' : 'info' }),
+  deploymentVersion = process.env.DEPLOYMENT_VERSION ?? 'local',
+  canServe = () => true,
 } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', proxyTrust(trustedProxies));
   app.set('json replacer', redactJson);
-  app.use(assignRequestId);
+  app.use(assignRequestId, requestLogs(logger, deploymentVersion, csrfSecret));
   app.use('/api/v1/auth', (_req, res, next) => {
     res.set('Cache-Control', 'private, no-store');
     next();
   });
-  app.use(helmet());
+  app.use(helmet({ strictTransportSecurity: nodeEnv === 'production' }));
   if (nodeEnv === 'development' || nodeEnv === 'test') {
     const configuredOrigin = new URL(webOrigin);
     if (
@@ -84,17 +90,21 @@ export function createApp({
       }),
     );
   }
+  app.get('/health/live', recordRoute, (_request, response) => {
+    response.set('Cache-Control', 'no-store').json({ status: 'live' });
+  });
+  app.get('/health/ready', recordRoute, async (_request, response) => {
+    const ready = canServe() && (await databaseReady(database)) && canServe();
+    response
+      .set('Cache-Control', 'no-store')
+      .status(ready ? 200 : 503)
+      .json({ status: ready ? 'ready' : 'unready' });
+  });
   app.use(requireJsonBody, express.json({ limit: '10kb', inflate: false }));
   app.use(loadSession(resolveSession), protectMutations(appOrigin, csrfSecret));
   const limits = createAuthRateLimits(rateLimits);
   app.use('/api/v1/auth/register', ...limits.register.map(postOnly));
   app.use('/api/v1/auth/login', ...limits.login.map(postOnly));
-  app.get('/health/live', (_request, response) => {
-    response.json({ status: 'live' });
-  });
-  app.get('/health/ready', (_request, response) => {
-    response.status(503).json({ status: 'unready' });
-  });
   if (nodeEnv === 'test' && routes) app.use(routes);
   app.use('/api/v1/auth', createAuthRoutes(database, csrfSecret));
   app.use('/api/v1', createCalendarRoutes(database, limits.reauthenticate));
