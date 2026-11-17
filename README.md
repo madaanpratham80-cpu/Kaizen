@@ -232,6 +232,12 @@ The quest and calendar migration uses PostgreSQL's `btree_gist` extension to enf
 
 When deploying calendar services over the earlier schema release, stop old registration writers before applying the calendar transition migration. It reconciles missing player state rows. Start the updated API after migration so future registrations create their player state atomically.
 
+### Scheduled maintenance
+
+Build the API with `pnpm --filter @kaizen/api build`. Configure your scheduler to run `pnpm --filter @kaizen/api job:finalize-days` hourly with the same `DATABASE_URL` used by the API. Each run discovers accounts with overdue dates or no current plan, handles at most 30 dates per account, and resumes from the last committed close on the next run.
+
+For local verification with the API environment file, run `node --env-file=apps/api/.env apps/api/dist/jobs/finalize-days.js` from the repository root.
+
 The workspace uses JavaScript ESM and JSDoc. It contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
 
 ```

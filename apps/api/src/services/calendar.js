@@ -277,7 +277,13 @@ async function openPlan(tx, userId, timezone, date) {
     data: { priorityId: priority.id },
   });
 }
-async function syncOne(tx, userId, now) {
+/**
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx Transaction holding the PlayerState lock.
+ * @param {string} userId
+ * @param {Date} now
+ * @returns {Promise<{status: 'ready' | 'advance', plan: import('@prisma/client').DayPlan} | {status: 'wait'}>}
+ */
+export async function materializeNextDay(tx, userId, now) {
   let { timezone, createdAt } = await tx.user.findUniqueOrThrow({
     where: { id: userId },
     select: { timezone: true, createdAt: true },
@@ -314,7 +320,7 @@ async function syncOne(tx, userId, now) {
   const plan = await openPlan(tx, userId, timezone, date);
   return now < plan.deadlineUtc
     ? { status: 'ready', plan }
-    : { status: 'advance' };
+    : { status: 'advance', plan };
 }
 /**
  * @param {PrismaClient} prisma
@@ -327,7 +333,7 @@ export async function syncCalendar(prisma, owner, clock = readServerClock) {
     const step = await locked(
       prisma,
       owner,
-      (tx, now) => syncOne(tx, owner.userId, now),
+      (tx, now) => materializeNextDay(tx, owner.userId, now),
       clock,
     );
     if (step.status === 'ready') return { status: 'ready', plan: step.plan };

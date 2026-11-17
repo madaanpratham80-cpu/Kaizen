@@ -7,7 +7,8 @@
     "postinstall": "prisma generate",
     "lint": "eslint .",
     "test": "vitest run",
-    "build": "prisma generate && find src -name '*.js' -print0 | xargs -0 -n 1 node --check && mkdir -p dist && cp -R src/. dist/"
+    "build": "prisma generate && find src -name '*.js' -print0 | xargs -0 -n 1 node --check && mkdir -p dist && cp -R src/. dist/",
+    "job:finalize-days": "node dist/jobs/finalize-days.js"
   },
   "dependencies": {
     "@js-temporal/polyfill": "0.5.1",
