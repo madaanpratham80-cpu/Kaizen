@@ -3,7 +3,7 @@ import pino from 'pino';
 
 /**
  * @param {string} name
- * @param {(prisma: PrismaClient, logger: import('pino').Logger) => Promise<{failed?: number}>} run
+ * @param {(prisma: PrismaClient, logger: import('pino').Logger) => Promise<Record<string, number> & {failed?: number}>} run
  * @returns {Promise<void>}
  */
 export async function runJob(name, run) {

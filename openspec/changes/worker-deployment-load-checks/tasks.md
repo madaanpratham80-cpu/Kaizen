@@ -7,5 +7,5 @@
 
 ## 2. Session cleanup job
 
-- [ ] 2.1 Add the independent session cleanup CLI. Verify `session-cleanup-job` on real PostgreSQL removes expired sessions in bounded batches and preserves active sessions.
-- [ ] 2.2 Document the separate command, run the root checks, and commit Step 2.
+- [x] 2.1 Add the independent session cleanup CLI. Verify `session-cleanup-job` on real PostgreSQL removes expired sessions in bounded batches and preserves active sessions.
+- [x] 2.2 Document the separate command, run the root checks, and commit Step 2.

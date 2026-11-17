@@ -238,6 +238,8 @@ Build the API with `pnpm --filter @kaizen/api build`. Configure your scheduler t
 
 For local verification with the API environment file, run `node --env-file=apps/api/.env apps/api/dist/jobs/finalize-days.js` from the repository root.
 
+Schedule `pnpm --filter @kaizen/api job:cleanup-sessions` separately with the same database environment. Each invocation deletes up to 20 batches of 500 expired sessions. For local verification, run `node --env-file=apps/api/.env apps/api/dist/jobs/cleanup-sessions.js` from the repository root.
+
 The workspace uses JavaScript ESM and JSDoc. It contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
 
 ```
