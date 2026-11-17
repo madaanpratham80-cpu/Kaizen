@@ -1,6 +1,56 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-progression-paper: #f5f0e6;
+  --color-progression-ink: #121110;
+  --color-progression-track: #d2cab9;
+  --color-health-healthy: #465321;
+  --color-health-tired: #805016;
+  --color-health-fading: #952e27;
+  --spacing-progression: 1rem;
+  --spacing-progression-gap: 0.375rem;
+  --font-progression: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-progression-metric: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
 @layer components {
+  .progression-panel {
+    color: var(--color-progression-ink);
+  }
+  .progression-value {
+    @apply font-progression-metric tabular-nums;
+  }
+  .progression-meter {
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 0.5rem;
+    color: inherit;
+    background: var(--color-progression-track);
+  }
+  .progression-meter::-webkit-meter-bar {
+    background: var(--color-progression-track);
+    border: none;
+  }
+  .progression-meter::-webkit-meter-optimum-value {
+    background: currentColor;
+  }
+  .progression-meter::-moz-meter-bar {
+    background: currentColor;
+  }
+  .progression-panel :focus-visible,
+  .progression-panel:focus-visible {
+    outline: 2px solid var(--color-progression-ink);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .progression-panel,
+    .progression-meter {
+      animation: none;
+      transition: none;
+    }
+  }
+
   .auth-label {
     @apply block font-semibold;
   }
