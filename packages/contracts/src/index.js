@@ -26,3 +26,11 @@ export {
 /** @typedef {import('./auth.js').LoginRequest} LoginRequest */
 /** @typedef {import('./auth.js').PublicUser} PublicUser */
 /** @typedef {import('./auth.js').RegisterRequest} RegisterRequest */
+
+export {
+  deleteAccountSchema,
+  habitsQuerySchema,
+  HISTORY_DAYS,
+  progressQuerySchema,
+  settingsSchema,
+} from './profile.js';

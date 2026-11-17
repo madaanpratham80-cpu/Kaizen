@@ -19,6 +19,9 @@ export function useCompletionDatabase() {
       prisma.dayPlan.updateMany({ where, data: { priorityId: null } }),
       prisma.questOccurrence.deleteMany({ where }),
       prisma.dayPlan.deleteMany({ where }),
+      prisma.dayPreferenceVersion.deleteMany({ where }),
+      prisma.calendarTimezoneTransition.deleteMany({ where }),
+      prisma.scheduleVersion.deleteMany({ where }),
       prisma.quest.deleteMany({ where }),
     ]);
     owners.length = 0;

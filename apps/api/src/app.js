@@ -97,7 +97,7 @@ export function createApp({
   });
   if (nodeEnv === 'test' && routes) app.use(routes);
   app.use('/api/v1/auth', createAuthRoutes(database, csrfSecret));
-  app.use('/api/v1', createCalendarRoutes(database));
+  app.use('/api/v1', createCalendarRoutes(database, limits.reauthenticate));
   app.use((_req, _res, next) =>
     next(new HttpError(404, 'NOT_FOUND', 'Resource not found.')),
   );

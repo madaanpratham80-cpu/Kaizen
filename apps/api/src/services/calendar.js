@@ -139,48 +139,63 @@ export function scheduleTimezoneTransition(
   return locked(
     prisma,
     owner,
-    async (tx, now) => {
-      const existing = await pendingTransition(tx, userId);
-      if (existing) {
-        if (existing.toTimezone === toTimezone) return existing;
-        throw new CalendarError(
-          409,
-          'TIMEZONE_CHANGE_PENDING',
-          'A timezone change is already pending.',
-        );
-      }
-      const { timezone } = await tx.user.findUniqueOrThrow({
-        where: { id: userId },
-        select: { timezone: true },
-      });
-      if (timezone === toTimezone) return null;
-      const day = await latestDay(tx, userId);
-      if (!day || day.startsAtUtc > now || day.deadlineUtc <= now) {
-        throw new CalendarError(
-          409,
-          'CALENDAR_NOT_READY',
-          'Sync the calendar before changing timezone.',
-        );
-      }
-      const next = firstTransitionDate(
-        plainDate(day.localDate),
-        day.deadlineUtc,
-        toTimezone,
-      );
-      return tx.calendarTimezoneTransition.create({
-        data: {
-          userId,
-          fromTimezone: timezone,
-          toTimezone,
-          lastOldDate: day.localDate,
-          gapStartsAt: day.deadlineUtc,
-          ...next,
-        },
-      });
-    },
+    (tx, now) => scheduleTimezoneInTransaction(tx, userId, toTimezone, now),
     clock,
   );
 }
+
+/**
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx Transaction holding the owner lock.
+ * @param {string} userId
+ * @param {string} toTimezone
+ * @param {Date} now
+ * @returns {Promise<import('@prisma/client').CalendarTimezoneTransition | null>}
+ */
+export async function scheduleTimezoneInTransaction(
+  tx,
+  userId,
+  toTimezone,
+  now,
+) {
+  const existing = await pendingTransition(tx, userId);
+  if (existing) {
+    if (existing.toTimezone === toTimezone) return existing;
+    throw new CalendarError(
+      409,
+      'TIMEZONE_CHANGE_PENDING',
+      'A timezone change is already pending.',
+    );
+  }
+  const { timezone } = await tx.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { timezone: true },
+  });
+  if (timezone === toTimezone) return null;
+  const day = await latestDay(tx, userId);
+  if (!day || day.startsAtUtc > now || day.deadlineUtc <= now) {
+    throw new CalendarError(
+      409,
+      'CALENDAR_NOT_READY',
+      'Sync the calendar before changing timezone.',
+    );
+  }
+  const next = firstTransitionDate(
+    plainDate(day.localDate),
+    day.deadlineUtc,
+    toTimezone,
+  );
+  return tx.calendarTimezoneTransition.create({
+    data: {
+      userId,
+      fromTimezone: timezone,
+      toTimezone,
+      lastOldDate: day.localDate,
+      gapStartsAt: day.deadlineUtc,
+      ...next,
+    },
+  });
+}
+
 function effectiveOn(date) {
   return {
     effectiveFrom: { lte: date },

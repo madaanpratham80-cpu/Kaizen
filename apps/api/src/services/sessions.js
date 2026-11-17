@@ -1,8 +1,10 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { withPlayerLock } from './player-lock.js';
 /** @typedef {import('@kaizen/contracts').PublicUser} PublicUser */
 /** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
 const SESSION_TOKEN_BYTES = 32;
 const SESSION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
+class SessionOwnerUnavailable extends Error {}
 /**
  * @param {Buffer} bytes
  */
@@ -25,19 +27,41 @@ function presentedTokenHash(token) {
 /**
  * @param {PrismaClient} prisma
  * @param {string} userId
- * @returns {Promise<string>}
+ * @param {string} [expectedPasswordHash] Credential snapshot verified before acquiring the lock.
+ * @returns {Promise<string | null>}
  */
-export async function createSession(prisma, userId) {
+export async function createSession(prisma, userId, expectedPasswordHash) {
   const bytes = randomBytes(SESSION_TOKEN_BYTES);
-  await prisma.session.create({
-    data: {
+  const tokenHash = hashToken(bytes);
+  try {
+    return await withPlayerLock(
+      prisma,
       userId,
-      tokenHash: hashToken(bytes),
-      expiresAt: new Date(Date.now() + SESSION_LIFETIME_MS),
-    },
-    select: { id: true },
-  });
-  return bytes.toString('base64url');
+      () => new SessionOwnerUnavailable(),
+      async (tx) => {
+        if (
+          expectedPasswordHash &&
+          !(await tx.user.findUnique({
+            where: { id: userId, passwordHash: expectedPasswordHash },
+            select: { id: true },
+          }))
+        )
+          return null;
+        await tx.session.create({
+          data: {
+            userId,
+            tokenHash,
+            expiresAt: new Date(Date.now() + SESSION_LIFETIME_MS),
+          },
+          select: { id: true },
+        });
+        return bytes.toString('base64url');
+      },
+    );
+  } catch (error) {
+    if (error instanceof SessionOwnerUnavailable) return null;
+    throw error;
+  }
 }
 /**
  * @typedef {(

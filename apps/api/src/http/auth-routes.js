@@ -9,7 +9,7 @@ import { registerAccount } from '../services/registration.js';
 import { revokeSession } from '../services/sessions.js';
 import { csrfProof, HttpError, SESSION_COOKIE } from './boundary.js';
 /** @typedef {import('@prisma/client').PrismaClient} PrismaClient */
-const cookieOptions = {
+export const sessionCookieOptions = {
   secure: true,
   httpOnly: true,
   sameSite: 'lax',
@@ -52,7 +52,7 @@ export function createAuthRoutes(prisma, secret) {
         requestId: req.requestId,
       });
       res.cookie(SESSION_COOKIE, result.sessionToken, {
-        ...cookieOptions,
+        ...sessionCookieOptions,
         maxAge: SESSION_LIFETIME_MS,
       });
       res.status(status).json(body);
@@ -75,7 +75,7 @@ export function createAuthRoutes(prisma, secret) {
   routes.post('/logout', async (req, res) => {
     const auth = requireSession(req);
     await revokeSession(prisma, auth.user.id, auth.session.token);
-    res.clearCookie(SESSION_COOKIE, cookieOptions);
+    res.clearCookie(SESSION_COOKIE, sessionCookieOptions);
     res.json(
       authLogoutResponseSchema.parse({
         data: { success: true },

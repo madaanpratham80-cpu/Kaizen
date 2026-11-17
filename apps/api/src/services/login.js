@@ -56,6 +56,7 @@ export async function loginAccount(prisma, input) {
   }
   if (!account || !passwordMatches) return loginFailed;
   const { id, displayName, timezone } = account;
-  const sessionToken = await createSession(prisma, id);
+  const sessionToken = await createSession(prisma, id, account.passwordHash);
+  if (!sessionToken) return loginFailed;
   return { ok: true, user: { id, email, displayName, timezone }, sessionToken };
 }

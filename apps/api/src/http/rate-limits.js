@@ -26,7 +26,7 @@ function accountKey(req) {
 }
 /**
  * @param {Partial<import('zod').input<typeof configSchema>>} [config]
- * @returns {{register: RequestHandler[], login: RequestHandler[]}}
+ * @returns {{register: RequestHandler[], login: RequestHandler[], reauthenticate: RequestHandler[]}}
  */
 export function createAuthRateLimits(config = {}) {
   const { windowMs, registerAccount, registerIp, loginAccount, loginIp } =
@@ -44,7 +44,7 @@ export function createAuthRateLimits(config = {}) {
         ),
       ),
   };
-  function forOperation(accountLimit, ipLimit) {
+  function forOperation(accountLimit, ipLimit, identify = accountKey) {
     return [
       rateLimit({
         ...options,
@@ -55,13 +55,18 @@ export function createAuthRateLimits(config = {}) {
       rateLimit({
         ...options,
         limit: accountLimit,
-        skip: (req) => accountKey(req) === undefined,
-        keyGenerator: (req) => accountKey(req) ?? '',
+        skip: (req) => identify(req) === undefined,
+        keyGenerator: (req) => identify(req) ?? '',
       }),
     ];
   }
   return {
     register: forOperation(registerAccount, registerIp),
     login: forOperation(loginAccount, loginIp),
+    reauthenticate: forOperation(
+      loginAccount,
+      loginIp,
+      (req) => req.auth?.user.id,
+    ),
   };
 }

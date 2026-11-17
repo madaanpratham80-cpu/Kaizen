@@ -2,15 +2,26 @@ import { Router } from 'express';
 import {
   completionRequestSchema,
   createQuestSchema,
+  deleteAccountSchema,
+  habitsQuerySchema,
   occurrenceIdSchema,
   prioritySchema,
+  progressQuerySchema,
   questIdSchema,
   questListQuerySchema,
   questUpdateSchema,
   quickQuestSchema,
+  settingsSchema,
   z,
 } from '@kaizen/contracts';
 import { CalendarError } from '../services/calendar.js';
+import {
+  deleteAccount,
+  readProfile,
+  updateSettings,
+} from '../services/account.js';
+import { readHabitWeek } from '../services/habits.js';
+import { readProgress } from '../services/progress-read.js';
 import { syncProgressCalendar } from '../services/calendar-sync.js';
 import { completeOccurrence } from '../services/completion.js';
 import { ProgressionError } from '../services/progression-store.js';
@@ -23,24 +34,33 @@ import {
   QuestCatalogError,
 } from '../services/quest-catalog.js';
 import { readToday } from '../services/today.js';
-import { HttpError, sendData } from './boundary.js';
+import { sessionCookieOptions } from './auth-routes.js';
+import { HttpError, sendData, SESSION_COOKIE } from './boundary.js';
 
 const empty = z.strictObject({});
 
 /**
  * @param {import('@prisma/client').PrismaClient} database
+ * @param {import('express').RequestHandler[]} reauthenticate
  * @returns {import('express').Router}
  */
-export function createCalendarRoutes(database) {
+export function createCalendarRoutes(database, reauthenticate) {
   const router = Router();
-  function route(method, path, handler) {
-    router[method](path, async (req, res) => {
-      res.set('Cache-Control', 'private, no-store');
-      if (!req.auth)
-        throw new HttpError(401, 'SESSION_INVALID', 'Invalid session.');
-      if (method !== 'get') empty.parse(req.query);
-      await handler(req, res, { userId: req.auth.user.id });
-    });
+  function route(method, path, handler, middleware = []) {
+    router[method](
+      path,
+      (req, res, next) => {
+        res.set('Cache-Control', 'private, no-store');
+        if (!req.auth)
+          throw new HttpError(401, 'SESSION_INVALID', 'Invalid session.');
+        if (method !== 'get') empty.parse(req.query);
+        next();
+      },
+      ...middleware,
+      async (req, res) => {
+        await handler(req, res, { userId: req.auth.user.id });
+      },
+    );
   }
   route('post', '/calendar/sync', async (req, res, owner) => {
     empty.parse(req.body === undefined ? {} : req.body);
@@ -111,6 +131,39 @@ export function createCalendarRoutes(database) {
     }
     sendData(res, result);
   });
+  route('get', '/habits', async (req, res, owner) => {
+    const { week } = habitsQuerySchema.parse(req.query);
+    sendData(res, await readHabitWeek(database, owner, week));
+  });
+  route('get', '/progress', async (req, res, owner) => {
+    sendData(
+      res,
+      await readProgress(database, owner, progressQuerySchema.parse(req.query)),
+    );
+  });
+  route('get', '/profile', async (req, res, owner) => {
+    empty.parse(req.query);
+    sendData(res, await readProfile(database, owner));
+  });
+  route('patch', '/settings', async (req, res, owner) => {
+    const actor = { ...owner, tokenHash: req.auth.session.tokenHash };
+    sendData(
+      res,
+      await updateSettings(database, actor, settingsSchema.parse(req.body)),
+    );
+  });
+  route(
+    'delete',
+    '/account',
+    async (req, res, owner) => {
+      const { password } = deleteAccountSchema.parse(req.body);
+      const actor = { ...owner, tokenHash: req.auth.session.tokenHash };
+      const result = await deleteAccount(database, actor, password);
+      res.clearCookie(SESSION_COOKIE, sessionCookieOptions);
+      sendData(res, result);
+    },
+    reauthenticate,
+  );
   router.use((error, _req, _res, next) => {
     if (error instanceof z.ZodError)
       return next(
