@@ -4,6 +4,7 @@ import {
   authSessionResponseSchema,
   z,
 } from '@kaizen/contracts';
+import { sessionCache } from '../api/session-cache.js';
 import { setFeedbackSession } from '../progression/feedback-session.js';
 
 /** @typedef {import('@kaizen/contracts').LoginRequest} LoginRequest */
@@ -13,16 +14,18 @@ const base = process.env.NEXT_PUBLIC_API_BASE_PATH || '/api/v1';
 const errorResponse = z.object({
   error: z.object({ message: z.string(), code: z.string().optional() }),
 });
+let sessionRequest = 0;
+let latestSessionUpdate = 0;
 
 /**
  * @template T
  * @param {string} path
  * @param {z.ZodType<T>} schema
  * @param {RequestInit} [init]
- * @returns {Promise<T>}
+ * @returns {Promise<{body: T, retryAfter: string | null}>}
  */
-async function call(path, schema, init) {
-  const response = await fetch(`${base}/auth/${path}`, {
+export async function requestApi(path, schema, init) {
+  const response = await fetch(`${base}/${path}`, {
     ...init,
     credentials: 'include',
     cache: 'no-store',
@@ -38,10 +41,13 @@ async function call(path, schema, init) {
       parsed.success ? parsed.data.error.code : undefined,
     );
   }
-  return schema.parse(body);
+  return {
+    body: schema.parse(body),
+    retryAfter: response.headers.get('Retry-After'),
+  };
 }
 
-class ApiError extends Error {
+export class ApiError extends Error {
   /**
    * @param {number} status
    * @param {string} message
@@ -52,6 +58,17 @@ class ApiError extends Error {
     this.status = status;
     this.code = code;
   }
+}
+
+/**
+ * @template T
+ * @param {string} path
+ * @param {z.ZodType<T>} schema
+ * @param {RequestInit} [init]
+ * @returns {Promise<T>}
+ */
+async function call(path, schema, init) {
+  return (await requestApi(`auth/${path}`, schema, init)).body;
 }
 
 /**
@@ -66,22 +83,48 @@ function post(body) {
   };
 }
 
+/**
+ * @param {number} request
+ * @param {string | null} identity
+ * @param {AbortSignal} [signal]
+ */
+function recordSession(request, identity, signal) {
+  signal?.throwIfAborted();
+  if (request < latestSessionUpdate) {
+    throw new DOMException('A newer session check completed.', 'AbortError');
+  }
+  latestSessionUpdate = request;
+  sessionCache.setIdentity(identity);
+  setFeedbackSession(identity);
+}
+
+/**
+ * @param {'login' | 'register'} path
+ * @param {LoginRequest | RegisterRequest} body
+ */
+async function startSession(path, body) {
+  const result = await call(path, authAccountResponseSchema, post(body));
+  recordSession(++sessionRequest, null);
+  return result;
+}
+
 export const auth = {
   /** @param {LoginRequest} body */
-  login: (body) => call('login', authAccountResponseSchema, post(body)),
+  login: (body) => startSession('login', body),
   /** @param {RegisterRequest} body */
-  register: (body) => call('register', authAccountResponseSchema, post(body)),
+  register: (body) => startSession('register', body),
   /** @param {AbortSignal} [signal] */
   async session(signal) {
+    const request = ++sessionRequest;
     try {
       const { data } = await call('session', authSessionResponseSchema, {
         signal,
       });
-      if (!signal?.aborted) setFeedbackSession(data.feedbackSessionId);
+      recordSession(request, data.feedbackSessionId, signal);
       return data;
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        if (!signal?.aborted) setFeedbackSession(null);
+        recordSession(request, null, signal);
         return null;
       }
       throw error;
@@ -106,7 +149,7 @@ export const auth = {
         return 'stale';
       if (!(error instanceof ApiError) || error.status !== 401) throw error;
     }
-    setFeedbackSession(null);
+    recordSession(++sessionRequest, null);
     return 'done';
   },
 };

@@ -197,6 +197,8 @@ node --env-file=apps/api/.env apps/api/dist/server.js
 
 The API build generates Prisma Client. In a second terminal copy `apps/web/.env.example` to `apps/web/.env.local`, run `pnpm --filter @kaizen/web dev`, and open `http://localhost:3000/register` or `http://localhost:3000/login` in Chrome. Use the literal `localhost` hostname for both processes so Chrome's localhost exception allows Secure cookies. Use HTTPS with one origin and `NEXT_PUBLIC_API_BASE_PATH=/api/v1` in production.
 
+Set `API_INTERNAL_ORIGIN=http://127.0.0.1:4000` in the Next.js server environment when Express runs on the same host. For a separate host, use the private Express origin without an API path. The Next.js proxy checks the incoming session with Express before serving signed-in routes and redirects to `/login` when it cannot verify the session.
+
 To check the HTTP flow directly, run this in the browser console on the local web app:
 
 ```js

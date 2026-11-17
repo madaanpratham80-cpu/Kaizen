@@ -1,3 +1,8 @@
+import {
+  habitsResponseSchema,
+  profileResponseSchema,
+  progressResponseSchema,
+} from '@kaizen/contracts';
 import { PrismaClient } from '@prisma/client';
 import { Temporal } from '@js-temporal/polyfill';
 import request from 'supertest';
@@ -94,7 +99,8 @@ describe('habits-week-routes', () => {
     await alice.get(`/habits?week=${week}&userId=${bob.userId}`).expect(400);
     const response = await alice.get(`/habits?week=${week}`).expect(200);
     noStore(response);
-    const { days, scheduled, completed, compliance } = response.body.data;
+    const { days, scheduled, completed, compliance } =
+      habitsResponseSchema.parse(response.body).data;
     expect(days.map(({ date }) => date)).toEqual(
       Array.from({ length: 7 }, (_, days) => week.add({ days }).toString()),
     );
@@ -231,7 +237,7 @@ describe('progress-routes', () => {
     const through = `from=${spring}&to=${spring}&limit=1`;
     const page = await alice.get(`/progress?${through}`).expect(200);
     noStore(page);
-    const output = page.body.data;
+    const output = progressResponseSchema.parse(page.body).data;
     expect(output.aggregates).toEqual([
       {
         localDate: spring.toString(),
@@ -334,8 +340,12 @@ describe('profile-settings-routes', () => {
       .expect(409);
     const profile = await alice.get('/profile').expect(200);
     noStore(profile);
-    expect(profile.body.data).toMatchObject({
-      user: { displayName: 'Alice' },
+    expect(profileResponseSchema.parse(profile.body).data).toMatchObject({
+      user: {
+        id: alice.userId,
+        displayName: 'Alice',
+        goals: ['Read every day'],
+      },
       totalXp: 0,
       health: 70,
       level: 1,

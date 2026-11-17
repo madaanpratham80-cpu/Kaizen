@@ -1,4 +1,9 @@
 import { randomUUID } from 'node:crypto';
+import {
+  calendarSyncResponseSchema,
+  questsResponseSchema,
+  todayResponseSchema,
+} from '@kaizen/contracts';
 import request from 'supertest';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
@@ -101,19 +106,27 @@ describe('calendar-routes', () => {
     await scheduled(owner, 'Read');
     const where = { userId: owner.userId };
     const blank = await owner.send('get', '/today').expect(200);
-    expect(blank.body.data).toMatchObject({
+    expect(todayResponseSchema.parse(blank.body).data).toMatchObject({
       plan: null,
       priority: null,
       status: 'catching-up',
     });
     expect(await prisma.dayPlan.count({ where })).toBe(0);
-    await owner
+    const backlog = await owner
       .send('post', '/calendar/sync')
       .expect(202)
       .expect('Retry-After', '1');
+    expect(calendarSyncResponseSchema.parse(backlog.body).data).toEqual({
+      status: 'catching-up',
+      retryAfterSeconds: 1,
+    });
     expect(await prisma.dayPlan.count({ where })).toBe(30);
     const sync = await owner.send('post', '/calendar/sync').expect(200);
-    expect(sync.body.data.plan.localDate).toBe(instant(day()).toISOString());
+    const synced = calendarSyncResponseSchema.parse(sync.body).data;
+    expect(synced).toMatchObject({
+      status: 'ready',
+      plan: { localDate: instant(day()).toISOString(), userId: owner.userId },
+    });
     const plans = await prisma.dayPlan.findMany({
       where,
       orderBy: { localDate: 'asc' },
@@ -127,8 +140,8 @@ describe('calendar-routes', () => {
       .send('get', '/today')
       .expect(200)
       .expect('Cache-Control', 'private, no-store');
-    expect(today.body.data).toMatchObject({
-      plan: { id: sync.body.data.plan.id, plannedCount: 1 },
+    expect(todayResponseSchema.parse(today.body).data).toMatchObject({
+      plan: { id: synced.plan.id, plannedCount: 1 },
       priority: { title: 'Read' },
       health: 65,
       totalXp: 0,
@@ -231,9 +244,17 @@ describe('quest-routes', () => {
     const filtered = await owner
       .send('get', '/quests?category=Academic&archived=true')
       .expect(200);
-    expect(filtered.body.data.quests.map(({ title }) => title)).toEqual([
-      'Read more',
-    ]);
+    expect(questsResponseSchema.parse(filtered.body).data.quests).toMatchObject(
+      [
+        {
+          id: created.body.data.id,
+          userId: owner.userId,
+          title: 'Read more',
+          category: 'Academic',
+          schedules: [{ difficulty: 'EASY', target: 1 }],
+        },
+      ],
+    );
     const page = await owner.send('get', '/quests?limit=1').expect(200);
     const next = await owner
       .send('get', `/quests?limit=1&after=${page.body.data.nextCursor}`)

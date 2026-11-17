@@ -16,7 +16,7 @@
 
 ## 3. Five screens
 
-- [ ] 3.1 Extend the typed API client and shared account-scoped cache. Verify loading, empty, error, offline, expired-session, and catch-up states on each screen, bounded Retry-After polling with cleanup, and cache isolation across account changes.
+- [x] 3.1 Add the typed API client, account-scoped cache, shared screen states, and signed-in route proxy. Verify response validation, bounded Retry-After polling with cleanup, cache isolation, and fail-closed session checks. This task delivers the shell only. The pages are implemented in the screen tasks, with shared states verified in 3.5.
 - [ ] 3.2 Build Today and Quests. Today shows character state, health, streak, daily priority, remaining quests, committed completion feedback, and recovery guidance. Quests shows personal quests, filters, difficulty, and XP. Verify pending actions, operation ID reuse, older response rejection, and coordinated refresh after completion. Manually check both screens and record each result in this group's commit body.
 - [ ] 3.3 Build Habits with the seven-day grid, per-habit streaks, and completion rate. Build Progress with heatmap, sequence-paginated ledger, seals, and pillar growth. Verify historical rendering, unavailable compliance, and paging. Manually check both screens and record each result in this group's commit body.
 - [ ] 3.4 Build Profile with character, level, rank, goals, and achievement archive. Verify committed values and empty archive behavior. Manually check Profile and record the result in its separate commit body.
