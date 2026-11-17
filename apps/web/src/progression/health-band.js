@@ -2,6 +2,12 @@ const HEALTHY_MINIMUM = 70;
 const TIRED_MINIMUM = 40;
 const FULL_PERCENT = 100;
 
+export const HEALTH_BANDS = {
+  healthy: { label: 'Healthy', color: 'text-health-healthy' },
+  tired: { label: 'Tired', color: 'text-health-tired' },
+  fading: { label: 'Fading', color: 'text-health-fading' },
+};
+
 /**
  * @param {number | null | undefined} value
  * @returns {number | null}

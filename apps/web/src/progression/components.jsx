@@ -1,12 +1,11 @@
-import { healthBandFor, normalizePercent } from './health-band.js';
+import {
+  HEALTH_BANDS,
+  healthBandFor,
+  normalizePercent,
+} from './health-band.js';
 
 const XP_PER_LEVEL = 100;
 const COMPLETE_PERCENT = 100;
-const HEALTH_BANDS = {
-  healthy: { label: 'Healthy', color: 'text-health-healthy' },
-  tired: { label: 'Tired', color: 'text-health-tired' },
-  fading: { label: 'Fading', color: 'text-health-fading' },
-};
 const PANEL =
   'progression-panel space-y-progression-gap border border-progression-ink bg-progression-paper p-progression font-progression';
 

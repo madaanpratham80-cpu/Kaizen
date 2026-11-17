@@ -67,6 +67,10 @@ export function createAuthRoutes(prisma, secret) {
         data: {
           user: auth.user,
           csrfToken: csrfProof(requireSecret(), auth.session.tokenHash),
+          feedbackSessionId: csrfProof(
+            requireSecret(),
+            `feedback:${auth.session.tokenHash}`,
+          ),
         },
         requestId: req.requestId,
       }),

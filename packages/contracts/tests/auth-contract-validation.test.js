@@ -148,13 +148,18 @@ describe('auth-contract-validation', () => {
     ).toBe(false);
     expect(
       authSessionResponseSchema.safeParse({
-        data: { user, csrfToken: 'csrf' },
+        data: { user, csrfToken: 'csrf', feedbackSessionId: 'feedback' },
         requestId: 'request-1',
       }).success,
     ).toBe(true);
     expect(
       authSessionResponseSchema.safeParse({
-        data: { user, csrfToken: 'csrf', tokenHash: 'secret' },
+        data: {
+          user,
+          csrfToken: 'csrf',
+          feedbackSessionId: 'feedback',
+          tokenHash: 'secret',
+        },
         requestId: 'request-1',
       }).success,
     ).toBe(false);

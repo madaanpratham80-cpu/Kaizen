@@ -34,7 +34,13 @@ describe('auth-web-form-component', () => {
       .mockResolvedValueOnce(failure('Invalid session.', 401))
       .mockResolvedValueOnce(reply({ user }, 201))
       .mockRejectedValueOnce(new TypeError('Offline'))
-      .mockResolvedValueOnce(reply({ user, csrfToken: 'proof' }));
+      .mockResolvedValueOnce(
+        reply({
+          user,
+          csrfToken: 'proof',
+          feedbackSessionId: 'feedback-proof',
+        }),
+      );
     vi.stubGlobal('fetch', fetch);
     render(createElement(AuthForm, { mode: 'register' }));
     fireEvent.change(await screen.findByLabelText('Display name'), {
@@ -66,14 +72,22 @@ describe('auth-web-form-component', () => {
     const replacement = { ...user, displayName: 'Replacement account' };
     const fetch = vi
       .fn()
-      .mockResolvedValueOnce(reply({ user, csrfToken: 'old' }))
+      .mockResolvedValueOnce(
+        reply({ user, csrfToken: 'old', feedbackSessionId: 'feedback-old' }),
+      )
       .mockResolvedValueOnce(
         Response.json(
           { error: { code: 'CSRF_INVALID', message: 'Invalid CSRF token.' } },
           { status: 403 },
         ),
       )
-      .mockResolvedValueOnce(reply({ user: replacement, csrfToken: 'new' }))
+      .mockResolvedValueOnce(
+        reply({
+          user: replacement,
+          csrfToken: 'new',
+          feedbackSessionId: 'feedback-new',
+        }),
+      )
       .mockResolvedValueOnce(reply({ success: true }));
     vi.stubGlobal('fetch', fetch);
     render(createElement(AuthForm, { mode: 'login' }));
@@ -94,7 +108,13 @@ describe('auth-web-form-component', () => {
       .fn()
       .mockResolvedValueOnce(failure('Invalid session.', 401))
       .mockResolvedValueOnce(reply({ user }, 201))
-      .mockResolvedValueOnce(reply({ user, csrfToken: 'proof' }))
+      .mockResolvedValueOnce(
+        reply({
+          user,
+          csrfToken: 'proof',
+          feedbackSessionId: 'feedback-proof',
+        }),
+      )
       .mockResolvedValueOnce(reply({ success: true }));
     vi.stubGlobal('fetch', fetch);
     const write = vi.spyOn(Storage.prototype, 'setItem');
@@ -166,7 +186,13 @@ describe('auth-web-form-component', () => {
   it('restores the account on mount from the cookie-backed session', async () => {
     const fetch = vi
       .fn()
-      .mockResolvedValue(reply({ user, csrfToken: 'proof' }));
+      .mockResolvedValue(
+        reply({
+          user,
+          csrfToken: 'proof',
+          feedbackSessionId: 'feedback-proof',
+        }),
+      );
     vi.stubGlobal('fetch', fetch);
     render(createElement(AuthForm, { mode: 'login' }));
     await screen.findByText('Your account');

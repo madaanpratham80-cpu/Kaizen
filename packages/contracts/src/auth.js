@@ -61,6 +61,7 @@ export const authSessionResponseSchema = z.strictObject({
   data: z.strictObject({
     user: publicUserSchema,
     csrfToken: z.string().min(1),
+    feedbackSessionId: z.string().min(1),
   }),
   requestId: z.string().min(1),
 });

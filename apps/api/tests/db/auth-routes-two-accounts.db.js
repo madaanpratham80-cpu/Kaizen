@@ -87,8 +87,22 @@ it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owne
   expect(firstSession.body.data).toEqual({
     user: first.user,
     csrfToken: expect.any(String),
+    feedbackSessionId: expect.any(String),
   });
   expect(secondSession.body.data.user).toEqual(second.user);
+  expect(firstSession.body.data.feedbackSessionId).not.toBe(
+    firstSession.body.data.csrfToken,
+  );
+  expect(secondSession.body.data.feedbackSessionId).not.toBe(
+    firstSession.body.data.feedbackSessionId,
+  );
+  const refreshed = await client
+    .get(`${base}/session`)
+    .set('Cookie', firstCookie)
+    .expect(200);
+  expect(refreshed.body.data.feedbackSessionId).toBe(
+    firstSession.body.data.feedbackSessionId,
+  );
   expect(secondSession.body.data.csrfToken).not.toBe(
     firstSession.body.data.csrfToken,
   );
@@ -101,6 +115,9 @@ it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owne
     .expect(403)
     .expect('Cache-Control', 'private, no-store');
   expect(missing.body.error.code).toBe('CSRF_INVALID');
+  await logout()
+    .set('X-CSRF-Token', firstSession.body.data.feedbackSessionId)
+    .expect(403);
   await logout()
     .set('X-CSRF-Token', secondSession.body.data.csrfToken)
     .expect(403);

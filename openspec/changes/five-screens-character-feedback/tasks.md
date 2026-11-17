@@ -13,3 +13,9 @@
 
 - [x] 2.1 Extend the Tailwind theme with semantic Healthy, Tired, and Fading colors, spacing, and typography. Review threshold boundaries, focus visibility, and contrast against the design sources.
 - [x] 2.2 Build `HealthBar`, `XPMeter`, `StreakBadge`, `SealBadge`, and `QuestCard`. Give each a visible text label and a percentage with a named meaning alongside color. Respect `prefers-reduced-motion`. Verify each component with Vitest and Testing Library, covering labels, percentage boundaries or unavailable values, and reduced motion. Commit Step 2 separately.
+
+## 4. GSAP character feedback
+
+- [x] 4.1 Add one GSAP presentation component for Healthy, Tired, and Fading posture, expression, and color, and 400 ms XP and health bar transitions after accepted committed completions. Verify health band boundaries in both directions, committed values at rest, repeated or stale responses, overlapping updates, cleanup on unmount or session replacement, and immediate motion-free updates when reduced motion is enabled or toggled mid-transition.
+- [x] 4.2 Show seal title and awarded XP once per committed event ID per authenticated session. Verify that receipt replay, navigation, and reload do not repeat a shown event, that multiple distinct events each appear once, and that reduced motion still shows the seal text immediately.
+- [x] 4.3 Check Step 4 in the browser with motion enabled and reduced, run the root verification scripts in `AGENTS.md` section 4 including the disposable PostgreSQL suite, and record results. Justify GSAP's purpose and rough installed size if added. Commit Step 4 separately.

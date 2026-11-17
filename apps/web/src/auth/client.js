@@ -4,6 +4,7 @@ import {
   authSessionResponseSchema,
   z,
 } from '@kaizen/contracts';
+import { setFeedbackSession } from '../progression/feedback-session.js';
 
 /** @typedef {import('@kaizen/contracts').LoginRequest} LoginRequest */
 /** @typedef {import('@kaizen/contracts').RegisterRequest} RegisterRequest */
@@ -73,10 +74,16 @@ export const auth = {
   /** @param {AbortSignal} [signal] */
   async session(signal) {
     try {
-      return (await call('session', authSessionResponseSchema, { signal }))
-        .data;
+      const { data } = await call('session', authSessionResponseSchema, {
+        signal,
+      });
+      if (!signal?.aborted) setFeedbackSession(data.feedbackSessionId);
+      return data;
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) return null;
+      if (error instanceof ApiError && error.status === 401) {
+        if (!signal?.aborted) setFeedbackSession(null);
+        return null;
+      }
       throw error;
     }
   },
@@ -99,6 +106,7 @@ export const auth = {
         return 'stale';
       if (!(error instanceof ApiError) || error.status !== 401) throw error;
     }
+    setFeedbackSession(null);
     return 'done';
   },
 };
