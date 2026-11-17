@@ -58,18 +58,24 @@ function ledgerRows(userId, timezone, high) {
   `;
 }
 
-function readHeatmap(tx, userId, start, end) {
-  return tx.$queryRaw`
+/**
+ * @param {string} userId
+ * @param {Date} start
+ * @param {Date} end
+ * @returns {import('@prisma/client').Prisma.Sql}
+ */
+export function heatmapQuery(userId, start, end) {
+  return Prisma.sql`
     SELECT d."localDate", d.status, COUNT(o.id)::integer AS completions
     FROM "DayPlan" d
     LEFT JOIN "QuestOccurrence" o ON o."userId" = d."userId" AND o."dayPlanId" = d.id AND o.status = 'COMPLETED'
-    WHERE d."userId" = ${userId}::uuid AND d."localDate" BETWEEN ${start}::date AND ${end}::date
+    WHERE d."userId" = ${userId}::uuid AND d."localDate" BETWEEN (${start}::timestamptz AT TIME ZONE 'UTC')::date AND (${end}::timestamptz AT TIME ZONE 'UTC')::date
     GROUP BY d."localDate", d.status
   `;
 }
 
 async function readWindow(tx, source, from, to, limit, before) {
-  const dates = Prisma.sql`"localDate" BETWEEN ${from}::date AND ${to}::date`;
+  const dates = Prisma.sql`"localDate" BETWEEN (${from}::timestamptz AT TIME ZONE 'UTC')::date AND (${to}::timestamptz AT TIME ZONE 'UTC')::date`;
   const cutoff = before ? Prisma.sql`AND sequence < ${before}` : Prisma.empty;
   const ledger = await tx.$queryRaw`
     WITH ledger AS (${source})
@@ -178,11 +184,8 @@ export function readProgress(prisma, { userId }, query) {
             ).toString('base64url')
           : null;
 
-      const rows = await readHeatmap(
-        tx,
-        userId,
-        dateColumn(heatStart),
-        dateColumn(today),
+      const rows = await tx.$queryRaw(
+        heatmapQuery(userId, dateColumn(heatStart), dateColumn(today)),
       );
       const cells = new Map(
         rows.map(({ localDate, status, completions }) => [

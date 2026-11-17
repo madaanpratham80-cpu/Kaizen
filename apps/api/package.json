@@ -10,7 +10,8 @@
     "build": "prisma generate && find src -name '*.js' -print0 | xargs -0 -n 1 node --check && mkdir -p dist && cp -R src/. dist/",
     "job:finalize-days": "node dist/jobs/finalize-days.js",
     "job:cleanup-sessions": "node dist/jobs/cleanup-sessions.js",
-    "db:migrate": "node src/ops/migrate.js"
+    "db:migrate": "node src/ops/migrate.js",
+    "verify:pilot": "node src/ops/pilot-load.js"
   },
   "dependencies": {
     "@js-temporal/polyfill": "0.5.1",

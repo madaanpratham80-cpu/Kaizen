@@ -17,8 +17,8 @@
 
 ## 4. Verification and load checks
 
-- [ ] 4.1 Seed 100 accounts with 365 dates each. Inspect Today and heatmap plans and measure warm p95 with 20 distinct sessions.
-- [ ] 4.2 Rehearse backup and restore in isolated PostgreSQL and reconcile ordered ledger events with PlayerState. Record the measured results in the Step 4 commit.
+- [x] 4.1 Seed 100 accounts with 365 dates each. Inspect Today and heatmap plans and measure warm p95 with 20 distinct sessions.
+- [x] 4.2 Rehearse backup and restore in isolated PostgreSQL and reconcile ordered ledger events with PlayerState. Record the measured results in the Step 4 commit.
 
 ## 5. Full final check
 

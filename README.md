@@ -238,6 +238,10 @@ Install `deploy/nginx/kaizen.conf` in the Nginx HTTP context after replacing its
 
 Provide `MIGRATION_DATABASE_URL` only to the deployment step and run `pnpm --filter @kaizen/api db:migrate` before starting the application. Provision the migration role as schema owner. Give the separate runtime role access to the application tables and omit DDL, schema creation, and migration history permissions. Provide its connection URL as `DATABASE_URL` to the API and jobs. Set `DEPLOYMENT_VERSION` to the released image or commit identifier.
 
+### Pilot verification
+
+Run `bash scripts/verify-pilot.sh` with PostgreSQL server and client tools on PATH. The script creates a loopback-only cluster, seeds 100 synthetic accounts for 365 days, prints the Today and heatmap query plans and warm request p95, and checks a logical backup against a separate restored database. Pass a free PostgreSQL port as the first argument if the default port 55434 is in use.
+
 ### Scheduled maintenance
 
 Build the API with `pnpm --filter @kaizen/api build`. Configure your scheduler to run `pnpm --filter @kaizen/api job:finalize-days` hourly with the same `DATABASE_URL` used by the API. Each run discovers accounts with overdue dates or no current plan, handles at most 30 dates per account, and resumes from the last committed close on the next run.
