@@ -1,17 +1,17 @@
-# Graph Report - Kaizen  (2026-11-16)
+# Graph Report - Kaizen  (2026-11-17)
 
 ## Corpus Check
-- 83 files · ~62,757 words
+- 144 files · ~88,983 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 10 file(s) not represented in the graph (top: (none) 5, .example 2, .toml 1)
+- Unclassified: 11 file(s) not represented in the graph (top: (none) 5, .example 2, .toml 1)
 
 ## Summary
-- 591 nodes · 843 edges · 42 communities (32 shown, 10 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 32 edges (avg confidence: 0.85)
+- 927 nodes · 1792 edges · 57 communities (48 shown, 9 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 53 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `18258d25`
+- Built from commit: `d5eec072`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -32,12 +32,16 @@
 - quest-catalog.js
 - Requirements
 - package.json
+- ADDED Requirements
 - Decisions
+- day-finalization-worker.db.js
 - Proposal
 - allowBuilds
 - app.js
-- auth-routes.js
+- ref_vitest
 - Proposal
+- services/completion.js
+- ADDED Requirements
 - .prettierrc.json
 - auth-migration-empty-db.sh
 - postcss.config.mjs
@@ -57,18 +61,29 @@
 - Tasks
 - Design
 - Tasks
+- character-feedback.jsx
+- Proposal
+- Design
+- Tasks
+- services/calendar.js
+- pilot-load.js
+- profile-routes.db.js
+- login.js
+- auth-register-postgres.db.js
+- slice-3-migration.db.js
+- verify-pilot.sh
 
 ## God Nodes (most connected - your core abstractions)
-1. `KAIZEN System Architecture` - 19 edges
-2. `createApp()` - 18 edges
-3. `HttpError` - 13 edges
-4. `createAuthRoutes()` - 10 edges
-5. `editQuest()` - 10 edges
-6. `register()` - 9 edges
-7. `AuthForm()` - 9 edges
-8. `ADDED Requirements` - 9 edges
-9. `Requirements` - 9 edges
-10. `loginAccount()` - 8 edges
+1. `createApp()` - 30 edges
+2. `readServerClock()` - 26 edges
+3. `createCalendarRoutes()` - 20 edges
+4. `ProgressionError` - 20 edges
+5. `KAIZEN System Architecture` - 19 edges
+6. `@prisma/client` - 16 edges
+7. `HttpError` - 16 edges
+8. `completeOccurrence()` - 16 edges
+9. `useAuthDatabase()` - 16 edges
+10. `dateColumn()` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Focus Session Finalization` --semantically_similar_to--> `Atomic Completion`  [INFERRED] [semantically similar]
@@ -89,7 +104,7 @@
 - **Core KAIZEN Screen Prototypes** — ui_v4_kaizen_01_today_poster_editorial_edition_code_today_screen, ui_v4_kaizen_02_quests_poster_editorial_edition_code_quests_screen, ui_v4_kaizen_03_habits_poster_editorial_edition_code_habits_screen, ui_v4_kaizen_04_progress_12_month_block_heatmap_code_progress_screen, ui_v4_kaizen_05_profile_character_dossier_poster_edition_code_profile_screen [EXTRACTED 1.00]
 - **Completion Consistency Pattern** — competitors_focumon_focumon_system_architecture_and_design_focus_session_finalization, competitors_habitica_habitica_system_architecture_and_design_server_side_gamification, kaizen_system_architecture_atomic_completion, kaizen_system_design_mvp_completion_service [INFERRED 0.85]
 
-## Communities (42 total, 10 thin omitted)
+## Communities (57 total, 9 thin omitted)
 
 ### Community 0 - "Atomic Completion"
 Cohesion: 0.13
@@ -112,12 +127,12 @@ Cohesion: 0.50
 Nodes (4): KAIZEN Feature List, Recovery-Oriented Core Loop, Quests Dispatch Screen, Profile Dossier Screen
 
 ### Community 5 - "web/package.json"
-Cohesion: 0.06
-Nodes (35): dependencies, @kaizen/contracts@workspace:*, next@^16.0.0, react@^19.0.0, react-dom@^19.0.0, devDependencies, eslint@^9.0.0, eslint-config-next@^16.0.0 (+27 more)
+Cohesion: 0.07
+Nodes (34): dependencies, gsap@3.13.0, @kaizen/contracts@workspace:*, next@^16.0.0, react-dom@^19.0.0, devDependencies, eslint@^9.0.0, eslint-config-next@^16.0.0 (+26 more)
 
 ### Community 6 - "index.js"
-Cohesion: 0.07
-Nodes (31): LoginPage(), RegisterPage(), AuthForm(), mutate(), submit(), ApiError, auth, call() (+23 more)
+Cohesion: 0.06
+Nodes (45): sessionCookieOptions, empty, LoginPage(), RegisterPage(), AuthForm(), mutate(), submit(), user (+37 more)
 
 ### Community 11 - "ADDED Requirements"
 Cohesion: 0.08
@@ -128,8 +143,8 @@ Cohesion: 0.13
 Nodes (18): dependencies, zod@^4.0.0, devDependencies, eslint@^9.0.0, @eslint/js@^9.0.0, vitest@^4.0.0, exports, eslint (+10 more)
 
 ### Community 13 - "quest-catalog.js"
-Cohesion: 0.21
-Nodes (20): archiveQuest(), checkVersion(), createQuest(), editQuest(), eligibleDate(), getQuest(), getQuestSchedule(), listQuests() (+12 more)
+Cohesion: 0.15
+Nodes (29): pillars, QUEST_RULE_VERSION, questFields(), REWARD_XP, createCalendarRoutes(), CalendarError, changePriority(), createQuickQuest() (+21 more)
 
 ### Community 14 - "Requirements"
 Cohesion: 0.08
@@ -139,9 +154,17 @@ Nodes (24): Purpose, Requirement: Keep account access owner-scoped, Requirement:
 Cohesion: 0.18
 Nodes (11): devDependencies, prettier@^3.6.0, name, packageManager, private, scripts, build, lint (+3 more)
 
+### Community 16 - "ADDED Requirements"
+Cohesion: 0.14
+Nodes (13): ADDED Requirements, Purpose, Requirement: Present committed character feedback, Requirement: Present five owned screens, Requirement: Present progression accessibly, Requirement: Reveal earned seals once, Scenario: A completion changes health bands, Scenario: A person prefers reduced motion (+5 more)
+
 ### Community 17 - "Decisions"
 Cohesion: 0.17
 Nodes (11): Context, CSRF and rate limits, Data model and migration, Decisions, Design, Goals / Non-Goals, HTTP boundary, Migration Plan (+3 more)
+
+### Community 18 - "day-finalization-worker.db.js"
+Cohesion: 0.16
+Nodes (16): onTwoConnections(), { prisma, owner, plan, occurrence }, raceCompletions(), holdPlayer(), holdTransaction(), operation(), useCompletionDatabase(), occurrence() (+8 more)
 
 ### Community 19 - "Proposal"
 Cohesion: 0.25
@@ -152,24 +175,32 @@ Cohesion: 0.25
 Nodes (7): allowBuilds, bcrypt, esbuild, prisma, @prisma/client, @prisma/engines, packages
 
 ### Community 21 - "app.js"
-Cohesion: 0.10
-Nodes (32): app, createApp(), postOnly(), prisma, proxyTrust(), accountHandler(), requireSecret(), assignRequestId() (+24 more)
+Cohesion: 0.06
+Nodes (54): app, createApp(), postOnly(), prisma, proxyTrust(), createAuthRoutes(), accountHandler(), requireSecret() (+46 more)
 
-### Community 22 - "auth-routes.js"
-Cohesion: 0.08
-Nodes (35): cookieOptions, createAuthRoutes(), requireSession(), csrfProof(), SESSION_COOKIE, bcryptComparisonCosts(), bcryptCost(), bcryptCostSchema (+27 more)
+### Community 22 - "ref_vitest"
+Cohesion: 0.14
+Nodes (11): registerAccount(), useAuthDatabase(), register(), client, { prisma, register }, owner(), owner(), { prisma } (+3 more)
 
 ### Community 23 - "Proposal"
 Cohesion: 0.25
 Nodes (7): Capabilities, Impact, Modified Capabilities, New Capabilities, Proposal, What Changes, Why
+
+### Community 25 - "services/completion.js"
+Cohesion: 0.08
+Nodes (58): appliesPlannedHealth(), applyHealthDelta(), completionXp(), eligibleSeals(), healthOnClose(), healthOnCompletion(), levelProgress(), transitionStreak() (+50 more)
+
+### Community 26 - "ADDED Requirements"
+Cohesion: 0.15
+Nodes (12): ADDED Requirements, Purpose, Requirement: Clean up expired sessions independently, Requirement: Finalize days using a scheduled command, Requirement: Operate the API behind hardened ingress, Requirement: Verify pilot performance and recoverability, Scenario: Concurrent completion, Scenario: Mixed expiry (+4 more)
 
 ### Community 30 - "ADDED Requirements"
 Cohesion: 0.20
 Nodes (9): ADDED Requirements, Purpose, Requirement: Read an owned habit week, Requirement: Read owned progress, Requirement: Read the authenticated profile, Scenario: Foreign account supplied, Scenario: Paginate tied timestamps, Scenario: Zero scheduled occurrences (+1 more)
 
 ### Community 31 - "api/package.json"
-Cohesion: 0.07
-Nodes (35): dependencies, bcrypt@6.0.0, cors@2.8.6, express@^5.0.0, express-rate-limit@^8.0.0, helmet@^8.0.0, @kaizen/contracts@workspace:*, pino@^10.0.0 (+27 more)
+Cohesion: 0.06
+Nodes (40): dependencies, bcrypt@6.0.0, cors@2.8.6, express@^5.0.0, express-rate-limit@^8.0.0, helmet@^8.0.0, @js-temporal/polyfill@0.5.1, @kaizen/contracts@workspace:* (+32 more)
 
 ### Community 33 - "Tasks"
 Cohesion: 0.33
@@ -219,25 +250,73 @@ Nodes (5): 1. Schema and migration, 2. Quest catalog service, 3. Calendar servic
 Cohesion: 0.33
 Nodes (5): Context, Decisions, Design, Goals / Non-Goals, Risks / Trade-offs
 
+### Community 45 - "Tasks"
+Cohesion: 0.33
+Nodes (5): 1. Read models and remaining routes, 2. Shared token system, 3. Five screens, 4. GSAP character feedback, Tasks
+
+### Community 46 - "character-feedback.jsx"
+Cohesion: 0.11
+Nodes (31): react@^19.0.0, CharacterFeedback(), FeedbackMeter(), Gesture(), prefersReducedMotion(), SEAL_TITLES, sealDetails(), serverPrefersReducedMotion() (+23 more)
+
+### Community 47 - "Proposal"
+Cohesion: 0.25
+Nodes (7): Capabilities, Impact, Modified Capabilities, New Capabilities, Proposal, What Changes, Why
+
+### Community 48 - "Design"
+Cohesion: 0.29
+Nodes (6): Context, Decisions, Design, Goals / Non-Goals, Migration Plan, Risks / Trade-offs
+
+### Community 49 - "Tasks"
+Cohesion: 0.29
+Nodes (6): 1. Day finalization worker, 2. Session cleanup job, 3. Deployment hardening, 4. Verification and load checks, 5. Full final check, Tasks
+
+### Community 50 - "services/calendar.js"
+Cohesion: 0.14
+Nodes (28): dateColumn(), dayBounds(), firstTransitionDate(), localDateAt(), plainDate(), effectiveOn(), latestDay(), locked() (+20 more)
+
+### Community 51 - "pilot-load.js"
+Cohesion: 0.15
+Nodes (11): makeAccounts(), PILOT_DAYS, PILOT_USERS, reconcilePilot(), seedPilot(), explain(), measure(), prisma (+3 more)
+
+### Community 52 - "profile-routes.db.js"
+Cohesion: 0.17
+Nodes (13): createSession(), hashToken(), invalidSession, lookupSession(), presentedTokenHash(), revokeSession(), SessionOwnerUnavailable, invalid (+5 more)
+
+### Community 53 - "login.js"
+Cohesion: 0.27
+Nodes (9): bcryptComparisonCosts(), bcryptCost(), bcryptCostSchema, verifyStoredBcryptCosts(), dummyHash(), loginAccount(), loginFailed, { prisma, register } (+1 more)
+
+### Community 54 - "auth-register-postgres.db.js"
+Cohesion: 0.29
+Nodes (5): conflict, database, databaseName, emails, prisma
+
+### Community 55 - "slice-3-migration.db.js"
+Cohesion: 0.40
+Nodes (4): createDay(), date(), fields, { prisma, register }
+
+### Community 56 - "verify-pilot.sh"
+Cohesion: 0.40
+Nodes (3): DATABASE_URL, MIGRATION_DATABASE_URL, verify-pilot.sh script
+
 ## Knowledge Gaps
-- **22 isolated node(s):** `Modular Monolith`, `Today Ledger Screen`, `Habits Protocol Screen`, `Progress Ledger Screen`, `Focumon` (+17 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 297 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **24 isolated node(s):** `MIGRATION_DATABASE_URL`, `DATABASE_URL`, `Modular Monolith`, `Today Ledger Screen`, `Habits Protocol Screen` (+19 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 405 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `web/package.json` to `index.js`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
-- **Are the 5 inferred relationships involving `createApp()` (e.g. with `postOnly()` and `assignRequestId()`) actually correct?**
-  _`createApp()` has 5 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Modular Monolith`, `Today Ledger Screen`, `Habits Protocol Screen` to the rest of the system?**
-  _22 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `@prisma/client` connect `ref_vitest` to `quest-catalog.js`, `day-finalization-worker.db.js`, `pilot-load.js`, `profile-routes.db.js`, `app.js`, `auth-register-postgres.db.js`, `services/completion.js`, `api/package.json`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Are the 6 inferred relationships involving `createApp()` (e.g. with `postOnly()` and `assignRequestId()`) actually correct?**
+  _`createApp()` has 6 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `MIGRATION_DATABASE_URL`, `DATABASE_URL`, `Modular Monolith` to the rest of the system?**
+  _24 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Atomic Completion` be split into smaller, more focused modules?**
   _Cohesion score 0.13333333333333333 - nodes in this community are weakly interconnected._
-- **Why does `next` connect `web/package.json` to `index.js`?**
-  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+- **Why does `react` connect `character-feedback.jsx` to `web/package.json`, `index.js`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **Should `ADDED Requirements` be split into smaller, more focused modules?**
   _Cohesion score 0.1 - nodes in this community are weakly interconnected._
-- **Why does `@prisma/client` connect `auth-routes.js` to `app.js`, `api/package.json`?**
-  _High betweenness centrality (0.010) - this node is a cross-community bridge._
+- **Why does `@testing-library/react` connect `web/package.json` to `character-feedback.jsx`, `index.js`?**
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
