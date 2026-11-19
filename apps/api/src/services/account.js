@@ -64,12 +64,23 @@ export function readProfile(prisma, { userId }) {
         orderBy: [{ unlockedAt: 'desc' }, { achievementCode: 'asc' }],
         omit: { userId: true },
       });
+      const pillarTotals = await tx.$queryRaw`
+        SELECT o.pillar, SUM(e."xpDelta") AS xp
+        FROM "ProgressEvent" e
+        JOIN "QuestOccurrence" o ON o.id = e."occurrenceId" AND o."userId" = e."userId"
+        WHERE e."userId" = ${userId}::uuid AND e.kind = 'COMPLETION'
+        GROUP BY o.pillar ORDER BY o.pillar
+      `;
       return {
         user: publicAccount(user),
         ...playerState,
         ...levelProgress(playerState.totalXp),
         rank: rankForXp(playerState.totalXp),
         seals,
+        pillarTotals: pillarTotals.map(({ pillar, xp }) => ({
+          pillar,
+          xp: Number(xp),
+        })),
       };
     },
     { isolationLevel: 'RepeatableRead' },

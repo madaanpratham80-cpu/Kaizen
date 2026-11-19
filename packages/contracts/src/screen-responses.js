@@ -250,5 +250,6 @@ export const profileResponseSchema = envelope(
     xpIntoLevel: count,
     rank,
     seals: z.array(seal),
+    pillarTotals: z.array(z.strictObject({ pillar, xp: count })),
   }),
 );

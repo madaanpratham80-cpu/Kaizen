@@ -493,6 +493,130 @@ describe('progress-routes', () => {
 });
 
 describe('profile-settings-routes', () => {
+  async function pillarHistory(actor, rewards) {
+    const saved = await plan(actor, { status: 'ACTIVE' });
+    const items = [];
+    for (const [index, { pillar, xp }] of rewards.entries()) {
+      const item = await occurrence(saved, { priority: false, rewardXp: 999 });
+      await prisma.questOccurrence.update({
+        where: { id: item.id },
+        data: { pillar, status: 'COMPLETED', completedAt: saved.startsAtUtc },
+      });
+      await prisma.progressEvent.create({
+        data: {
+          userId: actor.userId,
+          sequence: index + 1,
+          awardKey: `test:pillar:${index}`,
+          kind: 'COMPLETION',
+          dayId: saved.id,
+          occurrenceId: item.id,
+          xpDelta: xp,
+          healthDelta: 0,
+          ruleVersion: 1,
+        },
+      });
+      items.push(item);
+    }
+    await prisma.playerState.update({
+      where: { userId: actor.userId },
+      data: {
+        totalXp: rewards.reduce((total, { xp }) => total + xp, 0),
+        nextEventSequence: rewards.length + 1,
+        stateVersion: rewards.length,
+      },
+    });
+    return items;
+  }
+
+  it('profile pillar totals are owner-scoped', async () => {
+    const alice = await account();
+    const bob = await account();
+    await pillarHistory(alice, [
+      { pillar: 'Cognitive', xp: 37 },
+      { pillar: 'Craft', xp: 11 },
+    ]);
+    const read = async (actor) => {
+      const response = await actor.get('/profile').expect(200);
+      noStore(response);
+      return profileResponseSchema.parse(response.body).data;
+    };
+    expect((await read(alice)).pillarTotals).toEqual([
+      { pillar: 'Cognitive', xp: 37 },
+      { pillar: 'Craft', xp: 11 },
+    ]);
+    expect((await read(bob)).pillarTotals).toEqual([]);
+    await pillarHistory(bob, [{ pillar: 'Physical', xp: 7 }]);
+    const output = await read(bob);
+    expect(output.user.id).toBe(bob.userId);
+    expect(output.pillarTotals).toEqual([{ pillar: 'Physical', xp: 7 }]);
+    expect(output.pillarTotals).not.toContainEqual({
+      pillar: 'Cognitive',
+      xp: 37,
+    });
+    expect(output.pillarTotals).not.toContainEqual({ pillar: 'Craft', xp: 11 });
+    expect(JSON.stringify(output)).not.toContain(alice.userId);
+    await bob.get(`/profile?userId=${alice.userId}`).expect(400);
+  });
+
+  it('profile pillar totals match progress at the same stateVersion', async () => {
+    const actor = await account();
+    const compare = async () => {
+      const profile = profileResponseSchema.parse(
+        (await actor.get('/profile').expect(200)).body,
+      ).data;
+      const progress = progressResponseSchema.parse(
+        (await actor.get('/progress?limit=1').expect(200)).body,
+      ).data;
+      expect(profile.user.id).toBe(actor.userId);
+      expect(profile.stateVersion).toBe(progress.stateVersion);
+      expect(profile.pillarTotals).toEqual(progress.pillarTotals);
+      return profile;
+    };
+    expect((await compare()).pillarTotals).toEqual([]);
+    const items = await pillarHistory(actor, [
+      { pillar: 'Cognitive', xp: 10 },
+      { pillar: 'Cognitive', xp: 20 },
+      { pillar: 'Craft', xp: 7 },
+      { pillar: 'Physical', xp: 3 },
+    ]);
+    await prisma.quest.update({
+      where: { id: items[0].questId },
+      data: { pillar: 'Physical' },
+    });
+    const afterCatalogEdit = await compare();
+    expect(afterCatalogEdit.stateVersion).toBe(4);
+    expect(afterCatalogEdit.pillarTotals).toEqual([
+      { pillar: 'Cognitive', xp: 30 },
+      { pillar: 'Craft', xp: 7 },
+      { pillar: 'Physical', xp: 3 },
+    ]);
+    await prisma.progressEvent.create({
+      data: {
+        userId: actor.userId,
+        sequence: 5,
+        awardKey: 'test:pillar:seal',
+        kind: 'SEAL',
+        occurrenceId: items[0].id,
+        sealCode: 'iron-will',
+        xpDelta: 25,
+        healthDelta: 0,
+        ruleVersion: 1,
+      },
+    });
+    await prisma.playerState.update({
+      where: { userId: actor.userId },
+      data: { totalXp: 65, nextEventSequence: 6, stateVersion: 5 },
+    });
+    const profile = await compare();
+    expect(profile.stateVersion).toBe(5);
+    expect(profile.totalXp).toBe(65);
+    expect(profile.pillarTotals).toEqual([
+      { pillar: 'Cognitive', xp: 30 },
+      { pillar: 'Craft', xp: 7 },
+      { pillar: 'Physical', xp: 3 },
+    ]);
+  });
+
   it('returns safe committed fields and preserves historical dates when settings change', async () => {
     const alice = await account();
     const bob = await account();
