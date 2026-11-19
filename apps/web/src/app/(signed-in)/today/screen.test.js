@@ -134,6 +134,7 @@ function mockApi(complete, refreshed = updated) {
           xpIntoLevel: 30,
           rank: { title: 'Initiate', minimumLevel: 1, ruleVersion: 1 },
           seals: [],
+          pillarTotals: [],
         });
       case '/api/v1/progress':
         return reply({
