@@ -14,6 +14,11 @@ describe('shared screen state', () => {
     ['expired-session', 'alert', 'Your session expired. Log in to continue.'],
     ['catching-up', 'status', 'Catching up on your calendar…'],
     ['offline', 'status', 'You’re offline. Reconnect to try again.'],
+    [
+      'version-conflict',
+      'alert',
+      'Progress changed while loading. Reload to show a consistent snapshot.',
+    ],
   ])(
     'renders the %s label with the appropriate announcement role',
     (state, role, label) => {

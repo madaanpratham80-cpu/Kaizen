@@ -390,10 +390,6 @@ describe('progress-routes', () => {
       where: { id: target.id },
       data: { status: 'COMPLETED', completedAt: bounds.startsAtUtc },
     });
-    await prisma.quest.update({
-      where: { id: target.questId },
-      data: { pillar: 'Physical', title: 'Edited title' },
-    });
     const event = {
       userId: alice.userId,
       dayId: saved.id,
@@ -431,6 +427,10 @@ describe('progress-routes', () => {
       data: { totalXp: 401, nextEventSequence: 3, stateVersion: 2 },
     });
     const through = `from=${spring}&to=${spring}&limit=1`;
+    await prisma.quest.update({
+      where: { id: target.questId },
+      data: { pillar: 'Physical', title: 'Changed catalog title' },
+    });
     const page = await alice.get(`/progress?${through}`).expect(200);
     noStore(page);
     const output = progressResponseSchema.parse(page.body).data;
@@ -481,6 +481,10 @@ describe('progress-routes', () => {
       .get(`/progress?limit=1&cursor=${output.nextCursor}`)
       .expect(200);
     expect(next.body.data.ledger.map(({ sequence }) => sequence)).toEqual([1]);
+    expect(next.body.data.ledger[0]).toMatchObject({
+      kind: 'COMPLETION',
+      title: 'Read',
+    });
     expect(next.body.data.nextCursor).toBeNull();
     expect((await bob.get('/progress').expect(200)).body.data.ledger).toEqual(
       [],
@@ -569,7 +573,19 @@ describe('account-deletion-postgres', () => {
     const bob = await account();
     const saved = await plan(alice);
     await occurrence(saved);
-    const sealCount = await prisma.achievement.count();
+    const definitionQuery = {
+      where: {
+        code: { in: ['hundred-gates', 'iron-will', 'seven-day-warrior'] },
+        ruleVersion: 1,
+      },
+      orderBy: { code: 'asc' },
+    };
+    const sealDefinitions = await prisma.achievement.findMany(definitionQuery);
+    expect(sealDefinitions.map(({ code }) => code)).toEqual([
+      'hundred-gates',
+      'iron-will',
+      'seven-day-warrior',
+    ]);
     await api
       .delete('/api/v1/account')
       .set('Cookie', alice.cookie)
@@ -603,7 +619,9 @@ describe('account-deletion-postgres', () => {
     expect(
       await prisma.session.count({ where: { userId: alice.userId } }),
     ).toBe(0);
-    expect(await prisma.achievement.count()).toBe(sealCount);
+    expect(await prisma.achievement.findMany(definitionQuery)).toEqual(
+      sealDefinitions,
+    );
   });
 
   it('rolls back sessions and owned records if deletion fails after revoking sessions', async () => {

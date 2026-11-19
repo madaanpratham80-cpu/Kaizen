@@ -11,6 +11,8 @@ import { sessionCache } from './session-cache.js';
 
 /** @param {unknown} error */
 export function readFailure(error) {
+  if (error instanceof ApiError && error.code === 'STATE_VERSION_MISMATCH')
+    return 'version-conflict';
   if (error instanceof ApiError && error.status === 401)
     return 'expired-session';
   return navigator.onLine === false ? 'offline' : 'error';

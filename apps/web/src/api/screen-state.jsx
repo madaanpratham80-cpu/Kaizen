@@ -5,6 +5,8 @@ const labels = {
   offline: 'You’re offline. Reconnect to try again.',
   'expired-session': 'Your session expired. Log in to continue.',
   'catching-up': 'Catching up on your calendar…',
+  'version-conflict':
+    'Progress changed while loading. Reload to show a consistent snapshot.',
 };
 
 /**
@@ -13,6 +15,10 @@ const labels = {
  */
 export function ScreenState({ state }) {
   const role =
-    state === 'error' || state === 'expired-session' ? 'alert' : 'status';
+    state === 'error' ||
+    state === 'expired-session' ||
+    state === 'version-conflict'
+      ? 'alert'
+      : 'status';
   return <p role={role}>{labels[state]}</p>;
 }
