@@ -159,6 +159,13 @@ const habitDay = z.strictObject({
 export const habitsResponseSchema = envelope(
   z.strictObject({
     week: localDate,
+    habits: z.array(
+      z.strictObject({
+        questId: id,
+        title: z.string(),
+        streak: z.strictObject({ current: count, best: count }),
+      }),
+    ),
     days: z.array(habitDay).length(7),
     scheduled: count,
     completed: count,

@@ -120,6 +120,7 @@ function mockApi(complete, refreshed = updated) {
             timing: 'future',
             occurrences: [],
           })),
+          habits: [],
           scheduled: 0,
           completed: 0,
           compliance: null,

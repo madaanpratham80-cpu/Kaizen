@@ -35,6 +35,7 @@ async function account(client = api) {
     .get('/api/v1/auth/session')
     .set('Cookie', cookie)
     .expect(200);
+  expect(body.data.user.id).toBe(actor.userId);
   return {
     ...actor,
     cookie,
@@ -55,6 +56,112 @@ function noStore(response) {
 }
 
 describe('habits-week-routes', () => {
+  async function streakHistory(actor, outcomes) {
+    const first = await plan(actor, { offset: -outcomes.length });
+    const item = await occurrence(first);
+    await prisma.user.update({
+      where: { id: actor.userId },
+      data: { createdAt: first.localDate },
+    });
+    await prisma.scheduleVersion.create({
+      data: {
+        userId: actor.userId,
+        questId: item.questId,
+        effectiveFrom: first.localDate,
+        recurrence: 'DAILY',
+        title: 'Read',
+        category: 'Academic',
+        pillar: 'Cognitive',
+        difficulty: 'EASY',
+        target: 1,
+        ruleVersion: 1,
+      },
+    });
+    for (const [index, outcome] of outcomes.entries()) {
+      const saved =
+        index === 0
+          ? first
+          : await plan(actor, {
+              offset: index - outcomes.length,
+              status: outcome === null ? 'REST' : 'OPEN',
+              plannedCount: outcome === null ? 0 : 1,
+            });
+      if (outcome === null) continue;
+      const values = {
+        status: outcome ? 'COMPLETED' : 'PENDING',
+        completedAt: outcome ? saved.startsAtUtc : null,
+      };
+      if (index === 0)
+        await prisma.questOccurrence.update({
+          where: { id: item.id },
+          data: values,
+        });
+      else {
+        const fields = { ...item };
+        delete fields.id;
+        await prisma.questOccurrence.create({
+          data: { ...fields, ...values, dayPlanId: saved.id },
+        });
+      }
+    }
+    return item;
+  }
+
+  it('per-habit streak is owner-scoped', async () => {
+    const alice = await account();
+    const bob = await account();
+    const a = await streakHistory(alice, [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
+    const b = await streakHistory(bob, [true, false, true]);
+    const week = today().subtract({ days: 1 });
+    const read = async (actor) =>
+      habitsResponseSchema.parse(
+        (await actor.get(`/habits?week=${week}`).expect(200)).body,
+      ).data;
+    expect((await read(alice)).habits).toEqual([
+      { questId: a.questId, title: 'Read', streak: { current: 8, best: 8 } },
+    ]);
+    const output = await read(bob);
+    expect(output.habits).toEqual([
+      { questId: b.questId, title: 'Read', streak: { current: 1, best: 1 } },
+    ]);
+    expect(JSON.stringify(output)).not.toContain(a.questId);
+    expect(output.habits.map(({ streak }) => streak)).not.toContainEqual({
+      current: 8,
+      best: 8,
+    });
+    await bob.get(`/habits?week=${week}&userId=${alice.userId}`).expect(400);
+  });
+
+  it('per-habit streak counts only scheduled dates', async () => {
+    const alice = await account();
+    const item = await streakHistory(alice, [true, null, true, null, true]);
+    // The fourth date is an opened EMPTY day with no scheduled occurrence.
+    await prisma.dayPlan.update({
+      where: {
+        userId_localDate: {
+          userId: alice.userId,
+          localDate: dateColumn(today().subtract({ days: 2 })),
+        },
+      },
+      data: { status: 'EMPTY' },
+    });
+    const response = await alice
+      .get(`/habits?week=${today().subtract({ days: 5 })}`)
+      .expect(200);
+    expect(habitsResponseSchema.parse(response.body).data.habits).toEqual([
+      { questId: item.questId, title: 'Read', streak: { current: 3, best: 3 } },
+    ]);
+  });
+
   it('returns seven dates with historical snapshots and excludes future dates from compliance', async () => {
     const alice = await account();
     const bob = await account();
@@ -119,6 +226,34 @@ describe('habits-week-routes', () => {
       occurrences: [{ status: 'SCHEDULED' }],
     });
     expect({ scheduled, completed, compliance }).toEqual({
+      scheduled: 2,
+      completed: 1,
+      compliance: 0.5,
+    });
+    expect({
+      week: response.body.data.week,
+      days,
+      scheduled,
+      completed,
+      compliance,
+    }).toEqual({
+      week: week.toString(),
+      days: Array.from({ length: 7 }, (_, index) => ({
+        date: week.add({ days: index }).toString(),
+        id: index === 1 ? saved.id : null,
+        status: index === 1 ? 'ACTIVE' : 'SCHEDULED',
+        timing: index < 2 ? 'elapsed' : index === 2 ? 'today' : 'future',
+        occurrences: [
+          {
+            id: index === 1 ? item.id : null,
+            questId: item.questId,
+            title: index === 1 ? 'Original snapshot' : 'Historical rule',
+            target: 1,
+            status:
+              index === 0 ? 'MISSED' : index === 1 ? 'COMPLETED' : 'SCHEDULED',
+          },
+        ],
+      })),
       scheduled: 2,
       completed: 1,
       compliance: 0.5,
