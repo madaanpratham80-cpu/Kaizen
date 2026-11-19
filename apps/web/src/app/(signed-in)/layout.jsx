@@ -18,6 +18,9 @@ export default function SignedInLayout({ children }) {
         <Link href="/quests" className="underline">
           Quests
         </Link>
+        <Link href="/habits" className="underline">
+          Habits
+        </Link>
       </nav>
       {children}
     </div>

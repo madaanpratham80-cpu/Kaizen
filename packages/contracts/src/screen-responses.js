@@ -164,6 +164,23 @@ export const habitsResponseSchema = envelope(
         questId: id,
         title: z.string(),
         streak: z.strictObject({ current: count, best: count }),
+        completionRate: z.number().min(0).max(1).nullable(),
+        cells: z
+          .array(
+            z.strictObject({
+              date: localDate,
+              label: z.enum([
+                'Completed',
+                'Missed',
+                'Rest',
+                'Excused',
+                'Not scheduled',
+                'Pending',
+                'Scheduled',
+              ]),
+            }),
+          )
+          .length(7),
       }),
     ),
     days: z.array(habitDay).length(7),

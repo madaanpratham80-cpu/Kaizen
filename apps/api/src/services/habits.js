@@ -1,6 +1,10 @@
 import { Temporal } from '@js-temporal/polyfill';
 import { dateColumn, dayBounds } from '../domain/calendar.js';
 import { habitStreak } from '../domain/habit-streak.js';
+import {
+  summarizeHabitWeek,
+  summarizeWeekCompliance,
+} from '../domain/habit-week.js';
 import { readServerClock } from './player-lock.js';
 import { ProgressionError } from './progression-store.js';
 
@@ -184,6 +188,7 @@ async function readStreaks(tx, userId, account, end, now, days, weekSchedules) {
   return [...habits.values()].map((habit) => ({
     ...habit,
     streak: habitStreak(histories.get(habit.questId)),
+    ...summarizeHabitWeek(days, habit.questId),
   }));
 }
 
@@ -253,12 +258,6 @@ export function readHabitWeek(prisma, { userId }, week) {
           now,
         }),
       );
-      const scheduled = days
-        .filter(({ timing }) => timing === 'elapsed')
-        .flatMap(({ occurrences }) => occurrences);
-      const completed = scheduled.filter(
-        ({ status }) => status === 'COMPLETED',
-      ).length;
       return {
         week,
         habits: await readStreaks(
@@ -271,9 +270,7 @@ export function readHabitWeek(prisma, { userId }, week) {
           schedules,
         ),
         days,
-        scheduled: scheduled.length,
-        completed,
-        compliance: scheduled.length ? completed / scheduled.length : null,
+        ...summarizeWeekCompliance(days),
       };
     },
     { isolationLevel: 'RepeatableRead' },

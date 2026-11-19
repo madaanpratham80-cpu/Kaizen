@@ -56,6 +56,11 @@ function noStore(response) {
 }
 
 describe('habits-week-routes', () => {
+  const cellsFrom = (week, labels) =>
+    labels.map((label, index) => ({
+      date: week.add({ days: index }).toString(),
+      label,
+    }));
   async function streakHistory(actor, outcomes) {
     const first = await plan(actor, { offset: -outcomes.length });
     const item = await occurrence(first);
@@ -127,11 +132,39 @@ describe('habits-week-routes', () => {
         (await actor.get(`/habits?week=${week}`).expect(200)).body,
       ).data;
     expect((await read(alice)).habits).toEqual([
-      { questId: a.questId, title: 'Read', streak: { current: 8, best: 8 } },
+      {
+        questId: a.questId,
+        title: 'Read',
+        streak: { current: 8, best: 8 },
+        completionRate: 1,
+        cells: cellsFrom(week, [
+          'Completed',
+          'Pending',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+        ]),
+      },
     ]);
     const output = await read(bob);
     expect(output.habits).toEqual([
-      { questId: b.questId, title: 'Read', streak: { current: 1, best: 1 } },
+      {
+        questId: b.questId,
+        title: 'Read',
+        streak: { current: 1, best: 1 },
+        completionRate: 1,
+        cells: cellsFrom(week, [
+          'Completed',
+          'Pending',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+        ]),
+      },
     ]);
     expect(JSON.stringify(output)).not.toContain(a.questId);
     expect(output.habits.map(({ streak }) => streak)).not.toContainEqual({
@@ -158,7 +191,21 @@ describe('habits-week-routes', () => {
       .get(`/habits?week=${today().subtract({ days: 5 })}`)
       .expect(200);
     expect(habitsResponseSchema.parse(response.body).data.habits).toEqual([
-      { questId: item.questId, title: 'Read', streak: { current: 3, best: 3 } },
+      {
+        questId: item.questId,
+        title: 'Read',
+        streak: { current: 3, best: 3 },
+        completionRate: 1,
+        cells: cellsFrom(today().subtract({ days: 5 }), [
+          'Completed',
+          'Rest',
+          'Completed',
+          'Not scheduled',
+          'Completed',
+          'Pending',
+          'Scheduled',
+        ]),
+      },
     ]);
   });
 
@@ -206,6 +253,19 @@ describe('habits-week-routes', () => {
     await alice.get(`/habits?week=${week}&userId=${bob.userId}`).expect(400);
     const response = await alice.get(`/habits?week=${week}`).expect(200);
     noStore(response);
+    const habit = response.body.data.habits[0];
+    expect(habit.completionRate).toBe(0.5);
+    expect(habit.cells).toEqual(
+      cellsFrom(week, [
+        'Missed',
+        'Completed',
+        'Pending',
+        'Scheduled',
+        'Scheduled',
+        'Scheduled',
+        'Scheduled',
+      ]),
+    );
     const { days, scheduled, completed, compliance } =
       habitsResponseSchema.parse(response.body).data;
     expect(days.map(({ date }) => date)).toEqual(
@@ -265,6 +325,7 @@ describe('habits-week-routes', () => {
       .get(`/habits?week=${today().add({ days: 7 })}`)
       .expect(200);
     expect(empty.body.data.compliance).toBeNull();
+    expect(empty.body.data.habits[0].completionRate).toBeNull();
     expect(
       (await bob.get(`/habits?week=${week}`).expect(200)).body.data.days[1]
         .occurrences[0].id,
