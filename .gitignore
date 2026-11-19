@@ -10,4 +10,5 @@ coverage/
 .pnpm-store/
 .env
 .env.local
+/reviews/
 
