@@ -1,10 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { Fragment, useEffect, useState } from 'react';
+import {
+  createContext,
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { ApiError, auth } from '../auth/client.js';
 import { ScreenState } from './screen-state.jsx';
 import { sessionCache } from './session-cache.js';
+
+const ExpiredSessionContext = createContext(
+  /** @type {(() => void) | null} */ (null),
+);
 
 /** @typedef {NonNullable<Awaited<ReturnType<typeof auth.session>>>} ScreenSession */
 /** @typedef {NonNullable<ReturnType<typeof sessionCache.forSession>>} SessionScope */
@@ -22,6 +35,10 @@ export function readFailure(error) {
  * @param {{state: Parameters<typeof ScreenState>[0]['state'], retry?: () => void}} props
  */
 export function ScreenNotice({ state, retry }) {
+  const markExpired = useContext(ExpiredSessionContext);
+  useLayoutEffect(() => {
+    if (state === 'expired-session') markExpired?.();
+  }, [markExpired, state]);
   return (
     <div className="space-y-2">
       <ScreenState state={state} />
@@ -45,6 +62,12 @@ export function SessionScreen({ children }) {
   const [access, setAccess] = useState(null);
   const [failure, setFailure] = useState(null);
   const [retry, setRetry] = useState(0);
+  const expired = useRef(false);
+  const expiryGeneration = useRef(0);
+  const markExpired = useCallback(() => {
+    expired.current = true;
+    expiryGeneration.current += 1;
+  }, []);
 
   useEffect(() => {
     let current;
@@ -53,11 +76,13 @@ export function SessionScreen({ children }) {
       const controller = new AbortController();
       current = controller;
       const { signal } = controller;
+      const generation = expiryGeneration.current;
       try {
         const session = await auth.session(signal);
-        if (signal.aborted) return;
+        if (signal.aborted || generation !== expiryGeneration.current) return;
         const scope =
           session && sessionCache.forSession(session.feedbackSessionId);
+        expired.current = !scope;
         setFailure(scope ? null : 'expired-session');
         setAccess((previous) =>
           scope
@@ -69,17 +94,22 @@ export function SessionScreen({ children }) {
             : null,
         );
       } catch (error) {
-        if (signal.aborted) return;
+        if (signal.aborted || generation !== expiryGeneration.current) return;
         setAccess(null);
-        setFailure(readFailure(error));
+        const nextFailure = readFailure(error);
+        expired.current = nextFailure === 'expired-session';
+        setFailure(nextFailure);
       }
     }
+    function verifyOnFocus() {
+      if (!expired.current) void verify();
+    }
     void verify();
-    window.addEventListener('focus', verify);
+    window.addEventListener('focus', verifyOnFocus);
     window.addEventListener('online', verify);
     return () => {
       current?.abort();
-      window.removeEventListener('focus', verify);
+      window.removeEventListener('focus', verifyOnFocus);
       window.removeEventListener('online', verify);
     };
   }, [retry]);
@@ -112,8 +142,10 @@ export function SessionScreen({ children }) {
     );
   }
   return (
-    <Fragment key={access.session.feedbackSessionId}>
-      {children(access.session, access.scope, access.revision)}
-    </Fragment>
+    <ExpiredSessionContext.Provider value={markExpired}>
+      <Fragment key={access.session.feedbackSessionId}>
+        {children(access.session, access.scope, access.revision)}
+      </Fragment>
+    </ExpiredSessionContext.Provider>
   );
 }
