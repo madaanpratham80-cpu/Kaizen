@@ -33,6 +33,30 @@ export const settingsSchema = z
   })
   .refine((settings) => Object.keys(settings).length > 0);
 
+const settingsValidationDetail = z.strictObject({
+  path: z.union([
+    z.tuple([]),
+    z.tuple([z.enum(['displayName', 'timezone', 'goals'])]),
+    z.tuple([z.literal('goals'), z.int().nonnegative()]),
+  ]),
+  code: z.enum([
+    'INVALID_TYPE',
+    'TOO_SMALL',
+    'TOO_BIG',
+    'UNKNOWN_FIELD',
+    'INVALID_VALUE',
+  ]),
+});
+
+export const settingsValidationErrorResponseSchema = z.strictObject({
+  error: z.strictObject({
+    code: z.literal('INVALID_INPUT'),
+    message: z.string(),
+    details: z.array(settingsValidationDetail).min(1),
+  }),
+  requestId: z.uuid(),
+});
+
 export const deleteAccountSchema = z.strictObject({
   password: z
     .string()

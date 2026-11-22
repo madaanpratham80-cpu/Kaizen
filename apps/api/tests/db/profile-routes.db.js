@@ -2,6 +2,8 @@ import {
   habitsResponseSchema,
   profileResponseSchema,
   progressResponseSchema,
+  settingsSaveResponseSchema,
+  settingsValidationErrorResponseSchema,
 } from '@kaizen/contracts';
 import { PrismaClient } from '@prisma/client';
 import { Temporal } from '@js-temporal/polyfill';
@@ -688,6 +690,120 @@ describe('profile-settings-routes', () => {
     expect(
       (await bob.get('/profile').expect(200)).body.data.user,
     ).toMatchObject({ id: bob.userId, displayName: 'Test student', goals: [] });
+  });
+});
+
+describe('settings-validation-field-errors', () => {
+  it('returns one, multiple, nested and form-level paths without saving rejected changes', async () => {
+    const actor = await account();
+    const where = { id: actor.userId };
+    const before = await prisma.user.findUniqueOrThrow({ where });
+    const cases = [
+      [
+        { timezone: 'Mars/Olympus' },
+        [{ path: ['timezone'], code: 'INVALID_VALUE' }],
+      ],
+      [
+        { displayName: ' ', timezone: 'Mars/Olympus', goals: ['Uncommitted'] },
+        [
+          { path: ['displayName'], code: 'TOO_SMALL' },
+          { path: ['timezone'], code: 'INVALID_VALUE' },
+        ],
+      ],
+      [
+        { goals: [42], displayName: 'Uncommitted' },
+        [{ path: ['goals', 0], code: 'INVALID_TYPE' }],
+      ],
+      [{}, [{ path: [], code: 'INVALID_VALUE' }]],
+    ];
+    for (const [body, details] of cases) {
+      const result = await actor.send('patch', '/settings', body).expect(400);
+      noStore(result);
+      expect(
+        settingsValidationErrorResponseSchema.parse(result.body).error,
+      ).toEqual({
+        code: 'INVALID_INPUT',
+        message: 'Invalid request input.',
+        details,
+      });
+    }
+    expect(await prisma.user.findUniqueOrThrow({ where })).toEqual(before);
+    expect(
+      await prisma.calendarTimezoneTransition.count({
+        where: { userId: actor.userId },
+      }),
+    ).toBe(0);
+  });
+
+  it('rejects an owner override without reflecting it or changing either account', async () => {
+    const owner = await account();
+    const other = await account();
+    const query = {
+      where: { id: { in: [owner.userId, other.userId] } },
+      orderBy: { id: 'asc' },
+    };
+    const before = await prisma.user.findMany(query);
+    expect(before).toHaveLength(2);
+    const response = await owner
+      .send('patch', '/settings', {
+        displayName: 'Uncommitted',
+        userId: other.userId,
+      })
+      .expect(400);
+    const { error } = settingsValidationErrorResponseSchema.parse(
+      response.body,
+    );
+    expect(error.details).toEqual([{ path: [], code: 'UNKNOWN_FIELD' }]);
+    expect(JSON.stringify(response.body)).not.toContain(other.userId);
+    expect(JSON.stringify(response.body)).not.toContain('userId');
+    expect(await prisma.user.findMany(query)).toEqual(before);
+  });
+
+  it('keeps authorization, malformed JSON, other validation errors, and successful saves compatible', async () => {
+    const actor = await account();
+    const invalid = { timezone: 'Mars/Olympus' };
+    const withoutSession = await api
+      .patch('/api/v1/settings')
+      .set('Origin', origin)
+      .send(invalid)
+      .expect(401);
+    const withoutOrigin = await api
+      .patch('/api/v1/settings')
+      .set('Cookie', actor.cookie)
+      .send(invalid)
+      .expect(403);
+    const withoutCsrf = await api
+      .patch('/api/v1/settings')
+      .set('Origin', origin)
+      .set('Cookie', actor.cookie)
+      .send(invalid)
+      .expect(403);
+    const malformed = await actor
+      .send('patch', '/settings')
+      .set('Content-Type', 'application/json')
+      .send('{')
+      .expect(400);
+    const unrelated = await actor.get('/quests?limit=0').expect(400);
+    for (const [response, code, message] of [
+      [withoutSession, 'SESSION_INVALID', 'Invalid session.'],
+      [withoutOrigin, 'ORIGIN_NOT_ALLOWED', 'Origin is not allowed.'],
+      [withoutCsrf, 'CSRF_INVALID', 'Invalid CSRF token.'],
+      [malformed, 'INVALID_BODY', 'Invalid JSON body.'],
+      [unrelated, 'INVALID_INPUT', 'Invalid request input.'],
+    ]) {
+      expect(response.body).toEqual({
+        error: { code, message },
+        requestId: response.headers['x-request-id'],
+      });
+    }
+    const saved = await actor
+      .send('patch', '/settings', { displayName: 'Saved' })
+      .expect(200);
+    noStore(saved);
+    expect(settingsSaveResponseSchema.parse(saved.body).data).toMatchObject({
+      user: { id: actor.userId, displayName: 'Saved' },
+      pendingTimezone: null,
+    });
   });
 });
 

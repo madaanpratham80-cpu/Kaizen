@@ -39,6 +39,24 @@ import { sessionCookieOptions } from './auth-routes.js';
 import { HttpError, sendData, SESSION_COOKIE } from './boundary.js';
 
 const empty = z.strictObject({});
+const settingsFields = new Set(['displayName', 'timezone', 'goals']);
+const settingsIssueCodes = new Map([
+  ['invalid_type', 'INVALID_TYPE'],
+  ['too_small', 'TOO_SMALL'],
+  ['too_big', 'TOO_BIG'],
+  ['unrecognized_keys', 'UNKNOWN_FIELD'],
+]);
+
+/** @param {z.ZodError['issues'][number]} issue */
+function settingsIssueDetail({ path, code }) {
+  const [field, index] = path;
+  const publicCode = settingsIssueCodes.get(code) ?? 'INVALID_VALUE';
+  if (path.length === 1 && settingsFields.has(field))
+    return { path: [field], code: publicCode };
+  if (path.length === 2 && field === 'goals' && typeof index === 'number')
+    return { path: ['goals', index], code: publicCode };
+  return { path: [], code: publicCode };
+}
 
 /**
  * @param {import('@prisma/client').PrismaClient} database
@@ -149,10 +167,19 @@ export function createCalendarRoutes(database, reauthenticate) {
   });
   route('patch', '/settings', async (req, res, owner) => {
     const actor = { ...owner, tokenHash: req.auth.session.tokenHash };
-    sendData(
-      res,
-      await updateSettings(database, actor, settingsSchema.parse(req.body)),
-    );
+    const settings = settingsSchema.safeParse(req.body);
+    if (!settings.success) {
+      res.status(400).json({
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Invalid request input.',
+          details: settings.error.issues.map(settingsIssueDetail),
+        },
+        requestId: req.requestId,
+      });
+      return;
+    }
+    sendData(res, await updateSettings(database, actor, settings.data));
   });
   route(
     'delete',

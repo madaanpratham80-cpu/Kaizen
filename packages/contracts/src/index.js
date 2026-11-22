@@ -33,6 +33,7 @@ export {
   HISTORY_DAYS,
   progressQuerySchema,
   settingsSchema,
+  settingsValidationErrorResponseSchema,
 } from './profile.js';
 
 export {
