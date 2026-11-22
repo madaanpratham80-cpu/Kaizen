@@ -111,13 +111,16 @@ it('ignores a session check that resolves after a child reports expiry', async (
       ? createElement(ScreenNotice, { state: 'expired-session' })
       : createElement('button', { onClick: () => setExpired(true) }, 'Expire');
   }
-  render(createElement(SessionScreen, null, () => createElement(Child)));
+  const renderChild = vi.fn(() => createElement(Child));
+  render(createElement(SessionScreen, null, renderChild));
   const button = await screen.findByRole('button', { name: 'Expire' });
   fireEvent.focus(window);
   expect(session).toHaveBeenCalledTimes(2);
   fireEvent.click(button);
   await screen.findByText('Your session expired. Log in to continue.');
+  const rendersBeforeResolution = renderChild.mock.calls.length;
   await act(async () => resolveCheck(value));
+  expect(renderChild).toHaveBeenCalledTimes(rendersBeforeResolution);
   fireEvent.focus(window);
   expect(session).toHaveBeenCalledTimes(2);
   expect(
