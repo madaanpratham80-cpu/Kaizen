@@ -22,7 +22,7 @@ The journey used the production webpack build, local ingress on 3492, Express on
 | Gap | Status | Evidence and commit | pnpm test | pnpm test:db | pnpm lint | pnpm build |
 | --- | --- | --- | ---: | ---: | --- | --- |
 | 0 · Quests STIX | Clean-machine rendering open. The available Mac has STIX installed. | [Font selection and fixture](../kaizen-quests-display-serif/verification.md), 5a5dbf4 (existing commit results) | 171 passed | 85 passed | Passed | Passed |
-| 1 · Four-key rename | Open. Space replaced the selected title with whitespace. | [Keystrokes and persisted value](../five-screens-character-feedback/verification-quest-edit-keyboard.md), 4fbd4e2 | 171 passed | 85 passed | Passed | Passed |
+| 1 · Four-key rename | Four-key trial reached whitespace validation. Follow-up with letter keys saved a two-word title at version 2. | [Keystrokes and persisted value](../five-screens-character-feedback/verification-quest-edit-keyboard.md), 4fbd4e2 | 171 passed | 85 passed | Passed | Passed |
 | 2 · +450 | Documented mockup-only figure | [Quests Total Yield](../kaizen-ui-v4-design-tokens/limitations.md#quests-total-yield), a7b51e7 | 171 passed | 85 passed | Passed | Passed |
 | 3 · Health bands | Closed. Fading 38% to Tired 40%. | [Sampled browser frames](../five-screens-character-feedback/verification-reduced-motion-bands.md), 281fb93 | 171 passed | 85 passed | Passed | Passed |
 | 4 · Settings errors | Closed. Real HTTP 400 and accessible per-input messages. | [Settings PATCH](../five-screens-character-feedback/verification-settings-field-errors.md), c0352db and e898a9b | 172 passed | 85 passed | Passed | Passed |
@@ -30,3 +30,9 @@ The journey used the production webpack build, local ingress on 3492, Express on
 | 6 · Quests restyle | Documented deferral. HTTP 200 and live STIX heading verified. | [Current Quests layout](../kaizen-ui-v4-design-tokens/limitations.md#quests-restyle), 2b4bea4 | 172 passed | 85 passed | Passed | Passed |
 
 Final verification on the journey build: pnpm test passed (15 contracts, 108 web, 49 API). pnpm test:db passed (85 tests after seven migrations on a separate fresh database). pnpm lint passed all three packages. pnpm build passed with webpack and generated 12/12 static pages.
+
+## Main checkout rerun
+
+On 23 November 2026, 03:57:20–03:57:21 IST, the production app built and served from the local main checkout completed the same journey on a fresh database. The browser registered, completed the fixture-prepared planned quest, saw its Completed cell in Habits and its +10 XP / +5 health event in Progress, read 10 XP on Profile, saved “Demo updated name” in Settings, signed out to /login and signed back in with the saved name. The services stopped and the temporary database was removed.
+
+Separate keyboard verification saved “panel review” with one PATCH. The main-checkout gates passed: 172 regular tests, 85 fresh database tests, lint in three packages and webpack build with 12/12 static pages. The standalone Quests suite also passed 4/4. Clean-machine STIX rendering remains open.

@@ -14,6 +14,10 @@ Gap 5 checks: pnpm test passed (172). pnpm test:db passed (85 on fresh PostgreSQ
 
 ## Quests restyle
 
-The existing Quests layout is the demo layout. Chrome loaded the authenticated /quests document with HTTP 200 and rendered “Quests” and the New quest control. Chrome attributed all six heading glyphs to the custom STIXTwoText-Bold face. The [four-key edit check](../five-screens-character-feedback/verification-quest-edit-keyboard.md) also created a quest in setup, reached its editor and exercised Save validation. A successful rename using only the four permitted keys remains open.
+The existing Quests layout is the demo layout. Chrome loaded the authenticated /quests document with HTTP 200 and rendered “Quests” and the New quest control. Chrome attributed all six heading glyphs to the custom STIXTwoText-Bold face. The [four-key edit check](../five-screens-character-feedback/verification-quest-edit-keyboard.md) also created a quest in setup, reached its editor and exercised Save validation. The main-checkout follow-up saved a two-word title by keyboard and confirmed version 2 through the API.
 
 The visual restyle is a separate post-demo change. Gap 6 checks: pnpm test passed (172). pnpm test:db passed (85 on fresh PostgreSQL). pnpm lint passed all three packages. pnpm build passed with webpack (12/12 static pages).
+
+## STIX on a clean machine
+
+STIX Two Text on Quests is **not verified on a clean machine**. The available Mac has STIX installed, and a fresh Chrome profile inherits access to those system fonts. On this Mac Chrome downloaded the app-served WOFF2 and attributed the heading glyphs to the custom face. No font-free VM or container runtime was available for a separate rendering check. [Font evidence](../kaizen-quests-display-serif/verification.md)
