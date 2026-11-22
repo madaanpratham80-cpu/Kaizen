@@ -12,4 +12,4 @@ On November 22, 2026, an isolated disposable PostgreSQL database named `kaizen_q
 
 On the same isolated database, the named test `quest client ID routes > races two same-client creates under the owner lock and creates exactly one quest` passed **10 of 10** separate runs. Each run held the owner lock until PostgreSQL showed both requests blocked, released it, and asserted two HTTP 201 responses with the same quest ID and exactly one quest and one schedule.
 
-The temporary database cluster was stopped and removed. The separate Settings focus-test failure remains unresolved and is a prerequisite to the Onboarding commit.
+The temporary database cluster was stopped and removed. The earlier Settings focus-test failure remains unexplained; the subsequent guard and repeated test evidence are recorded in `../five-screens-character-feedback/verification-3.4-settings.md`.
