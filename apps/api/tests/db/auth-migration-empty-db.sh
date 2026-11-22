@@ -29,8 +29,10 @@ unique_count=$(psql "$psql_url" -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM pg
 expiry_index_count=$(psql "$psql_url" -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'Session_expiresAt_idx'")
 foreign_key_count=$(psql "$psql_url" -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM pg_constraint WHERE conname = 'Session_userId_fkey' AND contype = 'f'")
 display_name_count=$(psql "$psql_url" -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'displayName' AND is_nullable = 'NO'")
+quest_client_id_column=$(psql "$psql_url" -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'Quest' AND column_name = 'clientId' AND is_nullable = 'YES' AND udt_name = 'uuid'")
+quest_client_id_index=$(psql "$psql_url" -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'Quest_userId_clientId_key' AND indexdef LIKE 'CREATE UNIQUE INDEX%'")
 
-if [[ "$table_count" != '2' || "$unique_count" != '2' || "$expiry_index_count" != '1' || "$foreign_key_count" != '1' || "$display_name_count" != '1' ]]; then
+if [[ "$table_count" != '2' || "$unique_count" != '2' || "$expiry_index_count" != '1' || "$foreign_key_count" != '1' || "$display_name_count" != '1' || "$quest_client_id_column" != '1' || "$quest_client_id_index" != '1' ]]; then
   echo 'auth-migration-empty-db: expected tables or constraints are missing' >&2
   exit 1
 fi

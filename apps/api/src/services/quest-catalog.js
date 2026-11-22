@@ -16,7 +16,8 @@ import { questFields, QUEST_RULE_VERSION } from '../domain/quest-rules.js';
 /**
  * @typedef {(
  *   'QUEST_NOT_FOUND' | 'QUEST_VERSION_CONFLICT' | 'QUEST_ARCHIVED' |
- *   'INVALID_EFFECTIVE_DATE' | 'SCHEDULE_CONFLICT' | 'PLAYER_STATE_UNAVAILABLE'
+ *   'INVALID_EFFECTIVE_DATE' | 'SCHEDULE_CONFLICT' | 'PLAYER_STATE_UNAVAILABLE' |
+ *   'CLIENT_ID_REUSED'
  * )} QuestErrorCode
  */
 export class QuestCatalogError extends Error {
@@ -120,6 +121,7 @@ function ownedQuest(owner, id) {
  */
 export async function getQuest(prisma, owner, id) {
   const quest = await prisma.quest.findUnique({
+    omit: { clientId: true },
     where: {
       ...ownedQuest(owner, questIdSchema.parse(id)),
       schedules: { some: { userId: owner.userId } },
@@ -138,6 +140,7 @@ export async function getQuest(prisma, owner, id) {
 export async function listQuests(prisma, owner, input = {}) {
   const { after, limit, category, archived } = listQuestsSchema.parse(input);
   const rows = await prisma.quest.findMany({
+    omit: { clientId: true },
     where: {
       userId: owner.userId,
       id: after ? { gt: after } : undefined,
@@ -220,6 +223,46 @@ function checkVersion(quest, expectedVersion) {
 export function createQuest(prisma, owner, rawInput) {
   const input = createQuestSchema.parse(rawInput);
   return writeQuest(prisma, owner, async (tx, now, timezone) => {
+    if (input.clientId) {
+      const existing = await tx.quest.findUnique({
+        where: {
+          userId_clientId: { userId: owner.userId, clientId: input.clientId },
+        },
+        omit: { clientId: true },
+        include: {
+          schedules: {
+            where: { userId: owner.userId },
+            orderBy: { effectiveFrom: 'asc' },
+            take: 1,
+          },
+        },
+      });
+      if (existing) {
+        const { schedules, ...quest } = existing;
+        const original = schedules[0];
+        const expected = scheduleFields(input, utcDate(input.effectiveFrom));
+        const matches =
+          original &&
+          original.title === expected.title &&
+          original.category === expected.category &&
+          original.difficulty === expected.difficulty &&
+          original.target === expected.target &&
+          original.recurrence === expected.recurrence &&
+          original.effectiveFrom.getTime() ===
+            expected.effectiveFrom.getTime() &&
+          original.weekdays.length === expected.weekdays.length &&
+          original.weekdays.every(
+            (day, index) => day === expected.weekdays[index],
+          );
+        if (!matches)
+          throw new QuestCatalogError(
+            409,
+            'CLIENT_ID_REUSED',
+            'Client ID was already used for a different quest.',
+          );
+        return quest;
+      }
+    }
     const date = await eligibleDate(
       tx,
       owner,
@@ -228,9 +271,11 @@ export function createQuest(prisma, owner, rawInput) {
       timezone,
     );
     return tx.quest.create({
+      omit: { clientId: true },
       data: {
         ...questFields(input),
         userId: owner.userId,
+        clientId: input.clientId,
         schedules: { create: scheduleFields(input, date) },
       },
     });
@@ -277,6 +322,7 @@ export function editQuest(prisma, owner, id, rawInput) {
       data: { effectiveTo: date },
     });
     return tx.quest.update({
+      omit: { clientId: true },
       where: { ...ownedQuest(owner, quest.id), version: input.expectedVersion },
       data: {
         ...questFields(input),
@@ -306,6 +352,7 @@ export function archiveQuest(prisma, owner, id, rawInput) {
       timezone,
     );
     return tx.quest.update({
+      omit: { clientId: true },
       where: { ...ownedQuest(owner, quest.id), version: input.expectedVersion },
       data: {
         archivedAt: now,

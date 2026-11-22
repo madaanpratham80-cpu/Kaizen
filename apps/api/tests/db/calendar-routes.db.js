@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   calendarSyncResponseSchema,
+  questMutationResponseSchema,
   questsResponseSchema,
   todayResponseSchema,
 } from '@kaizen/contracts';
@@ -11,6 +12,7 @@ import { createApp } from '../../src/app.js';
 import { syncCalendar } from '../../src/services/calendar.js';
 import { SESSION_COOKIE } from '../../src/http/boundary.js';
 import { useAuthDatabase } from './auth-fixture.js';
+import { holdPlayer, waitForBlocked } from './completion-fixture.js';
 
 const { prisma, register } = useAuthDatabase();
 const origin = 'http://localhost:3000';
@@ -99,6 +101,155 @@ async function scheduled({ userId }, title) {
     },
   });
 }
+
+describe('quest client ID routes', () => {
+  async function counts(actor) {
+    return {
+      quests: await prisma.quest.count({ where: { userId: actor.userId } }),
+      schedules: await prisma.scheduleVersion.count({
+        where: { userId: actor.userId },
+      }),
+    };
+  }
+
+  it('replays a lost response without a second quest or schedule and rejects different fields', async () => {
+    const actor = await account();
+    const payload = { ...newQuest(), clientId: randomUUID() };
+    const first = await actor.send('post', '/quests').send(payload).expect(201);
+    questMutationResponseSchema.parse(first.body);
+    const baseline = await counts(actor);
+    expect(baseline).toEqual({ quests: 1, schedules: 1 });
+    const second = await actor
+      .send('post', '/quests')
+      .send(payload)
+      .expect(201);
+    expect(second.body.data).toEqual(first.body.data);
+    expect(await counts(actor)).toEqual(baseline);
+    expect(first.body.data).not.toHaveProperty('clientId');
+    const altered = await actor
+      .send('post', '/quests')
+      .send({ ...payload, title: 'Different' })
+      .expect(409);
+    expect(altered.body.error.code).toBe('CLIENT_ID_REUSED');
+    expect(await counts(actor)).toEqual(baseline);
+    await prisma.dayPlan.create({
+      data: {
+        userId: actor.userId,
+        localDate: instant(payload.effectiveFrom),
+        timezoneSnapshot: 'UTC',
+        status: 'OPEN',
+        startsAtUtc: instant(payload.effectiveFrom),
+        deadlineUtc: instant(day(3)),
+      },
+    });
+    const late = await actor.send('post', '/quests').send(payload).expect(201);
+    expect(late.body.data.id).toBe(first.body.data.id);
+    expect(await counts(actor)).toEqual(baseline);
+    await actor
+      .send('patch', `/quests/${first.body.data.id}`)
+      .send({
+        ...newQuest(),
+        effectiveFrom: day(4),
+        title: 'Revised',
+        expectedVersion: 1,
+      })
+      .expect(200);
+    const afterEdit = await counts(actor);
+    const editedReplay = await actor
+      .send('post', '/quests')
+      .send(payload)
+      .expect(201);
+    expect(editedReplay.body.data).toMatchObject({
+      id: first.body.data.id,
+      title: 'Revised',
+      version: 2,
+    });
+    expect(await counts(actor)).toEqual(afterEdit);
+  });
+
+  it('keeps omitted IDs independent and isolates matching IDs across accounts', async () => {
+    const alice = await account();
+    const bob = await account();
+    const payload = { ...newQuest(), clientId: randomUUID() };
+    const first = await alice.send('post', '/quests').send(payload).expect(201);
+    const aliceBaseline = await counts(alice);
+    const second = await bob.send('post', '/quests').send(payload).expect(201);
+    const bobBaseline = await counts(bob);
+    expect(second.body.data.id).not.toBe(first.body.data.id);
+    expect(second.body.data.userId).toBe(bob.userId);
+    expect(JSON.stringify(second.body)).not.toContain(first.body.data.id);
+    expect(aliceBaseline).toEqual({ quests: 1, schedules: 1 });
+    expect(bobBaseline).toEqual({ quests: 1, schedules: 1 });
+    const replayA = await alice
+      .send('post', '/quests')
+      .send(payload)
+      .expect(201);
+    const replayB = await bob.send('post', '/quests').send(payload).expect(201);
+    expect(replayA.body.data.id).toBe(first.body.data.id);
+    expect(replayB.body.data.id).toBe(second.body.data.id);
+    expect(await counts(alice)).toEqual(aliceBaseline);
+    expect(await counts(bob)).toEqual(bobBaseline);
+    const oldA = await alice
+      .send('post', '/quests')
+      .send(newQuest())
+      .expect(201);
+    const oldB = await alice
+      .send('post', '/quests')
+      .send(newQuest())
+      .expect(201);
+    expect(oldA.body.data.id).not.toBe(oldB.body.data.id);
+    expect(await counts(alice)).toEqual({ quests: 3, schedules: 3 });
+  });
+
+  it('races two same-client creates under the owner lock and creates exactly one quest', async () => {
+    const actor = await account();
+    const payload = { ...newQuest(), clientId: randomUUID() };
+    const lock = await holdPlayer(actor);
+    const calls = [
+      actor
+        .send('post', '/quests')
+        .send(payload)
+        .then((response) => response),
+      actor
+        .send('post', '/quests')
+        .send(payload)
+        .then((response) => response),
+    ];
+    const completed = Promise.allSettled(calls);
+    try {
+      await waitForBlocked(prisma, lock.pid, '%PlayerState%FOR UPDATE%', 2);
+    } finally {
+      await lock.release();
+    }
+    const results = await completed;
+    expect(results.map((result) => result.status)).toEqual([
+      'fulfilled',
+      'fulfilled',
+    ]);
+    const responses = results.map((result) => result.value);
+    expect(responses.map((response) => response.status)).toEqual([201, 201]);
+    expect(responses[0].body.data.id).toBe(responses[1].body.data.id);
+    expect(await counts(actor)).toEqual({ quests: 1, schedules: 1 });
+  });
+
+  it('enforces owner and client ID uniqueness directly in PostgreSQL', async () => {
+    const actor = await account();
+    const payload = { ...newQuest(), clientId: randomUUID() };
+    await actor.send('post', '/quests').send(payload).expect(201);
+    await expect(
+      prisma.quest.create({
+        data: {
+          userId: actor.userId,
+          clientId: payload.clientId,
+          title: 'Duplicate',
+          category: 'Academic',
+          pillar: 'Cognitive',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'P2002' });
+    expect(await counts(actor)).toEqual({ quests: 1, schedules: 1 });
+  });
+});
 
 describe('calendar-routes', () => {
   it('returns 202 with a bounded backlog, then 200, and Today only reads committed data', async () => {

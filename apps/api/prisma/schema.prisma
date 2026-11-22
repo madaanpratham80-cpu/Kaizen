@@ -75,6 +75,7 @@ model PlayerState {
 model Quest {
   id                   String            @id @default(uuid()) @db.Uuid
   userId               String            @db.Uuid
+  clientId             String?           @db.Uuid
   title                String
   category             String
   pillar               String
@@ -86,6 +87,7 @@ model Quest {
   occurrences          QuestOccurrence[]
 
   @@unique([userId, id])
+  @@unique([userId, clientId])
   @@index([userId, archivedAt])
 }
 

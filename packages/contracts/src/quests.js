@@ -17,7 +17,7 @@ const occurrenceFields = {
 };
 const version = z.number().int().min(1).max(2_147_483_647);
 
-export const createQuestSchema = z.strictObject({
+const questRequestFields = {
   ...occurrenceFields,
   effectiveFrom: localDateSchema,
   recurrence: z.discriminatedUnion('kind', [
@@ -34,9 +34,18 @@ export const createQuestSchema = z.strictObject({
         ),
     }),
   ]),
+};
+
+export const createQuestSchema = z.strictObject({
+  ...questRequestFields,
+  clientId: z
+    .uuid()
+    .transform((id) => id.toLowerCase())
+    .optional(),
 });
 
-export const editQuestSchema = createQuestSchema.extend({
+export const editQuestSchema = z.strictObject({
+  ...questRequestFields,
   expectedVersion: version,
 });
 export const archiveQuestSchema = z.strictObject({
