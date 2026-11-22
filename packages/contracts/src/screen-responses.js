@@ -253,3 +253,16 @@ export const profileResponseSchema = envelope(
     pillarTotals: z.array(z.strictObject({ pillar, xp: count })),
   }),
 );
+
+export const settingsSaveResponseSchema = envelope(
+  z.strictObject({
+    user: profileResponseSchema.shape.data.shape.user,
+    pendingTimezone: z
+      .strictObject({
+        timezone: ianaTimezoneSchema,
+        effectiveDate: localDate,
+        effectiveAt: instant,
+      })
+      .nullable(),
+  }),
+);

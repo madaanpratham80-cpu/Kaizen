@@ -43,5 +43,6 @@ export {
   progressResponseSchema,
   questMutationResponseSchema,
   questsResponseSchema,
+  settingsSaveResponseSchema,
   todayResponseSchema,
 } from './screen-responses.js';
