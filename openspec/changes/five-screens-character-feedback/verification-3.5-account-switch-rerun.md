@@ -1,0 +1,28 @@
+# Account-switching browser rerun
+
+Test: **switching from account A to account B clears A's cached data and loads only B's data**. Passed on commit `d3daa6d` on November 22, 2026 (Asia/Kolkata). The initial failed run remains in `verification-3.5-account-switch.md`.
+
+| Step                                 | Observed result                                                                                                                                                                                                                                                                           | Outcome |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| Start disposable stack               | Fresh `kaizen_routes_test` database, all seven migrations applied. PostgreSQL 55435, Express 3491, proxy 3492, Next.js 3493.                                                                                                                                                              | Pass    |
+| Register A and create a quest        | Registered “Route Switch A” on `/register`, opened Today and clicked the shell's Quests link. Created “Route Switch A quest” through New quest. Registration and quest creation each returned 201.                                                                                        | Pass    |
+| Register B and create a quest        | Used the shell's Sign out control, then the login page's Create an account link. Registered “Route Switch B” and created “Route Switch B quest” through the same Quests form. Both POSTs returned 201. Used shell sign-out again to begin the measured switch from A to B.                | Pass    |
+| Sign in as A and load three routes   | Login returned 200. Open Today led to Today. The shell's Quests and Profile links loaded both screens. Quests displayed “Route Switch A quest”; Profile displayed “Route Switch A”. Today displayed “No priority scheduled.” and “Nothing to show yet.”                                   | Pass    |
+| Sign out of A from the shell         | On Profile, Tab moved from the Profile link through Settings and Onboarding to Sign out. Enter activated the focused button. One logout POST returned 200 and the same tab reached `/login`.                                                                                              | Pass    |
+| Verify cookie removal and revocation | Logout expired `__Host-kaizen_session`. The B login request contained no session cookie and issued a different value. A separate GET to `/api/v1/auth/session` replaying only A's revoked cookie returned 401 `SESSION_INVALID`. The proxy logged comparisons and statuses only.          | Pass    |
+| Sign in as B and load three routes   | Login returned 200 in the same tab and cookie jar. Used Open Today, then the shell's Quests and Profile links. Today showed its empty state; Quests showed “Route Switch B quest”; Profile showed “Route Switch B”. A's display name and quest title were absent from each rendered page. | Pass    |
+| Repeat via shell links as B          | Clicked Today → Quests → Profile in the shell, with no address-bar navigation. Rechecked all three pages. Quests and Profile still showed only B's corresponding marker. Today still showed its empty state. Neither A marker appeared on any page.                                       | Pass    |
+
+Both quests were created through the UI with the default effective date of November 23. Neither was due during the November 22 run, so Today verified only that A's markers were absent. B's presence was verified on Quests by its quest title and on Profile by its display name. No cookies or browser storage were cleared manually.
+
+| Account | User ID                                | Quest ID                               |
+| ------- | -------------------------------------- | -------------------------------------- |
+| A       | `14303d2c-33a7-43a6-a23f-2d91100ca639` | `183e5655-5578-496a-9c54-984b78597ce1` |
+| B       | `fe6fb2f9-6a79-4a07-a07b-b579113db254` | `d647f0fc-8773-431c-bd5a-ede612b24872` |
+
+- `pnpm test` passed 169 tests, including tests for same-identity cache clearing, replacement identity, and one shell session read across re-renders. Lint and the production webpack build passed.
+- `bash /private/tmp/kaizen-shell-rerun/setup.sh` used the route-sweep setup with a temporary status-only proxy. The build tested in the browser matched the shell files committed as `d3daa6d`.
+- `node /private/tmp/kaizen-shell-rerun/stale-proof.mjs` used a separate disposable API fixture. Registration returned 201 and a new login returned 200. Logout with the old CSRF proof and the replacement cookie returned 403 `CSRF_INVALID`. The replacement session still returned 200. The shell component test covers the corresponding alert and verifies that the router does not navigate.
+- `psql -X -h 127.0.0.1 -p 55435 -d kaizen_routes_test` ran a read-only join of `User` and `Quest` on owner ID to record the fixture IDs.
+- Proxy logs showed successful screen session reads alongside the shell mount read. A fresh shell mount adds one session request. Navigation within the mounted shell retained the proof and the screens continued running their own session checks.
+- Ctrl-C stopped the local services and removed the disposable PostgreSQL cluster. No step in the A-to-B sequence was skipped. The full keyboard and reduced-motion sweeps remain open.
