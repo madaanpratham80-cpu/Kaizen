@@ -3,13 +3,14 @@
 import {
   settingsSaveResponseSchema,
   settingsSchema,
+  settingsValidationErrorResponseSchema,
   z,
 } from '@kaizen/contracts';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { screenApi } from '../../../api/client.js';
 import { ScreenNotice, SessionScreen } from '../../../api/session-screen.jsx';
 import { useCalendarRead } from '../../../api/use-calendar-read.js';
-import { ApiError, requestApi } from '../../../auth/client.js';
+import { ApiError } from '../../../auth/client.js';
 
 const SAVE_TIMEOUT_MS = 15_000;
 const MAX_GOALS = 8;
@@ -41,6 +42,28 @@ function rejectedSettings(error, changes) {
   if (error.code === 'INVALID_INPUT' && submitted.length === 1)
     return { [submitted[0]]: error.message };
   return { form: error.message };
+}
+
+/** @param {import('@kaizen/contracts').z.infer<typeof settingsValidationErrorResponseSchema>['error']} error */
+function fieldMessages({ details, message }) {
+  const messages = {};
+  for (const { path, code } of details) {
+    const [field, index] = path;
+    const key = path.join('.') || 'form';
+    if (field === 'displayName')
+      messages[key] = 'Enter a display name of 1 to 80 characters.';
+    else if (field === 'timezone')
+      messages[key] = 'Enter a valid IANA timezone.';
+    else if (field === 'goals' && index !== undefined)
+      messages[key] = 'Enter a goal of 1 to 80 characters.';
+    else if (field === 'goals')
+      messages[key] =
+        code === 'TOO_BIG'
+          ? 'Enter at most eight goals.'
+          : 'Check that your goals are valid and distinct.';
+    else messages.form = message;
+  }
+  return messages;
 }
 
 /**
@@ -79,11 +102,14 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
   /** @param {keyof Settings} field @param {string | string[]} value */
   function edit(field, value) {
     setDraft((previous) => ({ ...previous, [field]: value }));
-    setMessages((previous) => ({
-      ...previous,
-      [field]: undefined,
-      form: undefined,
-    }));
+    setMessages((previous) =>
+      Object.fromEntries(
+        Object.entries(previous).filter(
+          ([key]) =>
+            key !== 'form' && key !== field && !key.startsWith(field + '.'),
+        ),
+      ),
+    );
   }
 
   /** @param {import('react').FormEvent<HTMLFormElement>} event */
@@ -106,11 +132,12 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
     setSaving(true);
     setMessages({});
     try {
-      const { body } = await requestApi(
-        'settings',
-        settingsSaveResponseSchema,
+      const response = await fetch(
+        (process.env.NEXT_PUBLIC_API_BASE_PATH || '/api/v1') + '/settings',
         {
           method: 'PATCH',
+          credentials: 'include',
+          cache: 'no-store',
           headers: {
             'Content-Type': 'application/json',
             'X-CSRF-Token': session.csrfToken,
@@ -122,8 +149,31 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
           ]),
         },
       );
+      const body = await response.json().catch(() => null);
       if (signal.aborted) return;
-      setSaved({ value: body.data, source: profileRef.current });
+      if (!response.ok) {
+        const validation =
+          settingsValidationErrorResponseSchema.safeParse(body);
+        if (response.status === 400 && validation.success) {
+          setMessages(fieldMessages(validation.data.error));
+          return;
+        }
+        if (response.status === 400 && Array.isArray(body?.error?.details)) {
+          setMessages({ form: 'Invalid request input.' });
+          return;
+        }
+        throw new ApiError(
+          response.status,
+          typeof body?.error?.message === 'string'
+            ? body.error.message
+            : 'Could not save settings.',
+          body?.error?.code,
+        );
+      }
+      setSaved({
+        value: settingsSaveResponseSchema.parse(body).data,
+        source: profileRef.current,
+      });
       setDraft({});
     } catch (error) {
       if (signal.aborted) return;
@@ -222,12 +272,23 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
                       ),
                     )
                   }
-                  aria-invalid={Boolean(messages.goals)}
+                  aria-invalid={Boolean(
+                    messages[`goals.${index}`] || messages.goals,
+                  )}
                   aria-describedby={
-                    messages.goals ? 'settings-goals-error' : undefined
+                    messages[`goals.${index}`]
+                      ? `settings-goal-${index}-error`
+                      : messages.goals
+                        ? 'settings-goals-error'
+                        : undefined
                   }
                 />
               </label>
+              {messages[`goals.${index}`] && (
+                <p id={`settings-goal-${index}-error`} role="alert">
+                  {messages[`goals.${index}`]}
+                </p>
+              )}
               <button
                 type="button"
                 aria-label={`Remove goal ${index + 1}`}

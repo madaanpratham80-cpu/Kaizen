@@ -287,3 +287,43 @@ it('keeps edits available to retry after a server failure', async () => {
   await screen.findByText('Settings saved.');
   expect(patch).toHaveBeenCalledTimes(2);
 });
+
+it('shows a field-level error beside the input for each API detail path', async () => {
+  patch.mockImplementationOnce(() =>
+    Response.json(
+      {
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Invalid request input.',
+          details: [
+            { path: ['displayName'], code: 'TOO_SMALL' },
+            { path: ['timezone'], code: 'INVALID_VALUE' },
+            { path: ['goals', 0], code: 'TOO_SMALL' },
+            { path: [], code: 'UNKNOWN_FIELD' },
+          ],
+        },
+        requestId,
+      },
+      { status: 400 },
+    ),
+  );
+  await openSettings();
+  edit(nameInput(), 'Edited');
+  fireEvent.click(submit());
+  await screen.findByText('Invalid request input.');
+  for (const [input, message] of [
+    [nameInput(), 'Enter a display name of 1 to 80 characters.'],
+    [timezoneInput(), 'Enter a valid IANA timezone.'],
+    [goalInput(), 'Enter a goal of 1 to 80 characters.'],
+  ]) {
+    const error = screen.getByText(message);
+    expect(input.getAttribute('aria-describedby').split(' ')).toContain(
+      error.id,
+    );
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+  }
+  expect(screen.getByText('Invalid request input.').parentElement.tagName).toBe(
+    'FORM',
+  );
+  expect(patch).toHaveBeenCalledTimes(1);
+});
