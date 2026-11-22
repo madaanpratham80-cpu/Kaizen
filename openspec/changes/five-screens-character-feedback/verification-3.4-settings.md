@@ -20,3 +20,11 @@ The full unit suite passed 142 tests, including 8 Settings tests and 5 Settings 
 
 - An ambiguous API rejection of multiple fields returns `Invalid request input.` at form level. Returning structured validation paths and wiring them to the form is a separate API follow-up.
 - Same-field saves and retries across tabs are last-write-wins because the endpoint has no version check. The Settings form submits only changed fields.
+
+## Session focus guard verification
+
+An earlier Settings focus-test failure had no timestamped trace, so its original cause remains unknown. An initial focus guard subsequently reproduced an extra `session` request once in 20 runs; that result exposed an expiry path the first guard did not cover. The revised guard in `e2a3b08` passed 20 of 20 Settings-and-focus test runs. Its in-flight test checks that a session response resolving after a child reports expiry does not render the private session again.
+
+## Cleanup notes
+
+Graphify cleanup deletes only generated files; back up any untracked folder by name first.
