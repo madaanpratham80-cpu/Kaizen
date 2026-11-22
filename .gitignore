@@ -12,3 +12,5 @@ coverage/
 .env.local
 /reviews/
 
+
+/graphify-out/
