@@ -1,0 +1,212 @@
+{
+  "chrome": "Chrome/157.0.8103.80",
+  "platform": "darwin",
+  "signedInQuestsStatus": 200,
+  "localFaceProbe": {
+    "beforeDisabling": "loaded",
+    "afterDisabling": "loaded",
+    "arialBeforeDisabling": "loaded",
+    "arialAfterDisabling": "loaded"
+  },
+  "originalTitle": {
+    "text": "Quests",
+    "fontFamily": "\"STIX Two Text\"",
+    "fontWeight": "700"
+  },
+  "actualTitleFonts": [
+    {
+      "familyName": "STIX Two Text",
+      "postScriptName": "STIXTwoText-Bold",
+      "isCustomFont": true,
+      "glyphCount": 6
+    }
+  ],
+  "ordinaryFonts": [
+    {
+      "familyName": ".SF NS",
+      "postScriptName": ".SFNS-Regular",
+      "isCustomFont": false,
+      "glyphCount": 15
+    }
+  ],
+  "classReplacements": [
+    {
+      "id": "stitch-title",
+      "text": ".02 QUESTS",
+      "before": "font-display-lg text-display-lg font-black tracking-tighter uppercase text-on-surface leading-none m-0",
+      "after": "font-(family-name:--font-quests-display) text-display-lg font-bold tracking-tighter uppercase text-on-surface leading-none m-0"
+    },
+    {
+      "id": "stitch-yield",
+      "text": "+450",
+      "before": "font-display-xl text-display-xl font-black text-on-secondary-fixed leading-none tracking-tighter",
+      "after": "font-(family-name:--font-quests-display) text-display-xl font-bold text-on-secondary-fixed leading-none tracking-tighter"
+    }
+  ],
+  "fixtureFaces": {
+    "#stitch-title": {
+      "text": ".02 QUESTS",
+      "fontFamily": "\"STIX Two Text\"",
+      "fontWeight": "700",
+      "className": "font-(family-name:--font-quests-display) text-display-lg font-bold tracking-tighter uppercase text-on-surface leading-none m-0",
+      "faces": [
+        {
+          "familyName": "STIX Two Text",
+          "postScriptName": "STIXTwoText-Bold",
+          "isCustomFont": true,
+          "glyphCount": 10
+        }
+      ]
+    },
+    "#stitch-yield": {
+      "text": "+450",
+      "fontFamily": "\"STIX Two Text\"",
+      "fontWeight": "700",
+      "className": "font-(family-name:--font-quests-display) text-display-xl font-bold text-on-secondary-fixed leading-none tracking-tighter",
+      "faces": [
+        {
+          "familyName": "STIX Two Text",
+          "postScriptName": "STIXTwoText-Bold",
+          "isCustomFont": true,
+          "glyphCount": 4
+        }
+      ]
+    }
+  },
+  "fontResponses": [
+    {
+      "url": "http://localhost:3492/_next/static/media/5003410bef5ba35b.woff2",
+      "status": 200
+    }
+  ],
+  "blockedFonts": [
+    {
+      "familyName": "STIX Two Text",
+      "postScriptName": "STIXTwoText_Bold",
+      "isCustomFont": false,
+      "glyphCount": 6
+    }
+  ],
+  "fontBlocks": [
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    },
+    {
+      "reason": "inspector",
+      "message": ""
+    }
+  ]
+}

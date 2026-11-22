@@ -7,10 +7,16 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
+import { STIX_Two_Text } from 'next/font/google';
 import { createElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sessionCache } from '../../../api/session-cache.js';
+import QuestsPage from './page.jsx';
 import { QuestsScreen } from './screen.jsx';
+
+vi.mock('next/font/google', () => ({
+  STIX_Two_Text: vi.fn(() => ({ variable: 'quests-display-font' })),
+}));
 
 const uuid = (last) => `09d5a188-cc9f-47d4-8e1e-848c51b51e${last}`;
 const user = {
@@ -91,6 +97,36 @@ afterEach(() => {
 });
 
 describe('Quests screen', () => {
+  it('registers the self-hosted bold serif only for the Quests heading', async () => {
+    mockApi();
+    render(createElement(QuestsPage));
+
+    expect(STIX_Two_Text).toHaveBeenCalledExactlyOnceWith({
+      subsets: ['latin'],
+      weight: '700',
+      style: 'normal',
+      variable: '--font-quests-display',
+      preload: false,
+      adjustFontFallback: false,
+    });
+    expect(
+      screen.getByRole('main').classList.contains('quests-display-font'),
+    ).toBe(true);
+    const title = screen.getByRole('heading', { level: 1, name: 'Quests' });
+    await screen.findByRole('heading', { level: 2, name: 'Read' });
+    expect(title.classList.contains('font-bold')).toBe(true);
+    expect(title.classList.contains('font-black')).toBe(false);
+    expect(
+      Array.from(
+        screen
+          .getByRole('main')
+          .querySelectorAll(
+            '[class~="font-(family-name:--font-quests-display)"]',
+          ),
+      ),
+    ).toEqual([title]);
+  });
+
   it('filters quests by category, recurrence and status independently', async () => {
     mockApi();
     render(createElement(QuestsScreen));

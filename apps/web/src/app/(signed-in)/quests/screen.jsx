@@ -306,11 +306,16 @@ function QuestsContent({ session, scope, revision }) {
   );
 }
 
-/** @returns {import('react').ReactElement} */
-export function QuestsScreen() {
+/**
+ * @param {{ className?: string }} props
+ * @returns {import('react').ReactElement}
+ */
+export function QuestsScreen({ className = '' }) {
   return (
-    <main className="space-y-6">
-      <h1 className="text-4xl font-bold tracking-tight">Quests</h1>
+    <main className={`space-y-6 ${className}`.trim()}>
+      <h1 className="font-(family-name:--font-quests-display) text-4xl font-bold tracking-tight">
+        Quests
+      </h1>
       <SessionScreen>
         {(session, scope, revision) => (
           <QuestsContent {...{ session, scope, revision }} />
