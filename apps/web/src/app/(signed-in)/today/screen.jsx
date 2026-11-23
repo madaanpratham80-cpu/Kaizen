@@ -10,7 +10,7 @@ import {
 } from '../../../api/session-screen.jsx';
 import { ApiError } from '../../../auth/client.js';
 import { CharacterFeedback } from '../../../progression/character-feedback.jsx';
-import { QuestCard, StreakBadge } from '../../../progression/components.jsx';
+import { StreakBadge } from '../../../progression/components.jsx';
 
 /** @typedef {Awaited<ReturnType<typeof screenApi.today>>} Snapshot */
 /** @typedef {import('../../../api/session-screen.jsx').ScreenSession} ScreenSession */
@@ -192,10 +192,12 @@ function TodayContent({ session, scope, revision }) {
   const retry = () => setReload((value) => value + 1);
   if (failure === 'expired-session' || !snapshot) {
     return (
-      <ScreenNotice
-        state={failure ?? 'loading'}
-        retry={failure ? retry : undefined}
-      />
+      <div className="p-space-md sm:p-space-lg">
+        <ScreenNotice
+          state={failure ?? 'loading'}
+          retry={failure ? retry : undefined}
+        />
+      </div>
     );
   }
   const waiting = syncing || snapshot.status === 'catching-up';
@@ -208,91 +210,137 @@ function TodayContent({ session, scope, revision }) {
   const receipt = completion?.result;
 
   return (
-    <div className="space-y-8">
-      {failure && <ScreenNotice state={failure} retry={retry} />}
-      {waiting && (
-        <ScreenNotice state="catching-up" retry={syncing ? undefined : retry} />
+    <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      {(failure || waiting) && (
+        <div className="space-y-space-sm border-b border-outline-variant p-space-md lg:col-span-2">
+          {failure && <ScreenNotice state={failure} retry={retry} />}
+          {waiting && (
+            <ScreenNotice
+              state="catching-up"
+              retry={syncing ? undefined : retry}
+            />
+          )}
+        </div>
       )}
-      <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
+      <div className="grid content-start gap-px border-b border-outline-variant bg-outline-variant lg:border-r lg:border-b-0">
         <CharacterFeedback
           sessionId={session.feedbackSessionId}
           snapshot={snapshot}
           completion={completion}
         />
-        <div className="space-y-4">
-          <StreakBadge
-            days={snapshot.currentStreak}
-            milestoneDays={STREAK_MILESTONE}
-          />
-          <section
-            aria-labelledby="today-priority"
-            className="space-y-2 border p-progression"
-          >
-            <h2 id="today-priority" className="text-xl font-semibold">
+        <StreakBadge
+          days={snapshot.currentStreak}
+          milestoneDays={STREAK_MILESTONE}
+        />
+      </div>
+      <div className="flex min-w-0 flex-col">
+        <section
+          aria-labelledby="today-priority"
+          className="border-b border-outline-variant bg-surface-container-low p-space-md sm:p-space-lg"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-space-sm">
+            <p
+              id="today-priority"
+              className="font-label-mono-sm text-label-mono-sm text-primary uppercase"
+            >
               Daily priority
-            </h2>
-            <p>{snapshot.priority?.title ?? 'No priority scheduled.'}</p>
+            </p>
             {snapshot.priority && (
-              <p>
+              <p className="font-label-mono-sm text-label-mono-sm text-secondary uppercase">
                 {snapshot.priority.status === 'COMPLETED'
                   ? 'Completed'
                   : 'Pending'}
                 {snapshot.plan?.priorityLockedAt ? ' · Locked' : ''}
               </p>
             )}
-          </section>
-        </div>
-      </div>
-      {snapshot.recoveryHint && (
-        <p className="border-l-4 border-health-tired pl-3">
-          {snapshot.recoveryHint.code === 'SMALL_COMMITMENT'
-            ? 'Start with one easy quest today.'
-            : 'Try a smaller commitment on your next scheduled day.'}
-        </p>
-      )}
-      <section aria-labelledby="today-remaining" className="space-y-4">
-        <h2 id="today-remaining" className="text-2xl font-semibold">
-          Remaining quests
-        </h2>
-        {attemptError && <p role="alert">{attemptError.message}</p>}
-        {receipt?.status === 'completed' && (
-          <p role="status">Quest completed · {receipt.xpDelta} XP earned</p>
+          </div>
+          <p className="mt-space-sm font-headline-md text-headline-md break-words">
+            {snapshot.priority?.title ?? 'No priority scheduled.'}
+          </p>
+        </section>
+        {snapshot.recoveryHint && (
+          <p className="border-b border-l-4 border-outline-variant border-l-tertiary bg-surface-container-high px-space-md py-space-sm text-secondary sm:px-space-lg">
+            {snapshot.recoveryHint.code === 'SMALL_COMMITMENT'
+              ? 'Start with one easy quest today.'
+              : 'Try a smaller commitment on your next scheduled day.'}
+          </p>
         )}
-        {remaining.length ? (
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {remaining.map((item) => (
-              <li key={item.id} className="space-y-2">
-                <QuestCard {...item} completedCount={0} />
-                <button
-                  type="button"
-                  className="auth-button"
-                  disabled={waiting || pending !== null}
-                  onClick={() => void complete(item.id)}
+        <section aria-labelledby="today-remaining">
+          <p
+            id="today-remaining"
+            className="border-b border-outline-variant bg-secondary-fixed px-space-md py-space-sm font-label-mono-lg text-label-mono-lg text-on-secondary-fixed uppercase sm:px-space-lg"
+          >
+            Remaining quests
+          </p>
+          {attemptError && (
+            <p
+              role="alert"
+              className="px-space-md py-space-sm text-error sm:px-space-lg"
+            >
+              {attemptError.message}
+            </p>
+          )}
+          {receipt?.status === 'completed' && (
+            <p
+              role="status"
+              className="border-b border-outline-variant px-space-md py-space-sm font-label-mono-sm text-label-mono-sm text-tertiary sm:px-space-lg"
+            >
+              Quest completed · {receipt.xpDelta} XP earned
+            </p>
+          )}
+          {remaining.length ? (
+            <ul className="divide-y divide-outline-variant">
+              {remaining.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex min-w-0 flex-wrap items-center justify-between gap-space-md bg-surface px-space-md py-space-lg sm:px-space-lg"
                 >
-                  {pending === item.id
-                    ? `Completing ${item.title}…`
-                    : `${attemptError?.occurrenceId === item.id ? 'Retry completion for' : 'Complete'} ${item.title}`}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          !waiting &&
-          (completed.length ? (
-            <p>All quests for today are complete.</p>
+                  <div className="min-w-0 flex-1 basis-40">
+                    <p className="font-label-mono-sm text-label-mono-sm text-secondary uppercase">
+                      Pending · {item.difficulty} · {item.rewardXp} XP
+                    </p>
+                    <p className="mt-space-xs font-headline-sm text-headline-sm break-words">
+                      {item.title}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="max-w-full border border-primary-container bg-primary-container px-space-md py-space-sm font-label-mono-md text-label-mono-md break-words text-on-primary-container uppercase hover:bg-on-surface hover:text-surface focus-visible:!outline-primary focus-visible:!outline-offset-2 disabled:opacity-60"
+                    disabled={waiting || pending !== null}
+                    onClick={() => void complete(item.id)}
+                  >
+                    {pending === item.id
+                      ? `Completing ${item.title}…`
+                      : `${attemptError?.occurrenceId === item.id ? 'Retry completion for' : 'Complete'} ${item.title}`}
+                  </button>
+                </li>
+              ))}
+            </ul>
           ) : (
-            <div className="space-y-2">
-              <ScreenNotice state="empty" />
-              <Link href="/quests" className="underline">
-                Browse quests
-              </Link>
-            </div>
-          ))
-        )}
-        {completed.length > 0 && (
-          <p>Completed: {completed.map(({ title }) => title).join(', ')}</p>
-        )}
-      </section>
+            !waiting &&
+            (completed.length ? (
+              <p className="px-space-md py-space-lg sm:px-space-lg">
+                All quests for today are complete.
+              </p>
+            ) : (
+              <div className="space-y-space-sm px-space-md py-space-lg sm:px-space-lg">
+                <ScreenNotice state="empty" />
+                <Link
+                  href="/quests"
+                  className="text-primary underline focus-visible:!outline-primary"
+                >
+                  Browse quests
+                </Link>
+              </div>
+            ))
+          )}
+          {completed.length > 0 && (
+            <p className="border-t border-outline-variant bg-surface-container-lowest px-space-md py-space-sm text-tertiary sm:px-space-lg">
+              Completed: {completed.map(({ title }) => title).join(', ')}
+            </p>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
@@ -300,8 +348,12 @@ function TodayContent({ session, scope, revision }) {
 /** @returns {import('react').ReactElement} */
 export function TodayScreen() {
   return (
-    <main className="space-y-6">
-      <h1 className="text-4xl font-bold tracking-tight">Today</h1>
+    <main className="border border-outline-variant bg-surface font-body-md text-body-md text-on-surface">
+      <header className="border-b border-outline-variant bg-primary-container px-space-md py-space-lg text-on-primary-container sm:px-space-lg sm:py-space-xl">
+        <h1 className="font-display-lg text-display-lg-mobile uppercase sm:text-display-lg">
+          Today’s Ledger
+        </h1>
+      </header>
       <SessionScreen>
         {(session, scope, revision) => (
           <TodayContent {...{ session, scope, revision }} />
