@@ -23,9 +23,13 @@ function initialWeek(timezone) {
 }
 
 const cellColor = {
-  Completed: 'text-health-healthy',
-  Missed: 'text-health-fading',
-  Rest: 'text-progression-ink',
+  Completed: 'bg-tertiary text-on-tertiary',
+  Missed: 'bg-primary-container text-on-primary-fixed',
+  Rest: 'bg-surface-container-high text-secondary',
+  Excused: 'bg-surface-container-high text-secondary',
+  'Not scheduled': 'text-outline',
+  Pending: 'border border-outline-variant text-primary',
+  Scheduled: 'border border-surface-bright text-secondary',
 };
 
 /** @param {{session: import('../../../api/session-screen.jsx').ScreenSession, scope: import('../../../api/session-screen.jsx').SessionScope, revision: number}} props */
@@ -40,74 +44,104 @@ function HabitsContent({ session, scope, revision }) {
     read,
   );
   return (
-    <div className="space-y-6">
-      <label className="block">
+    <div>
+      <label className="flex flex-wrap items-center justify-between gap-space-sm border-b border-surface-bright bg-surface-container-lowest px-space-md py-space-md font-label-mono-md text-label-mono-md text-secondary uppercase sm:px-space-lg">
         Week starting
         <input
           type="date"
           value={week}
           required
-          className="block border bg-white p-2"
+          className="max-w-full border border-outline-variant bg-surface-container-low px-space-sm py-space-sm text-on-surface scheme-dark focus-visible:outline-primary!"
           onChange={(event) => {
             if (event.target.value) setWeek(event.target.value);
           }}
         />
       </label>
       {state && (
-        <ScreenNotice
-          state={state}
-          retry={state === 'loading' ? undefined : retry}
-        />
+        <div className="px-space-md py-space-md sm:px-space-lg">
+          <ScreenNotice
+            state={state}
+            retry={state === 'loading' ? undefined : retry}
+          />
+        </div>
       )}
       {data && (
         <>
-          <p>
-            Weekly completion rate:{' '}
-            {data.compliance === null
-              ? 'unavailable'
-              : `${Math.round(data.compliance * 100)}%`}{' '}
-            · {data.completed} of {data.scheduled} elapsed scheduled quests
-            completed
-          </p>
+          <div className="border-b border-surface-bright bg-secondary-fixed px-space-md py-space-lg text-on-secondary-fixed sm:px-space-lg">
+            <p className="font-label-mono-md text-label-mono-md uppercase">
+              Weekly completion rate:
+            </p>
+            <p className="mt-space-xs font-display-lg text-display-lg-mobile tabular-nums">
+              {data.compliance === null
+                ? 'unavailable'
+                : `${Math.round(data.compliance * 100)}%`}
+            </p>
+            <p className="mt-space-sm font-label-mono-sm text-label-mono-sm text-on-secondary-fixed-variant">
+              {data.completed} of {data.scheduled} elapsed scheduled quests
+              completed
+            </p>
+          </div>
           {!data.habits.length ? (
-            <ScreenNotice state="empty" />
+            <div className="px-space-md py-space-lg sm:px-space-lg">
+              <ScreenNotice state="empty" />
+            </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <caption className="pb-3 text-left">
+              <table className="w-full min-w-[50rem] border-collapse text-left">
+                <caption className="border-b border-surface-bright bg-surface-container px-space-md py-space-sm text-left font-label-mono-md text-label-mono-md text-secondary sm:px-space-lg">
                   Habit schedule for {data.week}. Rates include elapsed
                   scheduled dates.
                 </caption>
-                <thead>
+                <thead className="bg-surface-container-low font-label-mono-sm text-label-mono-sm text-primary uppercase">
                   <tr>
-                    <th scope="col" className="border p-2">
+                    <th
+                      scope="col"
+                      className="border border-surface-bright px-space-sm py-space-md"
+                    >
                       Habit
                     </th>
                     {data.days.map((day) => (
-                      <th scope="col" key={day.date} className="border p-2">
+                      <th
+                        scope="col"
+                        key={day.date}
+                        className="border border-surface-bright px-space-sm py-space-md"
+                      >
                         {day.date}
                       </th>
                     ))}
-                    <th scope="col" className="border p-2">
+                    <th
+                      scope="col"
+                      className="border border-surface-bright px-space-sm py-space-md"
+                    >
                       Streaks and rate
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.habits.map((habit) => (
-                    <tr key={habit.questId}>
-                      <th scope="row" className="border p-2">
+                    <tr
+                      key={habit.questId}
+                      className="odd:bg-surface-container-lowest even:bg-surface-container-low"
+                    >
+                      <th
+                        scope="row"
+                        className="border border-surface-bright px-space-md py-space-md font-headline-sm text-headline-sm"
+                      >
                         {habit.title}
                       </th>
                       {habit.cells.map(({ date, label }) => (
                         <td
                           key={date}
-                          className={`border p-2 ${cellColor[label] ?? ''}`}
+                          className="border border-surface-bright p-space-xs text-center"
                         >
-                          {label}
+                          <span
+                            className={`inline-block px-space-xs py-space-xs font-label-mono-sm text-label-mono-sm ${cellColor[label] ?? ''}`}
+                          >
+                            {label}
+                          </span>
                         </td>
                       ))}
-                      <td className="border p-2">
+                      <td className="space-y-space-xs border border-surface-bright px-space-sm py-space-md font-label-mono-sm text-label-mono-sm">
                         <p>
                           Current {habit.streak.current} · Best{' '}
                           {habit.streak.best}
@@ -134,8 +168,15 @@ function HabitsContent({ session, scope, revision }) {
 /** @returns {import('react').ReactElement} */
 export function HabitsScreen() {
   return (
-    <main className="space-y-6">
-      <h1 className="text-4xl font-bold">Habits</h1>
+    <main className="min-w-0 border border-surface-bright bg-surface font-body-md text-body-md text-on-surface">
+      <header className="border-b border-surface-bright bg-surface-container-low px-space-md py-space-lg sm:p-space-lg">
+        <p className="mb-space-sm inline-block bg-primary-container px-space-sm py-space-xs font-label-mono-sm text-label-mono-sm text-on-primary-container uppercase">
+          Weekly habit matrix
+        </p>
+        <h1 className="font-display-xl text-display-xl-mobile uppercase sm:text-display-xl">
+          Habits
+        </h1>
+      </header>
       <SessionScreen>
         {(session, scope, revision) => (
           <HabitsContent {...{ session, scope, revision }} />
