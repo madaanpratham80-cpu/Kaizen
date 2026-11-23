@@ -12,6 +12,7 @@ model User {
   normalizedEmail     String                       @unique
   goals               String[]                     @default([])
   displayName         String
+  gender              Gender?
   passwordHash        String
   timezone            String
   createdAt           DateTime                     @default(now())
@@ -24,6 +25,11 @@ model User {
   progressEvents      ProgressEvent[]
   completionReceipts  CompletionReceipt[]
   achievements        UserAchievement[]
+}
+
+enum Gender {
+  male
+  female
 }
 
 model CalendarTimezoneTransition {

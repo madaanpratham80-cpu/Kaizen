@@ -13,6 +13,7 @@ const validRegistration = {
   displayName: 'Student',
   password: 'long-enough-password',
   timezone: 'Asia/Kolkata',
+  gender: 'male',
 };
 
 describe('auth-contract-validation', () => {
@@ -33,6 +34,16 @@ describe('auth-contract-validation', () => {
   });
 
   it('requires valid email, display name, password, and timezone', () => {
+    expect(
+      registerRequestSchema.safeParse({
+        ...validRegistration,
+        gender: undefined,
+      }).success,
+    ).toBe(false);
+    expect(
+      registerRequestSchema.safeParse({ ...validRegistration, gender: '' })
+        .success,
+    ).toBe(false);
     expect(
       registerRequestSchema.safeParse({
         ...validRegistration,

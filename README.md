@@ -157,7 +157,7 @@ const json = { 'Content-Type': 'application/json' };
 const register = await auth('register', {
   method: 'POST',
   headers: json,
-  body: JSON.stringify({ email, password, displayName: 'Local test', timezone: 'UTC' }),
+  body: JSON.stringify({ email, password, displayName: 'Local test', timezone: 'UTC', gender: 'male' }),
 });
 const login = await auth('login', { method: 'POST', headers: json, body: JSON.stringify({ email, password }) });
 const session = await auth('session');

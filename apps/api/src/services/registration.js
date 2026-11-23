@@ -31,7 +31,7 @@ export async function registerAccount(prisma, input) {
       message: 'Invalid registration details.',
     };
   }
-  const { email, displayName, password, timezone } = registration.data;
+  const { email, displayName, password, timezone, gender } = registration.data;
   const passwordHash = await bcrypt.hash(password, bcryptCost());
   const tokenBytes = randomBytes(SESSION_TOKEN_BYTES);
   const tokenHash = createHash('sha256').update(tokenBytes).digest('hex');
@@ -44,6 +44,7 @@ export async function registerAccount(prisma, input) {
             displayName,
             passwordHash,
             timezone,
+            gender,
             playerState: { create: {} },
             sessions: {
               create: {
@@ -52,13 +53,18 @@ export async function registerAccount(prisma, input) {
               },
             },
           },
-          select: { id: true, displayName: true, timezone: true },
+          select: { id: true, displayName: true, timezone: true, gender: true },
         }),
       { maxWait: TRANSACTION_WAIT_MS, timeout: TRANSACTION_TIMEOUT_MS },
     );
+    const { gender: savedGender, ...publicFields } = user;
     return {
       ok: true,
-      user: { ...user, email },
+      user: {
+        ...publicFields,
+        email,
+        ...(savedGender && { gender: savedGender }),
+      },
       sessionToken: tokenBytes.toString('base64url'),
     };
   } catch (error) {

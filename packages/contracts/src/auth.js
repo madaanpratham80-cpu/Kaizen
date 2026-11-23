@@ -33,10 +33,13 @@ const normalizedEmailSchema = z
   .toLowerCase()
   .pipe(z.email().max(254));
 
+const genderSchema = z.enum(['male', 'female']);
+
 export const registerRequestSchema = z.strictObject({
   email: normalizedEmailSchema,
   displayName: z.string().trim().min(1).max(80),
   password: passwordSchema,
+  gender: genderSchema,
   timezone: ianaTimezoneSchema,
 });
 
@@ -49,6 +52,7 @@ export const publicUserSchema = z.strictObject({
   id: z.uuid(),
   email: z.email(),
   displayName: z.string(),
+  gender: genderSchema.optional(),
   timezone: ianaTimezoneSchema,
 });
 

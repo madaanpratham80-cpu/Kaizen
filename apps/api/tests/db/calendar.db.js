@@ -67,6 +67,7 @@ it('player-state-registration rolls back the account if baseline creation fails'
         email,
         password: 'test password with spaces',
         timezone: 'UTC',
+        gender: 'female',
         displayName: 'Test',
       }),
     ).rejects.toThrow('calendar baseline rejected');

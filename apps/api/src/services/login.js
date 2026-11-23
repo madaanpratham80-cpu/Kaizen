@@ -40,7 +40,13 @@ export async function loginAccount(prisma, input) {
   }
   const account = await prisma.user.findUnique({
     where: { normalizedEmail: email },
-    select: { id: true, displayName: true, timezone: true, passwordHash: true },
+    select: {
+      id: true,
+      displayName: true,
+      timezone: true,
+      gender: true,
+      passwordHash: true,
+    },
   });
   const storedCost = account
     ? bcrypt.getRounds(account.passwordHash)
@@ -55,8 +61,12 @@ export async function loginAccount(prisma, input) {
     if (storedCost === cost) passwordMatches = match;
   }
   if (!account || !passwordMatches) return loginFailed;
-  const { id, displayName, timezone } = account;
+  const { id, displayName, timezone, gender } = account;
   const sessionToken = await createSession(prisma, id, account.passwordHash);
   if (!sessionToken) return loginFailed;
-  return { ok: true, user: { id, email, displayName, timezone }, sessionToken };
+  return {
+    ok: true,
+    user: { id, email, displayName, timezone, ...(gender && { gender }) },
+    sessionToken,
+  };
 }

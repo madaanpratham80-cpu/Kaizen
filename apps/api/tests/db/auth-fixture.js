@@ -38,7 +38,10 @@ export function useAuthDatabase() {
     emails.clear();
   });
   afterAll(() => prisma.$disconnect());
-  async function register(password = '  exact submitted password  ') {
+  async function register(
+    password = '  exact submitted password  ',
+    gender = 'male',
+  ) {
     vi.stubEnv('AUTH_BCRYPT_COST', '12');
     const email = `auth-${randomUUID()}@example.com`;
     emails.add(email);
@@ -47,6 +50,7 @@ export function useAuthDatabase() {
       password,
       displayName: 'Test student',
       timezone: 'UTC',
+      gender,
     });
     if (!result.ok) throw new Error('Expected successful fixture registration');
     return { ...result, password };

@@ -7,8 +7,12 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthForm } from './auth-form.jsx';
+
+const router = vi.hoisted(() => ({ replace: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+beforeEach(() => router.replace.mockReset());
 
 const user = {
   id: '09d5a188-cc9f-47d4-8e1e-848c51b51e86',
@@ -52,6 +56,9 @@ describe('auth-web-form-component', () => {
     fireEvent.change(screen.getByLabelText('Password'), {
       target: { value: 'valid test password' },
     });
+    fireEvent.change(screen.getByLabelText('Gender'), {
+      target: { value: 'female' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
     expect((await screen.findByRole('alert')).textContent).toContain(
       'Your account was created',
@@ -60,7 +67,8 @@ describe('auth-web-form-component', () => {
     fireEvent.click(
       screen.getByRole('button', { name: 'Check session again' }),
     );
-    await screen.findByText('Your account');
+    await screen.findByText('Opening Today…');
+    expect(router.replace).toHaveBeenCalledExactlyOnceWith('/today');
     expect(fetch.mock.calls.map(([url]) => url)).toEqual([
       '/api/v1/auth/session',
       '/api/v1/auth/register',
@@ -68,40 +76,35 @@ describe('auth-web-form-component', () => {
       '/api/v1/auth/session',
     ]);
   });
-  it('refreshes a stale logout proof and asks before signing out the replacement account', async () => {
-    const replacement = { ...user, displayName: 'Replacement account' };
+  it('opens Today after login verifies the session', async () => {
     const fetch = vi
       .fn()
-      .mockResolvedValueOnce(
-        reply({ user, csrfToken: 'old', feedbackSessionId: 'feedback-old' }),
-      )
-      .mockResolvedValueOnce(
-        Response.json(
-          { error: { code: 'CSRF_INVALID', message: 'Invalid CSRF token.' } },
-          { status: 403 },
-        ),
-      )
+      .mockResolvedValueOnce(failure('Invalid session.', 401))
+      .mockResolvedValueOnce(reply({ user }))
       .mockResolvedValueOnce(
         reply({
-          user: replacement,
-          csrfToken: 'new',
-          feedbackSessionId: 'feedback-new',
+          user,
+          csrfToken: 'proof',
+          feedbackSessionId: 'feedback-proof',
         }),
-      )
-      .mockResolvedValueOnce(reply({ success: true }));
+      );
     vi.stubGlobal('fetch', fetch);
     render(createElement(AuthForm, { mode: 'login' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Log out' }));
-    await screen.findByText('Replacement account');
-    expect(await screen.findByRole('alert')).toBeTruthy();
-    expect(fetch).toHaveBeenCalledTimes(3);
-    fireEvent.click(screen.getByRole('button', { name: 'Log out' }));
-    await screen.findByRole('button', { name: 'Log in' });
-    expect(fetch).toHaveBeenNthCalledWith(
-      4,
-      '/api/v1/auth/logout',
-      expect.objectContaining({ headers: { 'X-CSRF-Token': 'new' } }),
-    );
+    fireEvent.change(await screen.findByLabelText('Email'), {
+      target: { value: user.email },
+    });
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'valid test password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Log in' }));
+    await screen.findByText('Opening Today…');
+    expect(router.replace).toHaveBeenCalledExactlyOnceWith('/today');
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+      '/api/v1/auth/session',
+      '/api/v1/auth/login',
+      '/api/v1/auth/session',
+    ]);
+    expect(screen.queryByRole('heading', { name: 'Your account' })).toBeNull();
   });
   it('registers with labelled fields, retains password spaces, and keeps credentials out of browser storage', async () => {
     const fetch = vi
@@ -114,10 +117,14 @@ describe('auth-web-form-component', () => {
           csrfToken: 'proof',
           feedbackSessionId: 'feedback-proof',
         }),
-      )
-      .mockResolvedValueOnce(reply({ success: true }));
+      );
     vi.stubGlobal('fetch', fetch);
     const write = vi.spyOn(Storage.prototype, 'setItem');
+    const browserOptions = new Intl.DateTimeFormat().resolvedOptions();
+    vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+      ...browserOptions,
+      timeZone: 'America/New_York',
+    });
     render(createElement(AuthForm, { mode: 'register' }));
     fireEvent.change(await screen.findByLabelText('Display name'), {
       target: { value: user.displayName },
@@ -128,9 +135,15 @@ describe('auth-web-form-component', () => {
     fireEvent.change(screen.getByLabelText('Password'), {
       target: { value: '  valid password  ' },
     });
-    expect(screen.getByLabelText('Time zone')).toBeTruthy();
+    expect(screen.queryByLabelText('Time zone')).toBeNull();
+    const gender = screen.getByLabelText('Gender');
+    expect(gender.validity.valueMissing).toBe(true);
+    fireEvent.change(gender, {
+      target: { value: 'male' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
-    await screen.findByText('Your account');
+    await screen.findByText('Opening Today…');
+    expect(router.replace).toHaveBeenCalledExactlyOnceWith('/today');
     expect(fetch).toHaveBeenNthCalledWith(
       2,
       '/api/v1/auth/register',
@@ -141,16 +154,10 @@ describe('auth-web-form-component', () => {
           email: user.email,
           displayName: user.displayName,
           password: '  valid password  ',
-          timezone: 'UTC',
+          gender: 'male',
+          timezone: 'America/New_York',
         }),
       }),
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Log out' }));
-    await screen.findByRole('button', { name: 'Create account' });
-    expect(fetch).toHaveBeenNthCalledWith(
-      4,
-      '/api/v1/auth/logout',
-      expect.objectContaining({ headers: { 'X-CSRF-Token': 'proof' } }),
     );
     expect(write).not.toHaveBeenCalled();
   });
@@ -184,18 +191,17 @@ describe('auth-web-form-component', () => {
   });
 
   it('restores the account on mount from the cookie-backed session', async () => {
-    const fetch = vi
-      .fn()
-      .mockResolvedValue(
-        reply({
-          user,
-          csrfToken: 'proof',
-          feedbackSessionId: 'feedback-proof',
-        }),
-      );
+    const fetch = vi.fn().mockResolvedValue(
+      reply({
+        user,
+        csrfToken: 'proof',
+        feedbackSessionId: 'feedback-proof',
+      }),
+    );
     vi.stubGlobal('fetch', fetch);
     render(createElement(AuthForm, { mode: 'login' }));
-    await screen.findByText('Your account');
+    await screen.findByText('Opening Today…');
+    expect(router.replace).toHaveBeenCalledExactlyOnceWith('/today');
     await waitFor(() =>
       expect(fetch).toHaveBeenCalledWith(
         '/api/v1/auth/session',

@@ -1,6 +1,6 @@
-import { AuthForm } from '../../auth/auth-form.jsx';
+import { AuthPage } from '../../auth/auth-page.jsx';
 
 /** @returns {import('react').ReactElement} */
 export default function RegisterPage() {
-  return <AuthForm mode="register" />;
+  return <AuthPage mode="register" />;
 }

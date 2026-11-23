@@ -37,7 +37,13 @@ const conflict = {
 function registration(password = 'a long test password') {
   const email = `registration-${randomUUID()}@example.com`;
   emails.add(email);
-  return { email, password, displayName: 'Test student', timezone: 'UTC' };
+  return {
+    email,
+    password,
+    displayName: 'Test student',
+    timezone: 'UTC',
+    gender: 'male',
+  };
 }
 beforeAll(async () => {
   const [connection] = await prisma.$queryRaw`
@@ -85,6 +91,7 @@ describe('auth-register-postgres', () => {
       email: input.email,
       displayName: input.displayName,
       timezone: input.timezone,
+      gender: input.gender,
     });
     const tokenBytes = Buffer.from(result.sessionToken, 'base64url');
     expect(tokenBytes).toHaveLength(32);

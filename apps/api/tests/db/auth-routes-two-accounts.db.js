@@ -28,16 +28,26 @@ function assertCookie(response, issued = true) {
 }
 it('registers via HTTP and issues a cookie without returning credentials in JSON', async () => {
   const email = `route-${randomUUID()}@example.com`;
+  const input = {
+    email,
+    password: 'registration test password',
+    displayName: 'Student',
+    timezone: 'UTC',
+  };
   try {
+    await client
+      .post(`${base}/register`)
+      .set('Origin', origin)
+      .send(input)
+      .expect(400);
+    expect(await prisma.user.count({ where: { normalizedEmail: email } })).toBe(
+      0,
+    );
+
     const res = await client
       .post(`${base}/register`)
       .set('Origin', origin)
-      .send({
-        email,
-        password: 'registration test password',
-        displayName: 'Student',
-        timezone: 'UTC',
-      })
+      .send({ ...input, gender: 'female' })
       .expect(201)
       .expect('Cache-Control', 'private, no-store');
     assertCookie(res);
@@ -48,6 +58,7 @@ it('registers via HTTP and issues a cookie without returning credentials in JSON
           email,
           displayName: 'Student',
           timezone: 'UTC',
+          gender: 'female',
         },
       },
       requestId: res.headers['x-request-id'],
@@ -65,8 +76,8 @@ it('registers via HTTP and issues a cookie without returning credentials in JSON
   }
 });
 it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owners', async () => {
-  const first = await register();
-  const second = await register();
+  const first = await register(undefined, 'male');
+  const second = await register(undefined, 'female');
   const firstLogin = await client
     .post(`${base}/login`)
     .set('Origin', origin)
@@ -90,6 +101,8 @@ it('auth-routes-two-accounts keeps sessions and CSRF proofs scoped to their owne
     feedbackSessionId: expect.any(String),
   });
   expect(secondSession.body.data.user).toEqual(second.user);
+  expect(firstSession.body.data.user.gender).toBe('male');
+  expect(secondSession.body.data.user.gender).toBe('female');
   expect(firstSession.body.data.feedbackSessionId).not.toBe(
     firstSession.body.data.csrfToken,
   );

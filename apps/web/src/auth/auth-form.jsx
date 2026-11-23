@@ -2,17 +2,27 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { loginRequestSchema, registerRequestSchema } from '@kaizen/contracts';
+import { useRouter } from 'next/navigation';
+import {
+  ianaTimezoneSchema,
+  loginRequestSchema,
+  registerRequestSchema,
+} from '@kaizen/contracts';
 import { auth, errorMessage } from './client.js';
 
-const loginLabel =
+const fieldLabel =
   'flex flex-col gap-space-xs font-label-mono-sm text-label-mono-sm text-secondary uppercase';
-const loginInput =
+const fieldInput =
   'w-full border border-surface-bright bg-surface-container-lowest px-space-md py-space-sm font-body-md text-body-md text-on-surface placeholder:text-secondary/50 focus:border-primary-container focus:outline-2 focus:outline-primary-container';
-const loginButton =
+const primaryButton =
   'w-full border border-primary-container bg-primary-container px-space-lg py-space-md font-label-mono-lg text-label-mono-lg text-on-primary-container uppercase hover:bg-on-surface hover:text-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60';
-const loginLink =
+const authLink =
   'text-secondary underline hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+
+const activeTab =
+  'grid place-items-center border border-primary-container bg-primary-container px-space-xs py-space-sm font-bold text-on-primary-container';
+const inactiveTab =
+  'grid place-items-center border border-surface-bright bg-surface px-space-xs py-space-sm text-secondary hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
 /**
  * @param {{ mode: 'login' | 'register' }} props
@@ -21,9 +31,8 @@ const loginLink =
 export function AuthForm({ mode }) {
   const registering = mode === 'register';
   const label = registering ? 'Create account' : 'Log in';
-  const [session, setSession] = useState(
-    /** @type {Awaited<ReturnType<typeof auth.session>>} */ (null),
-  );
+  const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +46,10 @@ export function AuthForm({ mode }) {
       .session(controller.signal)
       .then(
         (value) => {
-          if (!controller.signal.aborted) setSession(value);
+          if (!controller.signal.aborted && value) {
+            setRedirecting(true);
+            router.replace('/today');
+          }
         },
         (reason) => {
           if (!controller.signal.aborted) setError(errorMessage(reason));
@@ -47,7 +59,7 @@ export function AuthForm({ mode }) {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [revision]);
+  }, [revision, router]);
 
   /** @param {() => Promise<void>} action */
   async function mutate(action) {
@@ -72,7 +84,12 @@ export function AuthForm({ mode }) {
     const input = Object.fromEntries(new FormData(form));
     void mutate(async () => {
       if (registering) {
-        const parsed = registerRequestSchema.safeParse(input);
+        const localTimezone = new Intl.DateTimeFormat().resolvedOptions()
+          .timeZone;
+        const parsed = registerRequestSchema.safeParse({
+          ...input,
+          timezone: ianaTimezoneSchema.safeParse(localTimezone).data ?? 'UTC',
+        });
         if (!parsed.success) {
           setError(parsed.error.issues[0].message);
           return;
@@ -104,236 +121,176 @@ export function AuthForm({ mode }) {
         );
         return;
       }
-      setSession(current);
+      setRedirecting(true);
+      router.replace('/today');
     });
   }
 
-  const Container = registering ? 'main' : 'div';
-  const buttonClass = registering ? 'auth-button' : loginButton;
-  const formError = error && !registering && !loading && !session;
+  const formError = error && !registering && !loading && !redirecting;
   const errorMessageId = formError ? 'login-form-error' : undefined;
   const alert = error && (
     <p
       id={errorMessageId}
       role="alert"
-      className={
-        registering
-          ? 'mb-4 border-l-4 border-[#E63827] pl-3'
-          : 'font-label-mono-sm text-label-mono-sm text-error uppercase'
-      }
+      className="font-label-mono-sm text-label-mono-sm text-error uppercase"
     >
       {error}
     </p>
   );
 
   return (
-    <Container
-      className={registering ? 'mx-auto max-w-lg p-6 sm:py-16' : undefined}
+    <section
+      aria-labelledby="auth-heading"
+      className="flex flex-col gap-space-lg border border-surface-bright bg-surface-container-low p-space-md sm:p-space-lg"
     >
-      <section
-        aria-labelledby="auth-heading"
-        className={
-          registering
-            ? 'border border-[#121110] bg-[#F5F0E6] p-6 text-[#121110] sm:p-9'
-            : 'flex flex-col gap-space-lg border border-surface-bright bg-surface-container-low p-space-md sm:p-space-lg'
-        }
-      >
-        {registering ? (
-          <h1
-            id="auth-heading"
-            className="mb-6 text-4xl font-bold tracking-tight"
+      <div className="flex flex-wrap items-center justify-between gap-space-sm border-b border-surface-bright pb-space-md">
+        <h1
+          id="auth-heading"
+          className="font-headline-md text-headline-md uppercase"
+        >
+          {registering ? label : 'Access terminal'}
+        </h1>
+        <span className="font-label-mono-sm text-label-mono-sm text-primary-container uppercase">
+          [ Session:{' '}
+          {loading ? 'Checking' : redirecting ? 'Verified' : 'Unverified'} ]
+        </span>
+      </div>
+      {!formError && alert}
+      {loading ? (
+        <p role="status">Checking session…</p>
+      ) : redirecting ? (
+        <p role="status">Opening Today…</p>
+      ) : registrationCommitted ? (
+        <div className="space-y-4">
+          <button
+            className={primaryButton}
+            disabled={pending}
+            onClick={() =>
+              void mutate(async () => {
+                const current = await auth.session();
+                if (current) {
+                  setRedirecting(true);
+                  router.replace('/today');
+                } else {
+                  setError('Your account was created. Log in to continue.');
+                }
+              })
+            }
           >
-            {session ? 'Your account' : label}
-          </h1>
-        ) : (
-          <div className="flex flex-wrap items-center justify-between gap-space-sm border-b border-surface-bright pb-space-md">
-            <h1
-              id="auth-heading"
-              className="font-headline-md text-headline-md uppercase"
-            >
-              {session ? 'Your account' : 'Access terminal'}
-            </h1>
-            <span className="font-label-mono-sm text-label-mono-sm text-primary-container uppercase">
-              [ Session:{' '}
-              {loading ? 'Checking' : session ? 'Verified' : 'Unverified'} ]
-            </span>
-          </div>
-        )}
-        {!formError && alert}
-        {loading ? (
-          <p role="status">Checking session…</p>
-        ) : session ? (
-          <div className="space-y-4">
-            <p>
-              Signed in as <strong>{session.user.displayName}</strong>
-            </p>
-            <p>{session.user.email}</p>
-            <Link
-              className={registering ? 'block underline' : `block ${loginLink}`}
-              href="/today"
-            >
-              Open Today
-            </Link>
-            <button
-              className={buttonClass}
-              disabled={pending}
-              onClick={() =>
-                void mutate(async () => {
-                  if ((await auth.logout(session.csrfToken)) === 'done') {
-                    setSession(null);
-                    setRegistrationCommitted(false);
-                    return;
-                  }
-                  const current = await auth.session();
-                  setSession(current);
-                  if (current)
-                    setError(
-                      'Your session changed. Check the account and select Log out again.',
-                    );
-                })
-              }
-            >
-              {pending ? 'Logging out…' : 'Log out'}
+            Check session again
+          </button>
+          <Link className={`block ${authLink}`} href="/login">
+            Log in
+          </Link>
+        </div>
+      ) : (
+        <form
+          onSubmit={submit}
+          aria-busy={pending}
+          className="flex flex-col gap-space-lg"
+        >
+          <nav
+            aria-label="Account access"
+            className="grid grid-cols-2 text-center font-label-mono-md text-label-mono-md uppercase"
+          >
+            {registering ? (
+              <>
+                <Link className={inactiveTab} href="/login">
+                  Log in
+                </Link>
+                <span aria-current="page" className={activeTab}>
+                  Create an account
+                </span>
+              </>
+            ) : (
+              <>
+                <span aria-current="page" className={activeTab}>
+                  Log in
+                </span>
+                <Link className={inactiveTab} href="/register">
+                  Create an account
+                </Link>
+              </>
+            )}
+          </nav>
+          <fieldset className="flex flex-col gap-space-md" disabled={pending}>
+            {registering && (
+              <label className={fieldLabel}>
+                Display name
+                <input
+                  name="displayName"
+                  className={fieldInput}
+                  autoComplete="name"
+                  required
+                  maxLength={80}
+                />
+              </label>
+            )}
+            <label className={fieldLabel}>
+              Email
+              <input
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className={fieldInput}
+                placeholder={registering ? undefined : 'disciple@kaizen.io'}
+                aria-describedby={errorMessageId}
+              />
+            </label>
+            <label className={fieldLabel}>
+              Password
+              <input
+                name="password"
+                type="password"
+                autoComplete={registering ? 'new-password' : 'current-password'}
+                required
+                className={fieldInput}
+                aria-describedby={errorMessageId}
+              />
+            </label>
+            {registering && (
+              <label className={fieldLabel}>
+                Gender
+                <select
+                  name="gender"
+                  className={fieldInput}
+                  defaultValue=""
+                  required
+                >
+                  <option value="" disabled>
+                    Select gender
+                  </option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </label>
+            )}
+            {formError && alert}
+            <button className={`mt-space-sm ${primaryButton}`} type="submit">
+              {pending
+                ? registering
+                  ? 'Creating account…'
+                  : 'Logging in…'
+                : label}
             </button>
-          </div>
-        ) : registrationCommitted ? (
-          <div className="space-y-4">
+          </fieldset>
+          {error && (
             <button
-              className="auth-button"
+              className={`self-center font-label-mono-sm text-label-mono-sm uppercase ${authLink}`}
+              type="button"
               disabled={pending}
-              onClick={() =>
-                void mutate(async () => {
-                  const current = await auth.session();
-                  setSession(current);
-                  if (!current)
-                    setError('Your account was created. Log in to continue.');
-                })
-              }
+              onClick={() => {
+                setError('');
+                setLoading(true);
+                setRevision((value) => value + 1);
+              }}
             >
               Check session again
             </button>
-            <Link className="block underline" href="/login">
-              Log in
-            </Link>
-          </div>
-        ) : (
-          <form
-            onSubmit={submit}
-            aria-busy={pending}
-            className={registering ? undefined : 'flex flex-col gap-space-lg'}
-          >
-            {!registering && (
-              <nav
-                aria-label="Account access"
-                className="grid grid-cols-2 text-center font-label-mono-md text-label-mono-md uppercase"
-              >
-                <span
-                  aria-current="page"
-                  className="grid place-items-center border border-primary-container bg-primary-container px-space-xs py-space-sm font-bold text-on-primary-container"
-                >
-                  Log in
-                </span>
-                <Link
-                  className="grid place-items-center border border-surface-bright bg-surface px-space-xs py-space-sm text-secondary hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  href="/register"
-                >
-                  Create an account
-                </Link>
-              </nav>
-            )}
-            <fieldset
-              className={
-                registering ? 'space-y-4' : 'flex flex-col gap-space-md'
-              }
-              disabled={pending}
-            >
-              {registering && (
-                <label className="auth-label">
-                  Display name
-                  <input
-                    name="displayName"
-                    autoComplete="name"
-                    required
-                    maxLength={80}
-                  />
-                </label>
-              )}
-              <label className={registering ? 'auth-label' : loginLabel}>
-                Email
-                <input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className={registering ? undefined : loginInput}
-                  placeholder={registering ? undefined : 'disciple@kaizen.io'}
-                  aria-describedby={errorMessageId}
-                />
-              </label>
-              <label className={registering ? 'auth-label' : loginLabel}>
-                Password
-                <input
-                  name="password"
-                  type="password"
-                  autoComplete={
-                    registering ? 'new-password' : 'current-password'
-                  }
-                  required
-                  className={registering ? undefined : loginInput}
-                  aria-describedby={errorMessageId}
-                />
-              </label>
-              {formError && alert}
-              {registering && (
-                <label className="auth-label">
-                  Time zone
-                  <input
-                    name="timezone"
-                    defaultValue="UTC"
-                    placeholder="Asia/Kolkata"
-                    required
-                  />
-                </label>
-              )}
-              <button
-                className={
-                  registering ? buttonClass : `mt-space-sm ${buttonClass}`
-                }
-                type="submit"
-              >
-                {pending
-                  ? registering
-                    ? 'Creating account…'
-                    : 'Logging in…'
-                  : label}
-              </button>
-            </fieldset>
-            {registering && (
-              <Link className="mt-5 inline-block underline" href="/login">
-                Log in
-              </Link>
-            )}
-            {error && (
-              <button
-                className={
-                  registering
-                    ? 'ml-4 underline'
-                    : `self-center font-label-mono-sm text-label-mono-sm uppercase ${loginLink}`
-                }
-                type="button"
-                disabled={pending}
-                onClick={() => {
-                  setError('');
-                  setLoading(true);
-                  setRevision((value) => value + 1);
-                }}
-              >
-                Check session again
-              </button>
-            )}
-          </form>
-        )}
-      </section>
-    </Container>
+          )}
+        </form>
+      )}
+    </section>
   );
 }

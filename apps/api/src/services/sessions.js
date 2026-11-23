@@ -93,6 +93,7 @@ export async function lookupSession(prisma, token) {
           normalizedEmail: true,
           displayName: true,
           timezone: true,
+          gender: true,
         },
       },
     },
@@ -100,8 +101,11 @@ export async function lookupSession(prisma, token) {
   if (!session || session.expiresAt.getTime() <= Date.now()) {
     return invalidSession;
   }
-  const { normalizedEmail, ...user } = session.user;
-  return { ok: true, user: { ...user, email: normalizedEmail } };
+  const { normalizedEmail, gender, ...user } = session.user;
+  return {
+    ok: true,
+    user: { ...user, email: normalizedEmail, ...(gender && { gender }) },
+  };
 }
 /**
  * @param {PrismaClient} prisma
