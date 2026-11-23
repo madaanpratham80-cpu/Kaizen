@@ -10,14 +10,16 @@ import {
 } from '../../../api/session-screen.jsx';
 import { ApiError } from '../../../auth/client.js';
 import { CharacterFeedback } from '../../../progression/character-feedback.jsx';
-import { StreakBadge } from '../../../progression/components.jsx';
 
 /** @typedef {Awaited<ReturnType<typeof screenApi.today>>} Snapshot */
 /** @typedef {import('../../../api/session-screen.jsx').ScreenSession} ScreenSession */
 /** @typedef {import('../../../api/session-screen.jsx').SessionScope} SessionScope */
 
-const STREAK_MILESTONE = 7;
 const REFRESH_TIMEOUT_MS = 15000;
+const portraits = {
+  male: '/today-portrait-male.png',
+  female: '/today-portrait-female.png',
+};
 
 /** @param {string} localDate UTC serialization of the plan's local date. */
 function weekOf(localDate) {
@@ -25,6 +27,33 @@ function weekOf(localDate) {
   const daysSinceMonday = (date.getUTCDay() + 6) % 7;
   date.setUTCDate(date.getUTCDate() - daysSinceMonday);
   return date.toISOString().slice(0, 10);
+}
+
+/** @param {{completed?: number, planned?: number}} props */
+function LedgerHeader({ completed, planned }) {
+  return (
+    <header className="border-b-2 border-outline-variant bg-primary-container px-space-lg py-space-lg text-on-primary-container sm:px-margin-desktop sm:py-space-xl">
+      <p className="font-label-mono-md text-label-mono-md uppercase">
+        Operational roster
+      </p>
+      <h1 className="mt-space-md font-display-lg text-display-lg-mobile uppercase xl:text-display-lg">
+        Today’s Ledger
+      </h1>
+      {planned !== undefined && (
+        <div className="mt-space-md">
+          <p className="font-label-mono-md text-label-mono-md uppercase">
+            Interval progress
+          </p>
+          <p className="font-display-lg text-display-lg-mobile tabular-nums xl:text-display-lg">
+            {completed}/{planned}{' '}
+            <span className="font-label-mono-md text-label-mono-md uppercase">
+              done
+            </span>
+          </p>
+        </div>
+      )}
+    </header>
+  );
 }
 
 /** @param {{session: ScreenSession, scope: SessionScope, revision: number}} props */
@@ -192,12 +221,15 @@ function TodayContent({ session, scope, revision }) {
   const retry = () => setReload((value) => value + 1);
   if (failure === 'expired-session' || !snapshot) {
     return (
-      <div className="p-space-md sm:p-space-lg">
-        <ScreenNotice
-          state={failure ?? 'loading'}
-          retry={failure ? retry : undefined}
-        />
-      </div>
+      <>
+        <LedgerHeader />
+        <div className="p-space-md sm:p-space-lg">
+          <ScreenNotice
+            state={failure ?? 'loading'}
+            retry={failure ? retry : undefined}
+          />
+        </div>
+      </>
     );
   }
   const waiting = syncing || snapshot.status === 'catching-up';
@@ -208,11 +240,13 @@ function TodayContent({ session, scope, revision }) {
     ({ status }) => status === 'COMPLETED',
   );
   const receipt = completion?.result;
+  const completedPlanned = completed.filter(({ planned }) => planned).length;
+  const planned = snapshot.plan?.plannedCount ?? 0;
 
   return (
-    <div className="grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+    <div className="grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       {(failure || waiting) && (
-        <div className="space-y-space-sm border-b border-outline-variant p-space-md lg:col-span-2">
+        <div className="space-y-space-sm border-b border-outline-variant p-space-md md:col-span-2">
           {failure && <ScreenNotice state={failure} retry={retry} />}
           {waiting && (
             <ScreenNotice
@@ -222,18 +256,39 @@ function TodayContent({ session, scope, revision }) {
           )}
         </div>
       )}
-      <div className="grid content-start gap-px border-b border-outline-variant bg-outline-variant lg:border-r lg:border-b-0">
+      <div className="grid content-start border-b border-outline-variant md:border-r-2 md:border-b-0">
         <CharacterFeedback
           sessionId={session.feedbackSessionId}
           snapshot={snapshot}
           completion={completion}
+          poster
+          portraitSrc={portraits[session.user.gender]}
         />
-        <StreakBadge
-          days={snapshot.currentStreak}
-          milestoneDays={STREAK_MILESTONE}
-        />
+        <div className="grid grid-cols-2 divide-x divide-outline-variant border-y border-outline-variant bg-surface-container-low">
+          <p className="p-space-md font-label-mono-md text-label-mono-md text-outline uppercase">
+            Streak{' '}
+            <strong className="mt-space-xs block font-headline-lg text-headline-lg text-primary-container">
+              {snapshot.currentStreak}d
+            </strong>
+          </p>
+          <p className="p-space-md font-label-mono-md text-label-mono-md text-outline uppercase">
+            Best streak{' '}
+            <strong className="mt-space-xs block font-headline-lg text-headline-lg text-tertiary">
+              {snapshot.bestStreak}d
+            </strong>
+          </p>
+        </div>
       </div>
       <div className="flex min-w-0 flex-col">
+        <LedgerHeader completed={completedPlanned} planned={planned} />
+        <div className="flex flex-wrap items-baseline gap-space-md border-b-2 border-outline-variant bg-secondary-fixed px-space-lg py-space-md text-on-secondary-fixed">
+          <p className="font-label-mono-lg text-label-mono-lg uppercase">
+            Cadence summary
+          </p>
+          <p className="font-label-mono-md text-label-mono-md uppercase">
+            {completedPlanned} of {planned} done today
+          </p>
+        </div>
         <section
           aria-labelledby="today-priority"
           className="border-b border-outline-variant bg-surface-container-low p-space-md sm:p-space-lg"
@@ -254,7 +309,7 @@ function TodayContent({ session, scope, revision }) {
               </p>
             )}
           </div>
-          <p className="mt-space-sm font-headline-md text-headline-md break-words">
+          <p className="mt-space-sm font-headline-lg text-headline-lg break-words uppercase">
             {snapshot.priority?.title ?? 'No priority scheduled.'}
           </p>
         </section>
@@ -268,7 +323,7 @@ function TodayContent({ session, scope, revision }) {
         <section aria-labelledby="today-remaining">
           <p
             id="today-remaining"
-            className="border-b border-outline-variant bg-secondary-fixed px-space-md py-space-sm font-label-mono-lg text-label-mono-lg text-on-secondary-fixed uppercase sm:px-space-lg"
+            className="border-b border-outline-variant bg-surface-container-lowest px-space-md py-space-sm font-label-mono-lg text-label-mono-lg text-secondary uppercase sm:px-space-lg"
           >
             Remaining quests
           </p>
@@ -348,12 +403,7 @@ function TodayContent({ session, scope, revision }) {
 /** @returns {import('react').ReactElement} */
 export function TodayScreen() {
   return (
-    <main className="border border-outline-variant bg-surface font-body-md text-body-md text-on-surface">
-      <header className="border-b border-outline-variant bg-primary-container px-space-md py-space-lg text-on-primary-container sm:px-space-lg sm:py-space-xl">
-        <h1 className="font-display-lg text-display-lg-mobile uppercase sm:text-display-lg">
-          Today’s Ledger
-        </h1>
-      </header>
+    <main className="min-h-dvh border-b border-outline-variant bg-surface font-body-md text-body-md text-on-surface">
       <SessionScreen>
         {(session, scope, revision) => (
           <TodayContent {...{ session, scope, revision }} />

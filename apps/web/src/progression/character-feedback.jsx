@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { gsap } from 'gsap';
 import {
   useEffect,
@@ -18,6 +19,7 @@ import { claimFeedbackEvents, setFeedbackSession } from './feedback-session.js';
 const MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const BAR_DURATION_SECONDS = 0.4;
 const MAX_VALUE = 100;
+const DEFAULT_PORTRAIT = '/today-portrait.jpg';
 const SEAL_TITLES = {
   'seven-day-warrior': 'Seven-Day Warrior',
   'iron-will': 'Iron Will',
@@ -36,7 +38,7 @@ const prefersReducedMotion = () =>
   window.matchMedia?.(MOTION_QUERY).matches ?? true;
 const serverPrefersReducedMotion = () => true;
 
-function FeedbackMeter({ label, value, fill, color }) {
+function FeedbackMeter({ label, value, fill, color, poster }) {
   return (
     <div>
       <p className="progression-value">
@@ -49,7 +51,7 @@ function FeedbackMeter({ label, value, fill, color }) {
         aria-valuemax={MAX_VALUE}
         aria-valuenow={value}
         aria-valuetext={`${value}%`}
-        className="h-2 overflow-hidden bg-progression-track"
+        className={`h-2 overflow-hidden ${poster ? 'bg-surface-bright' : 'bg-progression-track'}`}
       >
         <span
           ref={fill}
@@ -89,7 +91,13 @@ function sealDetails(completion) {
   });
 }
 
-function SessionFeedback({ sessionId, snapshot, completion }) {
+function SessionFeedback({
+  sessionId,
+  snapshot,
+  completion,
+  poster,
+  portraitSrc,
+}) {
   const reduced = useSyncExternalStore(
     subscribeToMotion,
     prefersReducedMotion,
@@ -165,27 +173,87 @@ function SessionFeedback({ sessionId, snapshot, completion }) {
   return (
     <section
       aria-label="Character feedback"
-      className="progression-panel space-y-progression border border-progression-ink bg-progression-paper p-progression font-progression"
+      className={
+        poster
+          ? 'bg-surface text-on-surface'
+          : 'progression-panel space-y-progression border border-progression-ink bg-progression-paper p-progression font-progression'
+      }
     >
-      <div className={color}>
-        <Gesture band={band} />
-        <p className="font-semibold">{label}</p>
+      {poster && (
+        <div className="border-b-2 border-outline-variant">
+          <p className="border-b border-outline-variant px-space-lg py-space-sm font-label-mono-md text-label-mono-md text-outline uppercase">
+            Character dossier
+          </p>
+          <div className="relative aspect-square min-h-64 border-4 border-outline-variant bg-surface-container-lowest sm:aspect-[9/10]">
+            <Image
+              src={portraitSrc}
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 32vw, (min-width: 640px) 42vw, 100vw"
+              className={
+                portraitSrc === DEFAULT_PORTRAIT
+                  ? 'object-cover object-center grayscale contrast-150 brightness-90'
+                  : 'object-cover object-[center_32%]'
+              }
+              unoptimized
+            />
+          </div>
+        </div>
+      )}
+      <div
+        className={
+          poster
+            ? 'space-y-space-lg p-space-lg sm:p-margin-desktop'
+            : 'contents'
+        }
+      >
+        <div className={poster ? 'text-tertiary' : color}>
+          {poster ? (
+            <>
+              <p className="flex flex-wrap items-center justify-between gap-space-sm border-b border-outline-variant pb-space-sm font-label-mono-md text-label-mono-md uppercase">
+                <span className="text-outline">Vitality level</span>
+                <span className="bg-tertiary px-space-sm text-on-tertiary">
+                  {label}
+                </span>
+              </p>
+              <p
+                aria-hidden="true"
+                className="py-space-md font-display-xl text-display-xl-mobile text-on-surface tabular-nums xl:text-display-xl"
+              >
+                {health}%
+              </p>
+            </>
+          ) : (
+            <>
+              <Gesture band={band} />
+              <p className="font-semibold">{label}</p>
+            </>
+          )}
+          <FeedbackMeter
+            label="Health"
+            value={health}
+            fill={healthFill}
+            color={poster ? 'text-tertiary' : color}
+            poster={poster}
+          />
+        </div>
+        <p
+          className={
+            poster
+              ? 'border-t border-outline-variant pt-space-md font-headline-md text-headline-md'
+              : undefined
+          }
+        >
+          Level {1 + Math.floor(shown.totalXp / MAX_VALUE)} · {shown.totalXp} XP
+        </p>
         <FeedbackMeter
-          label="Health"
-          value={health}
-          fill={healthFill}
-          color={color}
+          label="XP toward next level"
+          value={xp}
+          fill={xpFill}
+          color={poster ? 'text-primary-container' : 'text-progression-ink'}
+          poster={poster}
         />
       </div>
-      <p>
-        Level {1 + Math.floor(shown.totalXp / MAX_VALUE)} · {shown.totalXp} XP
-      </p>
-      <FeedbackMeter
-        label="XP toward next level"
-        value={xp}
-        fill={xpFill}
-        color="text-progression-ink"
-      />
       <div aria-live="polite" aria-relevant="additions">
         {reveals.map(({ eventId: id, title, bonusXp }) => (
           <p key={id}>
@@ -198,11 +266,17 @@ function SessionFeedback({ sessionId, snapshot, completion }) {
 }
 
 /**
- * @param {{sessionId: string | null, snapshot: Snapshot, completion?: {sessionId: string, result: Completion} | null}} props
+ * @param {{sessionId: string | null, snapshot: Snapshot, completion?: {sessionId: string, result: Completion} | null, poster?: boolean, portraitSrc?: string}} props
  * Capture the completion's session when submitting the mutation. The snapshot belongs to the current session.
  * @returns {import('react').ReactElement | null}
  */
-export function CharacterFeedback({ sessionId, snapshot, completion }) {
+export function CharacterFeedback({
+  sessionId,
+  snapshot,
+  completion,
+  poster = false,
+  portraitSrc = DEFAULT_PORTRAIT,
+}) {
   useEffect(() => setFeedbackSession(sessionId), [sessionId]);
   if (!sessionId) return null;
   return (
@@ -210,6 +284,8 @@ export function CharacterFeedback({ sessionId, snapshot, completion }) {
       key={sessionId}
       sessionId={sessionId}
       snapshot={snapshot}
+      poster={poster}
+      portraitSrc={portraitSrc}
       completion={
         completion?.sessionId === sessionId ? completion.result : null
       }
