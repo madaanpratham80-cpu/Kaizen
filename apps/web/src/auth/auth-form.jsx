@@ -5,6 +5,15 @@ import Link from 'next/link';
 import { loginRequestSchema, registerRequestSchema } from '@kaizen/contracts';
 import { auth, errorMessage } from './client.js';
 
+const loginLabel =
+  'flex flex-col gap-space-xs font-label-mono-sm text-label-mono-sm text-secondary uppercase';
+const loginInput =
+  'w-full border border-surface-bright bg-surface-container-lowest px-space-md py-space-sm font-body-md text-body-md text-on-surface placeholder:text-secondary/50 focus:border-primary-container focus:outline-2 focus:outline-primary-container';
+const loginButton =
+  'w-full border border-primary-container bg-primary-container px-space-lg py-space-md font-label-mono-lg text-label-mono-lg text-on-primary-container uppercase hover:bg-on-surface hover:text-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60';
+const loginLink =
+  'text-secondary underline hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+
 /**
  * @param {{ mode: 'login' | 'register' }} props
  * @returns {import('react').ReactElement}
@@ -99,17 +108,58 @@ export function AuthForm({ mode }) {
     });
   }
 
+  const Container = registering ? 'main' : 'div';
+  const buttonClass = registering ? 'auth-button' : loginButton;
+  const formError = error && !registering && !loading && !session;
+  const errorMessageId = formError ? 'login-form-error' : undefined;
+  const alert = error && (
+    <p
+      id={errorMessageId}
+      role="alert"
+      className={
+        registering
+          ? 'mb-4 border-l-4 border-[#E63827] pl-3'
+          : 'font-label-mono-sm text-label-mono-sm text-error uppercase'
+      }
+    >
+      {error}
+    </p>
+  );
+
   return (
-    <main className="mx-auto max-w-lg p-6 sm:py-16">
-      <section className="border border-[#121110] bg-[#F5F0E6] p-6 text-[#121110] sm:p-9">
-        <h1 className="mb-6 text-4xl font-bold tracking-tight">
-          {session ? 'Your account' : label}
-        </h1>
-        {error && (
-          <p role="alert" className="mb-4 border-l-4 border-[#E63827] pl-3">
-            {error}
-          </p>
+    <Container
+      className={registering ? 'mx-auto max-w-lg p-6 sm:py-16' : undefined}
+    >
+      <section
+        aria-labelledby="auth-heading"
+        className={
+          registering
+            ? 'border border-[#121110] bg-[#F5F0E6] p-6 text-[#121110] sm:p-9'
+            : 'flex flex-col gap-space-lg border border-surface-bright bg-surface-container-low p-space-md sm:p-space-lg'
+        }
+      >
+        {registering ? (
+          <h1
+            id="auth-heading"
+            className="mb-6 text-4xl font-bold tracking-tight"
+          >
+            {session ? 'Your account' : label}
+          </h1>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-space-sm border-b border-surface-bright pb-space-md">
+            <h1
+              id="auth-heading"
+              className="font-headline-md text-headline-md uppercase"
+            >
+              {session ? 'Your account' : 'Access terminal'}
+            </h1>
+            <span className="font-label-mono-sm text-label-mono-sm text-primary-container uppercase">
+              [ Session:{' '}
+              {loading ? 'Checking' : session ? 'Verified' : 'Unverified'} ]
+            </span>
+          </div>
         )}
+        {!formError && alert}
         {loading ? (
           <p role="status">Checking session…</p>
         ) : session ? (
@@ -118,11 +168,14 @@ export function AuthForm({ mode }) {
               Signed in as <strong>{session.user.displayName}</strong>
             </p>
             <p>{session.user.email}</p>
-            <Link className="block underline" href="/today">
+            <Link
+              className={registering ? 'block underline' : `block ${loginLink}`}
+              href="/today"
+            >
               Open Today
             </Link>
             <button
-              className="auth-button"
+              className={buttonClass}
               disabled={pending}
               onClick={() =>
                 void mutate(async () => {
@@ -164,8 +217,36 @@ export function AuthForm({ mode }) {
             </Link>
           </div>
         ) : (
-          <form onSubmit={submit} aria-busy={pending}>
-            <fieldset className="space-y-4" disabled={pending}>
+          <form
+            onSubmit={submit}
+            aria-busy={pending}
+            className={registering ? undefined : 'flex flex-col gap-space-lg'}
+          >
+            {!registering && (
+              <nav
+                aria-label="Account access"
+                className="grid grid-cols-2 text-center font-label-mono-md text-label-mono-md uppercase"
+              >
+                <span
+                  aria-current="page"
+                  className="grid place-items-center border border-primary-container bg-primary-container px-space-xs py-space-sm font-bold text-on-primary-container"
+                >
+                  Log in
+                </span>
+                <Link
+                  className="grid place-items-center border border-surface-bright bg-surface px-space-xs py-space-sm text-secondary hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  href="/register"
+                >
+                  Create an account
+                </Link>
+              </nav>
+            )}
+            <fieldset
+              className={
+                registering ? 'space-y-4' : 'flex flex-col gap-space-md'
+              }
+              disabled={pending}
+            >
               {registering && (
                 <label className="auth-label">
                   Display name
@@ -177,16 +258,19 @@ export function AuthForm({ mode }) {
                   />
                 </label>
               )}
-              <label className="auth-label">
+              <label className={registering ? 'auth-label' : loginLabel}>
                 Email
                 <input
                   name="email"
                   type="email"
                   autoComplete="email"
                   required
+                  className={registering ? undefined : loginInput}
+                  placeholder={registering ? undefined : 'disciple@kaizen.io'}
+                  aria-describedby={errorMessageId}
                 />
               </label>
-              <label className="auth-label">
+              <label className={registering ? 'auth-label' : loginLabel}>
                 Password
                 <input
                   name="password"
@@ -195,8 +279,11 @@ export function AuthForm({ mode }) {
                     registering ? 'new-password' : 'current-password'
                   }
                   required
+                  className={registering ? undefined : loginInput}
+                  aria-describedby={errorMessageId}
                 />
               </label>
+              {formError && alert}
               {registering && (
                 <label className="auth-label">
                   Time zone
@@ -208,7 +295,12 @@ export function AuthForm({ mode }) {
                   />
                 </label>
               )}
-              <button className="auth-button" type="submit">
+              <button
+                className={
+                  registering ? buttonClass : `mt-space-sm ${buttonClass}`
+                }
+                type="submit"
+              >
                 {pending
                   ? registering
                     ? 'Creating account…'
@@ -216,15 +308,18 @@ export function AuthForm({ mode }) {
                   : label}
               </button>
             </fieldset>
-            <Link
-              className="mt-5 inline-block underline"
-              href={registering ? '/login' : '/register'}
-            >
-              {registering ? 'Log in' : 'Create an account'}
-            </Link>
+            {registering && (
+              <Link className="mt-5 inline-block underline" href="/login">
+                Log in
+              </Link>
+            )}
             {error && (
               <button
-                className="ml-4 underline"
+                className={
+                  registering
+                    ? 'ml-4 underline'
+                    : `self-center font-label-mono-sm text-label-mono-sm uppercase ${loginLink}`
+                }
                 type="button"
                 disabled={pending}
                 onClick={() => {
@@ -239,6 +334,6 @@ export function AuthForm({ mode }) {
           </form>
         )}
       </section>
-    </main>
+    </Container>
   );
 }
