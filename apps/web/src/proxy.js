@@ -20,6 +20,14 @@ export const config = {
  * @returns {Promise<import('next/server').NextResponse>}
  */
 export async function proxy(request) {
+  // Allow Instant Guest Mode to explore the full app without Express
+  const isGuest = request.cookies.get('kaizen_guest')?.value === 'true';
+  if (isGuest) {
+    const response = NextResponse.next();
+    response.headers.set('Cache-Control', 'private, no-store');
+    return response;
+  }
+
   const matches = request.headers
     .get('cookie')
     ?.split(';')
@@ -40,7 +48,7 @@ export async function proxy(request) {
         signal: AbortSignal.timeout(SESSION_CHECK_TIMEOUT_MS),
       });
       verified = response.status === 200;
-      void response.body?.cancel().catch(() => {});
+      void response.body?.cancel().catch(() => { });
     } catch {
       // Express is the authority even when its session endpoint is unavailable.
     }

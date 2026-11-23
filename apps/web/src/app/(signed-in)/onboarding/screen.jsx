@@ -1,451 +1,448 @@
 'use client';
 
-import {
-  createQuestSchema,
-  questCategorySchema,
-  settingsSaveResponseSchema,
-  settingsSchema,
-  settingsValidationErrorResponseSchema,
-} from '@kaizen/contracts';
-import { useEffect, useRef, useState } from 'react';
-import { screenApi } from '../../../api/client.js';
-import { ScreenState } from '../../../api/screen-state.jsx';
-import {
-  readFailure,
-  ScreenNotice,
-  SessionScreen,
-} from '../../../api/session-screen.jsx';
-import { useCalendarRead } from '../../../api/use-calendar-read.js';
-import { ApiError } from '../../../auth/client.js';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { SessionScreen } from '../../../api/session-screen.jsx';
+import { loadGuestState, saveGuestState } from '../../../api/guest-store.js';
 
-const apiBase = process.env.NEXT_PUBLIC_API_BASE_PATH || '/api/v1';
-const SAVE_TIMEOUT_MS = 15_000;
-const MAX_GOALS = 8;
-const STARTER_TARGET = 1;
-const timezoneHelp =
-  "Timezone changes apply to future unopened days only. Today's plan keeps its current timezone.";
-const inputStyle = 'block w-full border border-current bg-white p-2';
-
-/** @typedef {import('../../../api/session-screen.jsx').ScreenSession} Session */
-/** @typedef {import('../../../api/session-screen.jsx').SessionScope} Scope */
-/** @typedef {Awaited<ReturnType<typeof screenApi.profile>>} Profile */
-/** @typedef {Awaited<ReturnType<typeof screenApi.createQuest>>} Quest */
-/** @typedef {import('@kaizen/contracts').z.infer<typeof settingsSchema>} Settings */
-/** @typedef {import('@kaizen/contracts').z.infer<typeof settingsSaveResponseSchema>['data']} SavedSettings */
-/** @typedef {import('@kaizen/contracts').z.infer<typeof settingsValidationErrorResponseSchema>['error']['details'][number]} SettingsDetail */
-/** @typedef {{path: string, message: string}} FieldIssue */
-
-/**
- * The shared transport exposes only code and message on errors.
- * @param {Settings} input
- * @param {{csrfToken: string, signal: AbortSignal}} options
- */
-async function saveSettings(input, { csrfToken, signal }) {
-  signal.throwIfAborted();
-  const response = await fetch(`${apiBase}/settings`, {
-    method: 'PATCH',
-    credentials: 'include',
-    cache: 'no-store',
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-    body: JSON.stringify(input),
-    signal: AbortSignal.any([signal, AbortSignal.timeout(SAVE_TIMEOUT_MS)]),
-  });
-  signal.throwIfAborted();
-  if (response.status === 401) throw new ApiError(401, 'Invalid session.');
-  const body = await response.json().catch(() => null);
-  if (response.ok)
-    return { saved: settingsSaveResponseSchema.parse(body).data };
-  if (response.status === 400) {
-    const validation = settingsValidationErrorResponseSchema.safeParse(body);
-    if (validation.success) return { validation: validation.data.error };
-  }
-  const message = body?.error?.message;
-  throw new ApiError(
-    response.status,
-    typeof message === 'string' ? message : 'Could not save settings.',
-  );
-}
-
-/** @param {SettingsDetail} issue */
-function settingsIssue({ path, code }) {
-  const field = path.join('.');
-  if (field === 'displayName')
-    return 'Enter a display name of 1 to 80 characters.';
-  if (field === 'timezone') return 'Enter a valid IANA timezone, such as UTC.';
-  if (field.startsWith('goals.')) return 'Enter a goal of 1 to 80 characters.';
-  if (field === 'goals') {
-    if (code === 'TOO_BIG') return 'Enter at most eight goals.';
-    return 'Check that your goals are valid and distinct.';
-  }
-  return 'Review the settings before continuing.';
-}
-
-/** @param {{field: string, issues: FieldIssue[]}} props */
-function FieldErrors({ field, issues }) {
-  const messages = issues.filter(({ path }) => path === field);
-  if (!messages.length) return null;
+export function OnboardingScreen() {
   return (
-    <ul id={`onboarding-error-${field}`} role="alert">
-      {messages.map(({ message }, index) => (
-        <li key={index}>{message}</li>
-      ))}
-    </ul>
-  );
-}
-
-/** @param {FieldIssue[]} issues @param {string} field @param {string} [hint] */
-function errorAttributes(issues, field, hint) {
-  const invalid = issues.some(({ path }) => path === field);
-  return {
-    'aria-invalid': invalid,
-    'aria-describedby':
-      [hint, invalid && `onboarding-error-${field}`]
-        .filter(Boolean)
-        .join(' ') || undefined,
-  };
-}
-
-/** @param {{saved: SavedSettings}} props */
-function SavedSummary({ saved }) {
-  const { user, pendingTimezone } = saved;
-  return (
-    <section aria-label="Saved settings" className="space-y-2 border p-4">
-      <p className="font-semibold">Settings saved.</p>
-      <dl>
-        <dt>Display name</dt>
-        <dd>{user.displayName}</dd>
-        <dt>Current timezone</dt>
-        <dd>{user.timezone}</dd>
-        <dt>Goals</dt>
-        <dd>
-          {user.goals.length ? (
-            <ul>
-              {user.goals.map((goal) => (
-                <li key={goal}>{goal}</li>
-              ))}
-            </ul>
-          ) : (
-            <ScreenState state="empty" />
-          )}
-        </dd>
-      </dl>
-      {pendingTimezone && (
-        <p>
-          Pending timezone: {pendingTimezone.timezone} on{' '}
-          <time dateTime={pendingTimezone.effectiveDate}>
-            {pendingTimezone.effectiveDate}
-          </time>
-          .
-        </p>
+    <SessionScreen>
+      {(session, scope, revision) => (
+        <OnboardingDossierContent session={session} scope={scope} revision={revision} />
       )}
-    </section>
+    </SessionScreen>
   );
 }
 
-/** @param {{profile: Profile, session: Session, scope: Scope, unavailable: boolean, expire: () => void}} props */
-function OnboardingForm({ profile, session, scope, unavailable, expire }) {
-  const [goals, setGoals] = useState(profile.user.goals);
-  const [saved, setSaved] = useState(
-    /** @type {SavedSettings | null} */ (null),
-  );
-  const [quest, setQuest] = useState(/** @type {Quest | null} */ (null));
-  const [issues, setIssues] = useState(/** @type {FieldIssue[]} */ ([]));
-  const [pending, setPending] = useState(null);
-  const [failure, setFailure] = useState(null);
-  const lifetime = useRef(null);
-  const busy = useRef(false);
-  const clientId = useRef(null);
-  useEffect(() => {
-    const controller = new AbortController();
-    lifetime.current = AbortSignal.any([controller.signal, scope.signal]);
-    return () => controller.abort();
-  }, [scope.signal]);
+export default OnboardingScreen;
 
-  /** @param {import('react').FormEvent<HTMLFormElement>} event */
-  async function submit(event) {
-    event.preventDefault();
-    const signal = lifetime.current;
-    if (!signal || signal.aborted || busy.current || unavailable || quest)
-      return;
-    const form = new FormData(event.currentTarget);
-    const starter = createQuestSchema.safeParse({
-      title: form.get('title'),
-      category: form.get('category'),
-      effectiveFrom: form.get('effectiveFrom'),
-      difficulty: 'EASY',
-      target: STARTER_TARGET,
-      recurrence: { kind: 'DAILY' },
-    });
-    const settings = saved
-      ? null
-      : settingsSchema.safeParse({
-          displayName: form.get('displayName'),
-          timezone: form.get('timezone'),
-          goals,
-        });
-    const invalid = [
-      ...(settings && !settings.success ? settings.error.issues : []),
-      ...(!starter.success ? starter.error.issues : []),
-    ];
-    setIssues(
-      invalid.map(({ path, message }) => ({ path: path.join('.'), message })),
-    );
-    setFailure(null);
-    if (!starter.success || settings?.success === false) return;
+function OnboardingDossierContent({ session }) {
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [guestState] = useState(() => loadGuestState());
 
-    const options = { csrfToken: session.csrfToken, signal };
-    let settingsCommitted = Boolean(saved);
-    busy.current = true;
-    try {
-      if (settings?.success) {
-        setPending('settings');
-        const result = await saveSettings(settings.data, options);
-        if (signal.aborted) return;
-        if (result.validation) {
-          setIssues(
-            result.validation.details.map((issue) => ({
-              path: issue.path.join('.'),
-              message: settingsIssue(issue),
-            })),
-          );
-          return;
-        }
-        settingsCommitted = true;
-        setSaved(result.saved);
+  // Step 1: Identity
+  const [displayName, setDisplayName] = useState(guestState.displayName || 'DISCIPLE #042');
+  const [gender, setGender] = useState('male');
+  const [timezone, setTimezone] = useState(guestState.timezone || 'UTC');
+
+  // Step 2: Pillar Focus & Directives
+  const [primaryPillar, setPrimaryPillar] = useState('Cognitive');
+  const [selectedGoals, setSelectedGoals] = useState([
+    'Master Spectral Theorems & SVD',
+    'Maintain 42-day continuous streak',
+    'Daily cold recovery cadence',
+  ]);
+  const [customGoal, setCustomGoal] = useState('');
+
+  // Step 3: Starter Quest
+  const [starterTitle, setStarterTitle] = useState('LINEAR ALGEBRA: EIGENVECTORS & SVD DRILL');
+  const [starterCategory, setStarterCategory] = useState('Academic');
+  const [starterDifficulty, setStarterDifficulty] = useState('MEDIUM');
+  const [starterRecurrence, setStarterRecurrence] = useState('DAILY');
+
+  function toggleGoal(goal) {
+    if (selectedGoals.includes(goal)) {
+      setSelectedGoals(selectedGoals.filter((g) => g !== goal));
+    } else {
+      if (selectedGoals.length < 5) {
+        setSelectedGoals([...selectedGoals, goal]);
       }
-      setPending('quest');
-      clientId.current ??= crypto.randomUUID();
-      const created = await screenApi.createQuest(
-        { ...starter.data, clientId: clientId.current },
-        options,
-      );
-      if (!signal.aborted) setQuest(created);
-    } catch (error) {
-      if (signal.aborted) return;
-      const state = readFailure(error);
-      if (state === 'expired-session') expire();
-      else
-        setFailure({
-          state,
-          step: settingsCommitted ? 'quest' : 'settings',
-          message: error instanceof ApiError ? error.message : null,
-        });
-    } finally {
-      busy.current = false;
-      if (!signal.aborted) setPending(null);
     }
   }
 
-  const disabled = Boolean(pending) || unavailable;
+  function addCustomGoal(e) {
+    e.preventDefault();
+    if (!customGoal.trim() || selectedGoals.length >= 5) return;
+    setSelectedGoals([...selectedGoals, customGoal.trim()]);
+    setCustomGoal('');
+  }
+
+  function handleCompleteOnboarding() {
+    const updated = {
+      ...guestState,
+      displayName: displayName.trim() || 'DISCIPLE #042',
+      timezone,
+      goals: selectedGoals,
+    };
+    saveGuestState(updated);
+    router.push('/today');
+  }
+
   return (
-    <div className="max-w-xl space-y-4">
-      {saved && <SavedSummary saved={saved} />}
-      {quest ? (
-        <p role="status">Starter quest created: {quest.title}.</p>
-      ) : (
-        <form
-          onSubmit={submit}
-          aria-busy={Boolean(pending)}
-          className="space-y-4"
+    <div className="flex flex-col w-full bg-[#141312] text-[#e6e1df] font-['DM_Sans',sans-serif] selection:bg-[#ff5541] selection:text-[#5c0000]">
+      {/* TOP HEADER DISPATCH */}
+      <section className="w-full bg-[#0f0e0d] border-b-2 border-[#5c403b] p-6 lg:p-8">
+        <div className="flex items-center gap-3 font-mono text-xs text-[#ac8883] uppercase tracking-wider">
+          <span className="text-[#ff5541] font-bold">// COMMISSIONING PROTOCOL</span>
+          <span>// CADENCE 2026</span>
+          <span>// ONBOARDING WIZARD</span>
+        </div>
+        <div className="mt-3 flex flex-col md:flex-row md:items-baseline md:gap-6">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase text-[#e6e1df] leading-none m-0 font-['Space_Grotesk',sans-serif]">
+            DISCIPLE COMMISSIONING
+          </h1>
+          <span className="font-mono text-xs uppercase tracking-tight text-[#cac6bd] font-bold mt-1 md:mt-0">
+            ESTABLISH IDENTITY, DIRECTIVES, AND YOUR INITIAL EXECUTION TARGET.
+          </span>
+        </div>
+      </section>
+
+      {/* 3-STEP PROGRESSION TABS (ABUTTING BLOCKS) */}
+      <section className="w-full grid grid-cols-3 border-b-2 border-[#5c403b] bg-[#5c403b] gap-[1px] font-mono text-xs uppercase font-bold">
+        <button
+          type="button"
+          onClick={() => setStep(1)}
+          className={`p-4 flex items-center justify-between transition-none cursor-pointer ${
+            step === 1
+              ? 'bg-[#ff5541] text-[#5c0000]'
+              : 'bg-[#0f0e0d] text-[#cac6bd] hover:bg-[#1d1b1a]'
+          }`}
         >
-          {failure && (
-            <div className="space-y-1">
-              <ScreenState state={failure.state} />
-              <p>
-                {failure.step === 'quest'
-                  ? 'Settings are saved. You can retry creating the starter quest here.'
-                  : 'The settings save could not be confirmed.'}
-              </p>
-              {failure.message && <p>{failure.message}</p>}
+          <span>.01 IDENTITY</span>
+          <span className="text-[10px] opacity-75">{step > 1 ? '✓' : '[01]'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStep(2)}
+          className={`p-4 flex items-center justify-between transition-none cursor-pointer ${
+            step === 2
+              ? 'bg-[#ff5541] text-[#5c0000]'
+              : 'bg-[#0f0e0d] text-[#cac6bd] hover:bg-[#1d1b1a]'
+          }`}
+        >
+          <span>.02 DIRECTIVES</span>
+          <span className="text-[10px] opacity-75">{step > 2 ? '✓' : '[02]'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStep(3)}
+          className={`p-4 flex items-center justify-between transition-none cursor-pointer ${
+            step === 3
+              ? 'bg-[#ff5541] text-[#5c0000]'
+              : 'bg-[#0f0e0d] text-[#cac6bd] hover:bg-[#1d1b1a]'
+          }`}
+        >
+          <span>.03 FIRST TARGET</span>
+          <span className="text-[10px] opacity-75">[03]</span>
+        </button>
+      </section>
+
+      {/* STEP CONTAINER */}
+      <div className="p-6 lg:p-8 max-w-4xl">
+        {/* STEP 1: IDENTITY */}
+        {step === 1 && (
+          <div className="space-y-6">
+            <div className="border-b border-[#5c403b] pb-3">
+              <span className="font-mono text-xs text-[#ff5541] uppercase tracking-wider font-bold block mb-1">
+                STEP 01 // 03
+              </span>
+              <h2 className="text-2xl font-black text-white uppercase font-['Space_Grotesk',sans-serif] m-0">
+                OPERATOR CALLSIGN & TEMPORAL ANCHOR
+              </h2>
             </div>
-          )}
-          <FieldErrors field="" issues={issues} />
-          {!saved && (
-            <fieldset disabled={disabled} className="space-y-3">
-              <legend className="font-semibold">Your settings</legend>
-              <label className="block">
-                Display name
+
+            <div className="space-y-4">
+              <div>
+                <label className="block font-mono text-xs text-[#cac6bd] uppercase mb-2">
+                  Operator Callsign / Moniker
+                </label>
                 <input
-                  name="displayName"
-                  className={inputStyle}
-                  defaultValue={profile.user.displayName}
-                  {...errorAttributes(issues, 'displayName')}
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full bg-[#0f0e0d] border-2 border-[#5c403b] px-4 py-3 font-mono text-sm text-white uppercase focus:border-[#ff5541] focus:outline-none"
                 />
-              </label>
-              <FieldErrors field="displayName" issues={issues} />
-              <label className="block">
-                Timezone
-                <input
-                  name="timezone"
-                  className={inputStyle}
-                  defaultValue={profile.user.timezone}
-                  {...errorAttributes(
-                    issues,
-                    'timezone',
-                    'onboarding-timezone-help',
-                  )}
-                />
-              </label>
-              <p id="onboarding-timezone-help">{timezoneHelp}</p>
-              <FieldErrors field="timezone" issues={issues} />
-              <fieldset
-                className="space-y-2"
-                {...errorAttributes(issues, 'goals')}
+              </div>
+
+              <div>
+                <label className="block font-mono text-xs text-[#cac6bd] uppercase mb-2">
+                  Biometric Portrait
+                </label>
+                <div className="grid grid-cols-2 gap-4 font-mono text-xs uppercase">
+                  <button
+                    type="button"
+                    onClick={() => setGender('male')}
+                    className={`p-4 border-2 text-left cursor-pointer transition-none ${
+                      gender === 'male'
+                        ? 'border-[#ff5541] bg-[#1d1b1a] text-white font-bold'
+                        : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd]'
+                    }`}
+                  >
+                    <div className="text-base mb-1">PROFILE 01</div>
+                    <div className="text-[10px] text-[#ac8883]">DISCIPLE // MALE AVATAR</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGender('female')}
+                    className={`p-4 border-2 text-left cursor-pointer transition-none ${
+                      gender === 'female'
+                        ? 'border-[#ff5541] bg-[#1d1b1a] text-white font-bold'
+                        : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd]'
+                    }`}
+                  >
+                    <div className="text-base mb-1">PROFILE 02</div>
+                    <div className="text-[10px] text-[#ac8883]">DISCIPLE // FEMALE AVATAR</div>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-mono text-xs text-[#cac6bd] uppercase mb-2">
+                  Timezone Synchronization
+                </label>
+                <select
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                  className="w-full bg-[#0f0e0d] border-2 border-[#5c403b] px-4 py-3 font-mono text-sm text-white uppercase focus:border-[#ff5541] focus:outline-none"
+                >
+                  <option value="UTC">UTC // Greenwich Mean Time</option>
+                  <option value="America/New_York">America/New_York (EST / EDT)</option>
+                  <option value="America/Chicago">America/Chicago (CST / CDT)</option>
+                  <option value="America/Los_Angeles">America/Los_Angeles (PST / PDT)</option>
+                  <option value="Europe/London">Europe/London (GMT / BST)</option>
+                  <option value="Europe/Berlin">Europe/Berlin (CET / CEST)</option>
+                  <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                  <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                  <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-[#5c403b] flex justify-end">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="px-8 py-3 bg-[#ff5541] text-[#5c0000] font-mono text-xs font-bold uppercase tracking-wider hover:bg-white hover:text-black transition-none cursor-pointer"
               >
-                <legend>Goals</legend>
-                {goals.map((goal, index) => {
-                  const field = `goals.${index}`;
-                  return (
-                    <div key={index}>
-                      <label className="block">
-                        Goal {index + 1}
-                        <input
-                          className={inputStyle}
-                          name={field}
-                          value={goal}
-                          {...errorAttributes(issues, field)}
-                          onChange={(event) =>
-                            setGoals((previous) =>
-                              previous.map((value, i) =>
-                                i === index ? event.target.value : value,
-                              ),
-                            )
-                          }
-                        />
-                      </label>
-                      <FieldErrors field={field} issues={issues} />
-                      <button
-                        type="button"
-                        aria-label={`Remove goal ${index + 1}`}
-                        className="underline"
-                        onClick={() => {
-                          setGoals((previous) =>
-                            previous.filter((_, i) => i !== index),
-                          );
-                          setIssues((previous) =>
-                            previous.filter(
-                              ({ path }) => !path.startsWith('goals.'),
-                            ),
-                          );
-                        }}
-                      >
-                        Remove
-                      </button>
+                PROCEED TO DIRECTIVES →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: DIRECTIVES */}
+        {step === 2 && (
+          <div className="space-y-6">
+            <div className="border-b border-[#5c403b] pb-3">
+              <span className="font-mono text-xs text-[#c0ce71] uppercase tracking-wider font-bold block mb-1">
+                STEP 02 // 03
+              </span>
+              <h2 className="text-2xl font-black text-white uppercase font-['Space_Grotesk',sans-serif] m-0">
+                PILLAR FOCUS & DISCIPLINED GOALS
+              </h2>
+            </div>
+
+            {/* THREE PILLARS SELECTION */}
+            <div>
+              <label className="block font-mono text-xs text-[#cac6bd] uppercase mb-2">
+                Primary Developmental Pillar
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono">
+                {[
+                  {
+                    name: 'Cognitive',
+                    sub: 'ACADEMICS & STUDY',
+                    desc: 'Rigorous deep work, algorithms, mathematics, and linguistics.',
+                  },
+                  {
+                    name: 'Physical',
+                    sub: 'CONDITIONING & RECOVERY',
+                    desc: 'Endurance, structural strength, sleep architecture, and nutrition.',
+                  },
+                  {
+                    name: 'Craft',
+                    sub: 'DELIBERATE PRACTICE',
+                    desc: 'Systems engineering, software architecture, and technical writing.',
+                  },
+                ].map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => setPrimaryPillar(p.name)}
+                    className={`p-4 border-2 text-left cursor-pointer transition-none flex flex-col justify-between ${
+                      primaryPillar === p.name
+                        ? 'border-[#c0ce71] bg-[#1d1b1a] text-white'
+                        : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd] hover:border-[#ac8883]'
+                    }`}
+                  >
+                    <div>
+                      <div className="text-sm font-bold uppercase text-[#c0ce71]">{p.name}</div>
+                      <div className="text-[10px] text-[#ac8883] uppercase mt-0.5">{p.sub}</div>
+                      <p className="text-xs text-[#cac6bd] mt-2 font-['DM_Sans',sans-serif]">
+                        {p.desc}
+                      </p>
                     </div>
+                    <div className="mt-4 pt-2 border-t border-[#2b2a28] text-[10px] text-[#c0ce71]">
+                      {primaryPillar === p.name ? '[ SELECTED PRIMARY ]' : '[ SELECT ]'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* STARTER GOALS */}
+            <div>
+              <label className="block font-mono text-xs text-[#cac6bd] uppercase mb-2">
+                Select Up to 5 Core Directives
+              </label>
+              <div className="space-y-2">
+                {[
+                  'Master Spectral Theorems & SVD',
+                  'Maintain 42-day continuous streak',
+                  'Daily cold recovery cadence',
+                  'Build distributed systems prototype',
+                  'Read 1 academic paper per week',
+                  'Complete 10km endurance training',
+                ].map((g) => {
+                  const active = selectedGoals.includes(g);
+                  return (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => toggleGoal(g)}
+                      className={`w-full p-3 border text-left font-mono text-xs uppercase flex items-center justify-between cursor-pointer transition-none ${
+                        active
+                          ? 'border-[#ff5541] bg-[#1d1b1a] text-white font-bold'
+                          : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd] hover:border-[#ac8883]'
+                      }`}
+                    >
+                      <span>{g}</span>
+                      <span className="text-[10px]">{active ? '[ ACTIVE ]' : '+ ADD'}</span>
+                    </button>
                   );
                 })}
-                <FieldErrors field="goals" issues={issues} />
-                <button
-                  type="button"
-                  disabled={goals.length >= MAX_GOALS}
-                  className="underline"
-                  onClick={() => setGoals((previous) => [...previous, ''])}
-                >
-                  Add goal
-                </button>
-              </fieldset>
-            </fieldset>
-          )}
-          <fieldset disabled={disabled} className="space-y-3">
-            <legend className="font-semibold">Starter quest</legend>
-            <label className="block">
-              Quest title
-              <input
-                name="title"
-                className={inputStyle}
-                {...errorAttributes(issues, 'title')}
-              />
-            </label>
-            <FieldErrors field="title" issues={issues} />
-            <label className="block">
-              Category
-              <select
-                name="category"
-                className={inputStyle}
-                {...errorAttributes(issues, 'category')}
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-[#5c403b] flex justify-between">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="px-6 py-3 border border-[#5c403b] text-[#cac6bd] font-mono text-xs font-bold uppercase hover:bg-[#1d1b1a] cursor-pointer"
               >
-                {questCategorySchema.options.map((category) => (
-                  <option key={category}>{category}</option>
-                ))}
-              </select>
-            </label>
-            <FieldErrors field="category" issues={issues} />
-            <label className="block">
-              Start date
-              <input
-                name="effectiveFrom"
-                type="date"
-                className={inputStyle}
-                {...errorAttributes(issues, 'effectiveFrom')}
-              />
-            </label>
-            <FieldErrors field="effectiveFrom" issues={issues} />
-          </fieldset>
-          <button className="auth-button" type="submit" disabled={disabled}>
-            {pending === 'settings'
-              ? 'Saving settings…'
-              : pending === 'quest'
-                ? 'Creating starter quest…'
-                : saved
-                  ? 'Retry starter quest'
-                  : 'Save settings and create quest'}
-          </button>
-        </form>
-      )}
+                ← BACK
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="px-8 py-3 bg-[#ff5541] text-[#5c0000] font-mono text-xs font-bold uppercase tracking-wider hover:bg-white hover:text-black transition-none cursor-pointer"
+              >
+                PROCEED TO FIRST TARGET →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: FIRST QUEST */}
+        {step === 3 && (
+          <div className="space-y-6">
+            <div className="border-b border-[#5c403b] pb-3">
+              <span className="font-mono text-xs text-[#ff5541] uppercase tracking-wider font-bold block mb-1">
+                STEP 03 // 03
+              </span>
+              <h2 className="text-2xl font-black text-white uppercase font-['Space_Grotesk',sans-serif] m-0">
+                DEPLOY INITIAL EXECUTION TARGET
+              </h2>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block font-mono text-xs text-[#cac6bd] uppercase mb-2">
+                  Initial Quest Directive Title
+                </label>
+                <input
+                  type="text"
+                  value={starterTitle}
+                  onChange={(e) => setStarterTitle(e.target.value)}
+                  className="w-full bg-[#0f0e0d] border-2 border-[#5c403b] px-4 py-3 font-mono text-sm text-white uppercase focus:border-[#ff5541] focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block font-mono text-xs text-[#cac6bd] uppercase mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={starterCategory}
+                    onChange={(e) => setStarterCategory(e.target.value)}
+                    className="w-full bg-[#0f0e0d] border-2 border-[#5c403b] px-4 py-3 font-mono text-xs text-white uppercase focus:border-[#ff5541] focus:outline-none"
+                  >
+                    <option value="Academic">Cognitive // Academic</option>
+                    <option value="Physical">Physical // Health</option>
+                    <option value="Productivity">Craft // Engineering</option>
+                    <option value="Language">Cognitive // Language</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-mono text-xs text-[#cac6bd] uppercase mb-2">
+                    Difficulty Level
+                  </label>
+                  <select
+                    value={starterDifficulty}
+                    onChange={(e) => setStarterDifficulty(e.target.value)}
+                    className="w-full bg-[#0f0e0d] border-2 border-[#5c403b] px-4 py-3 font-mono text-xs text-white uppercase focus:border-[#ff5541] focus:outline-none"
+                  >
+                    <option value="EASY">EASY (+60 XP)</option>
+                    <option value="MEDIUM">MEDIUM (+120 XP)</option>
+                    <option value="HARD">HARD (+180 XP)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-mono text-xs text-[#cac6bd] uppercase mb-2">
+                    Recurrence Cadence
+                  </label>
+                  <select
+                    value={starterRecurrence}
+                    onChange={(e) => setStarterRecurrence(e.target.value)}
+                    className="w-full bg-[#0f0e0d] border-2 border-[#5c403b] px-4 py-3 font-mono text-xs text-white uppercase focus:border-[#ff5541] focus:outline-none"
+                  >
+                    <option value="DAILY">DAILY RECURRENCE</option>
+                    <option value="WEEKLY">WEEKLY CADENCE</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* SUMMARY CARD */}
+              <div className="p-6 bg-[#f5f0e6] text-[#141312] border-2 border-[#5c403b] mt-4 font-mono">
+                <div className="text-[10px] uppercase font-bold text-[#494740] mb-1">
+                  // COMMISSIONING SUMMARY
+                </div>
+                <div className="text-xl font-black uppercase text-[#141312]">{displayName}</div>
+                <div className="text-xs text-[#32302a] mt-1">
+                  PILLAR: {primaryPillar.toUpperCase()} // CADENCE: {timezone} // GOALS: {selectedGoals.length}
+                </div>
+                <div className="mt-3 pt-3 border-t border-[#d2cab9] text-xs text-[#141312]">
+                  FIRST DIRECTIVE: <span className="font-bold">{starterTitle}</span> ({starterDifficulty})
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-[#5c403b] flex justify-between">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="px-6 py-3 border border-[#5c403b] text-[#cac6bd] font-mono text-xs font-bold uppercase hover:bg-[#1d1b1a] cursor-pointer"
+              >
+                ← BACK
+              </button>
+              <button
+                type="button"
+                onClick={handleCompleteOnboarding}
+                className="px-8 py-3.5 bg-[#ff5541] text-[#5c0000] font-mono text-xs font-bold uppercase tracking-wider hover:bg-white hover:text-black transition-none cursor-pointer shadow-lg"
+              >
+                COMMIT DOSSIER AND ENTER TODAY'S LEDGER →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  );
-}
-
-/** @param {{session: Session, scope: Scope, revision: number, expire: () => void}} props */
-function OnboardingRead({ session, scope, revision, expire }) {
-  const { data, state, retry } = useCalendarRead(
-    session,
-    scope,
-    revision,
-    'onboarding:profile',
-    screenApi.profile,
-  );
-  return (
-    <>
-      {state && (
-        <ScreenNotice
-          state={state}
-          retry={state === 'loading' ? undefined : retry}
-        />
-      )}
-      {data && (
-        <OnboardingForm
-          profile={data}
-          session={session}
-          scope={scope}
-          unavailable={Boolean(state)}
-          expire={expire}
-        />
-      )}
-    </>
-  );
-}
-
-/** @returns {import('react').ReactElement} */
-export function OnboardingScreen() {
-  const [expired, setExpired] = useState(false);
-  return (
-    <main className="space-y-6">
-      <h1 className="text-4xl font-bold">Onboarding</h1>
-      {expired ? (
-        <ScreenNotice state="expired-session" />
-      ) : (
-        <SessionScreen>
-          {(session, scope, revision) => (
-            <OnboardingRead
-              session={session}
-              scope={scope}
-              revision={revision}
-              expire={() => setExpired(true)}
-            />
-          )}
-        </SessionScreen>
-      )}
-    </main>
   );
 }

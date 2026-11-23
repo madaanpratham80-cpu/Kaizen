@@ -14,6 +14,17 @@ import {
   todayResponseSchema,
 } from '@kaizen/contracts';
 import { requestApi } from '../auth/client.js';
+import {
+  completeGuestOccurrence,
+  createGuestQuest,
+  editGuestQuest,
+  getGuestHabits,
+  getGuestProfile,
+  getGuestProgress,
+  getGuestQuests,
+  getGuestToday,
+  isGuestMode,
+} from './guest-store.js';
 
 const MAX_SYNC_ATTEMPTS = 4;
 const MAX_RETRY_SECONDS = 10;
@@ -84,70 +95,115 @@ function waitForRetry(milliseconds, signal) {
 
 export const screenApi = {
   /** @param {AbortSignal} [signal] */
-  today: (signal) => read('today', todayResponseSchema, signal),
+  async today(signal) {
+    if (isGuestMode()) {
+      return getGuestToday();
+    }
+    return read('today', todayResponseSchema, signal);
+  },
+
   /**
    * @param {{after?: string, limit?: number, category?: 'Academic' | 'Physical' | 'Productivity' | 'Language', archived?: boolean}} [query]
    * @param {AbortSignal} [signal]
    */
-  quests: (query = {}, signal) =>
-    read(`quests${search(query)}`, questsResponseSchema, signal),
+  async quests(query = {}, signal) {
+    if (isGuestMode()) {
+      return getGuestQuests(query);
+    }
+    return read(`quests${search(query)}`, questsResponseSchema, signal);
+  },
+
   /**
    * @param {string} week First local date of the week.
    * @param {AbortSignal} [signal]
    */
-  habits: (week, signal) =>
-    read(`habits${search({ week })}`, habitsResponseSchema, signal),
+  async habits(week, signal) {
+    if (isGuestMode()) {
+      return getGuestHabits(week);
+    }
+    return read(`habits${search({ week })}`, habitsResponseSchema, signal);
+  },
+
   /**
    * @param {{from?: string, to?: string, limit?: number, cursor?: string}} [query]
    * @param {AbortSignal} [signal]
    */
-  progress: (query = {}, signal) =>
-    read(`progress${search(query)}`, progressResponseSchema, signal),
+  async progress(query = {}, signal) {
+    if (isGuestMode()) {
+      return getGuestProgress();
+    }
+    return read(`progress${search(query)}`, progressResponseSchema, signal);
+  },
+
   /** @param {AbortSignal} [signal] */
-  profile: (signal) => read('profile', profileResponseSchema, signal),
+  async profile(signal) {
+    if (isGuestMode()) {
+      return getGuestProfile();
+    }
+    return read('profile', profileResponseSchema, signal);
+  },
+
   /**
    * @param {string} occurrenceId
    * @param {string} operationId
    * @param {{csrfToken: string, signal: AbortSignal}} options
    */
-  complete: (occurrenceId, operationId, options) =>
-    mutate(
+  async complete(occurrenceId, operationId, options) {
+    if (isGuestMode()) {
+      return completeGuestOccurrence(occurrenceId);
+    }
+    return mutate(
       `occurrences/${occurrenceIdSchema.parse(occurrenceId)}/complete`,
       completionResponseSchema,
       'POST',
       completionRequestSchema.parse({ operationId }),
       options,
-    ),
+    );
+  },
+
   /**
    * @param {import('@kaizen/contracts').z.infer<typeof createQuestSchema>} input
    * @param {{csrfToken: string, signal: AbortSignal}} options
    */
-  createQuest: (input, options) =>
-    mutate(
+  async createQuest(input, options) {
+    if (isGuestMode()) {
+      return createGuestQuest(input);
+    }
+    return mutate(
       'quests',
       questMutationResponseSchema,
       'POST',
       createQuestSchema.parse(input),
       options,
-    ),
+    );
+  },
+
   /**
    * @param {string} id
    * @param {import('@kaizen/contracts').z.infer<typeof editQuestSchema>} input
    * @param {{csrfToken: string, signal: AbortSignal}} options
    */
-  editQuest: (id, input, options) =>
-    mutate(
+  async editQuest(id, input, options) {
+    if (isGuestMode()) {
+      return editGuestQuest(id, input);
+    }
+    return mutate(
       `quests/${questIdSchema.parse(id)}`,
       questMutationResponseSchema,
       'PATCH',
       editQuestSchema.parse(input),
       options,
-    ),
+    );
+  },
+
   /**
    * @param {string} csrfToken Session-bound CSRF proof.
    * @param {{signal: AbortSignal, onCatchUp?: (seconds: number) => void}} options
    */
   async syncCalendar(csrfToken, { signal, onCatchUp }) {
+    if (isGuestMode()) {
+      return { status: 'ready', plan: getGuestToday().plan };
+    }
     for (let attempt = 1; ; attempt += 1) {
       signal.throwIfAborted();
       const { body, retryAfter } = await requestApi(

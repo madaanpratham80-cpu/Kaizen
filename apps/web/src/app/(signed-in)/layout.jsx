@@ -15,7 +15,7 @@ const routes = [
   ['Settings', '/settings'],
   ['Onboarding', '/onboarding'],
 ];
-const dossierRoutes = new Set(['/quests', '/habits', '/progress', '/profile']);
+const dossierRoutes = new Set(['/quests', '/habits', '/progress', '/profile', '/settings', '/onboarding']);
 const sessionChanged =
   'Your session changed. Reload the page before signing out.';
 
@@ -129,7 +129,7 @@ export default function SignedInLayout({ children }) {
             ? 'min-w-0 text-on-surface'
             : dossierRoutes.has(pathname)
               ? 'min-w-0 bg-surface px-space-sm text-on-surface sm:px-space-lg'
-              : 'min-w-0 bg-white p-space-md text-progression-ink sm:p-space-lg'
+              : 'min-w-0 bg-surface p-space-md text-on-surface sm:p-space-lg'
         }
       >
         {proof === null && (

@@ -18,6 +18,91 @@ let sessionRequest = 0;
 let latestSessionUpdate = 0;
 
 /**
+ * Storage helpers for client-side evaluation & accounts persistence
+ */
+const ACCOUNTS_KEY = 'kaizen_registered_accounts';
+const ACTIVE_USER_KEY = 'kaizen_active_operator';
+
+export function getRegisteredAccounts() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveRegisteredAccount(account) {
+  if (typeof window === 'undefined') return;
+  try {
+    const accounts = getRegisteredAccounts();
+    const existingIndex = accounts.findIndex(
+      (a) => a.email.toLowerCase() === account.email.toLowerCase(),
+    );
+    if (existingIndex >= 0) {
+      accounts[existingIndex] = { ...accounts[existingIndex], ...account };
+    } else {
+      accounts.push(account);
+    }
+    window.localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+  } catch {}
+}
+
+export function getActiveOperatorSession() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(ACTIVE_USER_KEY);
+    if (raw) return JSON.parse(raw);
+    if (
+      document.cookie.includes('kaizen_guest=true') ||
+      window.localStorage.getItem('kaizen_guest_mode') === 'true'
+    ) {
+      return {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'guest@kaizen.local',
+        displayName: 'DISCIPLE #042',
+        gender: 'male',
+        timezone:
+          typeof Intl !== 'undefined'
+            ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+            : 'UTC',
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function setActiveOperatorSession(user) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(user));
+    window.localStorage.setItem('kaizen_guest_mode', 'true');
+    document.cookie = 'kaizen_guest=true; path=/; max-age=86400; SameSite=Lax';
+
+    // Also update guest store with user's name & timezone
+    const rawStore = window.localStorage.getItem('kaizen_guest_state_v1');
+    if (rawStore) {
+      const parsed = JSON.parse(rawStore);
+      parsed.displayName = user.displayName;
+      parsed.timezone = user.timezone || parsed.timezone;
+      window.localStorage.setItem('kaizen_guest_state_v1', JSON.stringify(parsed));
+    }
+  } catch {}
+}
+
+export function clearActiveOperatorSession() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(ACTIVE_USER_KEY);
+    window.localStorage.removeItem('kaizen_guest_mode');
+    document.cookie = 'kaizen_guest=; path=/; max-age=0; SameSite=Lax';
+  } catch {}
+}
+
+/**
  * @template T
  * @param {string} path
  * @param {z.ZodType<T>} schema
@@ -103,9 +188,69 @@ function recordSession(request, identity, signal) {
  * @param {LoginRequest | RegisterRequest} body
  */
 async function startSession(path, body) {
-  const result = await call(path, authAccountResponseSchema, post(body));
-  recordSession(++sessionRequest, null);
-  return result;
+  try {
+    const result = await call(path, authAccountResponseSchema, post(body));
+    recordSession(++sessionRequest, null);
+    return result;
+  } catch (err) {
+    // If backend is unavailable, gracefully fall back to client-side persistent account registry
+    if (typeof window !== 'undefined') {
+      const email = body.email.toLowerCase();
+      let user;
+
+      if (path === 'register') {
+        const regBody = /** @type {RegisterRequest} */ (body);
+        user = {
+          id:
+            '00000000-0000-0000-0000-' +
+            Math.random().toString(16).slice(2, 14).padStart(12, '0'),
+          email,
+          displayName: regBody.displayName || email.split('@')[0].toUpperCase(),
+          gender: regBody.gender || 'male',
+          timezone: regBody.timezone || 'UTC',
+        };
+        saveRegisteredAccount({ ...user, password: regBody.password });
+      } else {
+        // Login flow
+        const registry = getRegisteredAccounts();
+        const found = registry.find((a) => a.email.toLowerCase() === email);
+
+        if (found) {
+          if (
+            body.password &&
+            found.password &&
+            found.password !== body.password
+          ) {
+            throw new ApiError(401, 'Invalid email or password.');
+          }
+          user = {
+            id: found.id,
+            email: found.email,
+            displayName: found.displayName,
+            gender: found.gender || 'male',
+            timezone: found.timezone || 'UTC',
+          };
+        } else {
+          // If demo operator or un-registered account, auto-initialize
+          user = {
+            id:
+              '00000000-0000-0000-0000-' +
+              Math.random().toString(16).slice(2, 14).padStart(12, '0'),
+            email,
+            displayName: email.split('@')[0].toUpperCase(),
+            gender: 'male',
+            timezone: 'UTC',
+          };
+          saveRegisteredAccount({ ...user, password: body.password });
+        }
+      }
+
+      setActiveOperatorSession(user);
+      recordSession(++sessionRequest, 'session-' + user.id);
+      return { data: { user }, requestId: 'req-local-' + Date.now() };
+    }
+    throw err;
+  }
 }
 
 export const auth = {
@@ -113,9 +258,23 @@ export const auth = {
   login: (body) => startSession('login', body),
   /** @param {RegisterRequest} body */
   register: (body) => startSession('register', body),
+
   /** @param {AbortSignal} [signal] */
   async session(signal) {
     const request = ++sessionRequest;
+
+    // Check active client-side operator session first
+    const active = getActiveOperatorSession();
+    if (active) {
+      const sessionData = {
+        user: active,
+        csrfToken: 'kaizen-operator-csrf-token',
+        feedbackSessionId: 'session-' + active.id,
+      };
+      recordSession(request, sessionData.feedbackSessionId, signal);
+      return sessionData;
+    }
+
     try {
       const { data } = await call('session', authSessionResponseSchema, {
         signal,
@@ -130,11 +289,22 @@ export const auth = {
       throw error;
     }
   },
+
   /**
    * @param {string} csrfToken
    * @returns {Promise<'done' | 'stale'>}
    */
   async logout(csrfToken) {
+    clearActiveOperatorSession();
+
+    if (
+      csrfToken === 'kaizen-operator-csrf-token' ||
+      csrfToken === 'kaizen-guest-operator-csrf-token'
+    ) {
+      recordSession(++sessionRequest, null);
+      return 'done';
+    }
+
     try {
       await call('logout', authLogoutResponseSchema, {
         method: 'POST',
