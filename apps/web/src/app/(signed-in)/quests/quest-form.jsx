@@ -8,6 +8,8 @@ import {
   questDifficultySchema,
 } from '@kaizen/contracts';
 
+import { dossierButton, dossierInput } from '../dossier.jsx';
+
 const WEEKDAYS = [
   'Monday',
   'Tuesday',
@@ -17,7 +19,6 @@ const WEEKDAYS = [
   'Saturday',
   'Sunday',
 ];
-const inputStyle = 'block w-full border border-current bg-white p-2';
 
 /** @typedef {Awaited<ReturnType<typeof import('../../../api/client.js').screenApi.quests>>['quests'][number]} Quest */
 /** @typedef {import('@kaizen/contracts').z.infer<typeof editQuestSchema>} QuestEdit */
@@ -98,13 +99,17 @@ export function QuestForm({ quest, timezone, pending, onSave, onCancel }) {
       aria-busy={pending}
       className="space-y-3"
     >
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p role="alert" className="text-error">
+          {error}
+        </p>
+      )}
       <fieldset disabled={pending} className="grid gap-4 sm:grid-cols-2">
         <label>
           Title
           <input
             name="title"
-            className={inputStyle}
+            className={dossierInput}
             required
             maxLength={120}
             defaultValue={quest?.title ?? ''}
@@ -114,7 +119,7 @@ export function QuestForm({ quest, timezone, pending, onSave, onCancel }) {
           Category
           <select
             name="category"
-            className={inputStyle}
+            className={dossierInput}
             defaultValue={quest?.category ?? questCategorySchema.options[0]}
           >
             {questCategorySchema.options.map((option) => (
@@ -126,7 +131,7 @@ export function QuestForm({ quest, timezone, pending, onSave, onCancel }) {
           Difficulty
           <select
             name="difficulty"
-            className={inputStyle}
+            className={dossierInput}
             defaultValue={schedule?.difficulty ?? 'EASY'}
           >
             {questDifficultySchema.options.map((option) => (
@@ -143,7 +148,7 @@ export function QuestForm({ quest, timezone, pending, onSave, onCancel }) {
             name="target"
             min="0"
             step="1"
-            className={inputStyle}
+            className={dossierInput}
             required
             defaultValue={schedule?.target ?? 1}
           />
@@ -153,7 +158,7 @@ export function QuestForm({ quest, timezone, pending, onSave, onCancel }) {
           <select
             name="recurrence"
             aria-label="Quest recurrence"
-            className={inputStyle}
+            className={dossierInput}
             value={recurrence}
             onChange={(event) => setRecurrence(event.target.value)}
           >
@@ -166,7 +171,7 @@ export function QuestForm({ quest, timezone, pending, onSave, onCancel }) {
           <input
             type="date"
             name="effectiveFrom"
-            className={inputStyle}
+            className={dossierInput}
             required
             min={minDate}
             defaultValue={minDate}
@@ -194,11 +199,11 @@ export function QuestForm({ quest, timezone, pending, onSave, onCancel }) {
         )}
       </fieldset>
       <div className="flex gap-4">
-        <button className="auth-button" type="submit" disabled={pending}>
+        <button className={dossierButton} type="submit" disabled={pending}>
           {pending ? 'Saving…' : quest ? 'Save changes' : 'Create quest'}
         </button>
         <button
-          className="underline"
+          className="px-space-md py-space-sm text-secondary underline focus-visible:outline-2 focus-visible:outline-primary"
           type="button"
           onClick={onCancel}
           disabled={pending}

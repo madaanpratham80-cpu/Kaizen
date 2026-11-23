@@ -97,7 +97,7 @@ afterEach(() => {
 });
 
 describe('Quests screen', () => {
-  it('registers the self-hosted bold serif only for the Quests heading', async () => {
+  it('registers the self-hosted bold serif for Quests display text', async () => {
     mockApi();
     render(createElement(QuestsPage));
 
@@ -113,18 +113,25 @@ describe('Quests screen', () => {
       screen.getByRole('main').classList.contains('quests-display-font'),
     ).toBe(true);
     const title = screen.getByRole('heading', { level: 1, name: 'Quests' });
-    await screen.findByRole('heading', { level: 2, name: 'Read' });
+    const cardTitle = await screen.findByRole('heading', {
+      level: 2,
+      name: 'Read',
+    });
     expect(title.classList.contains('font-bold')).toBe(true);
     expect(title.classList.contains('font-black')).toBe(false);
+    const displayClass = 'font-(family-name:--font-quests-display)';
+    expect(title.classList.contains(displayClass)).toBe(true);
+    expect(cardTitle.classList.contains(displayClass)).toBe(true);
     expect(
-      Array.from(
-        screen
-          .getByRole('main')
-          .querySelectorAll(
-            '[class~="font-(family-name:--font-quests-display)"]',
-          ),
-      ),
-    ).toEqual([title]);
+      screen
+        .getByText('Visible quests')
+        .nextElementSibling.classList.contains(displayClass),
+    ).toBe(true);
+    expect(
+      screen
+        .getByRole('button', { name: 'Edit Read' })
+        .classList.contains(displayClass),
+    ).toBe(false);
   });
 
   it('filters quests by category, recurrence and status independently', async () => {

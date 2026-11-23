@@ -1,9 +1,15 @@
 'use client';
 
+import Image from 'next/image';
 import { useCallback } from 'react';
 import { screenApi } from '../../../api/client.js';
 import { ScreenNotice, SessionScreen } from '../../../api/session-screen.jsx';
 import { useCalendarRead } from '../../../api/use-calendar-read.js';
+import {
+  HEALTH_BANDS,
+  healthBandFor,
+} from '../../../progression/health-band.js';
+import { DossierHeader, DossierMetric, dossierPanel } from '../dossier.jsx';
 
 const metricLabel = 'font-label-mono-sm text-label-mono-sm uppercase';
 const panelLabel =
@@ -32,110 +38,149 @@ function ProfileContent({ session, scope, revision }) {
       )}
       {data && (!state || state === 'catching-up') && (
         <>
-          <dl className="grid gap-px border-b border-surface-bright bg-surface-bright sm:grid-cols-2 lg:grid-cols-4">
-            <div className="min-w-0 space-y-space-sm bg-surface-container-low p-space-md sm:p-space-lg">
-              <dt className={metricLabel}>Display name</dt>
-              <dd className="font-headline-md text-headline-md [overflow-wrap:anywhere]">
-                {data.user.displayName}
-              </dd>
-            </div>
-            <div className="min-w-0 space-y-space-sm bg-surface-container p-space-md sm:p-space-lg">
-              <dt className={metricLabel}>Level</dt>
-              <dd className="font-display-lg text-display-lg-mobile font-bold text-tertiary tabular-nums">
-                {data.level}
-              </dd>
-            </div>
-            <div className="min-w-0 space-y-space-sm bg-surface-container-low p-space-md sm:p-space-lg">
-              <dt className={metricLabel}>Rank title</dt>
-              <dd className="font-headline-md text-headline-md text-primary [overflow-wrap:anywhere]">
-                {data.rank.title}
-              </dd>
-            </div>
-            <div className="min-w-0 space-y-space-sm bg-secondary-fixed p-space-md text-on-secondary-fixed sm:p-space-lg">
-              <dt className={metricLabel}>Total XP</dt>
-              <dd className="font-display-lg text-display-lg-mobile font-bold tabular-nums [overflow-wrap:anywhere]">
-                {data.totalXp} XP
-              </dd>
-            </div>
+          <dl className="grid grid-cols-2 gap-px border-b-2 border-outline-variant bg-outline-variant xl:grid-cols-4">
+            <DossierMetric label="Total XP" value={`${data.totalXp} XP`} />
+            <DossierMetric
+              label="Current streak"
+              value={`${data.currentStreak} ${data.currentStreak === 1 ? 'day' : 'days'}`}
+              note={`Best streak ${data.bestStreak}`}
+              tone="signal"
+            />
+            <DossierMetric
+              label="Health"
+              value={`${data.health}%`}
+              note={HEALTH_BANDS[healthBandFor(data.health)]?.label}
+              tone="paper"
+            />
+            <DossierMetric
+              label="Earned seals"
+              value={data.seals.length}
+              tone="olive"
+            />
           </dl>
-          <div className="grid gap-px bg-surface-bright lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-            <section aria-label="Selected goals" className="min-w-0 bg-surface">
-              <p className={panelLabel}>Selected goals</p>
-              <div className={panelBody}>
-                {data.user.goals.length ? (
-                  <ul className="divide-y divide-surface-bright border border-surface-bright bg-surface-container-low">
-                    {data.user.goals.map((goal, index) => (
-                      <li
-                        key={`${index}:${goal}`}
-                        className="px-space-md py-space-sm [overflow-wrap:anywhere]"
-                      >
-                        {goal}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <>
-                    <ScreenNotice state="empty" />
-                    <p>No goals selected.</p>
-                  </>
-                )}
-              </div>
-            </section>
-            <section
-              aria-label="Pillar totals"
-              className="min-w-0 bg-surface-container-lowest lg:row-span-2"
-            >
-              <p className={panelLabel}>Pillar totals</p>
-              <div className={panelBody}>
-                {!data.pillarTotals.length ||
-                data.pillarTotals.every(({ xp }) => xp === 0) ? (
-                  <>
-                    <ScreenNotice state="empty" />
-                    <p>No pillar XP yet.</p>
-                  </>
-                ) : (
-                  <ul className="space-y-space-sm">
-                    {data.pillarTotals.map(({ pillar, xp }) => (
-                      <li
-                        key={pillar}
-                        className="border border-surface-bright border-l-2 border-l-primary-container bg-surface-container px-space-md py-space-md font-headline-sm text-headline-sm tabular-nums [overflow-wrap:anywhere]"
-                      >
-                        {pillar}: {xp} XP
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </section>
-            <section
-              aria-label="Achievement archive"
-              className="min-w-0 bg-surface"
-            >
-              <p className={panelLabel}>Achievement archive</p>
-              <div className={panelBody}>
-                {data.seals.length ? (
-                  <ul className="divide-y divide-surface-bright border border-surface-bright bg-surface-container-low">
-                    {data.seals.map((seal) => (
-                      <li
-                        key={`${seal.achievementCode}:${seal.ruleVersion}`}
-                        className="px-space-md py-space-sm [overflow-wrap:anywhere]"
-                      >
-                        {seal.achievementCode} · Bonus XP: {seal.bonusXp} XP ·
-                        Earned:{' '}
-                        <time dateTime={seal.unlockedAt}>
-                          {seal.unlockedAt}
-                        </time>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <>
-                    <ScreenNotice state="empty" />
-                    <p>No achievements earned yet.</p>
-                  </>
-                )}
-              </div>
-            </section>
+          <div className="grid gap-px bg-outline-variant lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            <div className="min-w-0 bg-surface">
+              <section aria-label="Character dossier">
+                <p className={panelLabel}>Character dossier</p>
+                <div className="p-space-lg">
+                  <div className="grid aspect-square min-h-32 place-items-center border-2 border-outline-variant bg-surface-container-lowest p-space-lg">
+                    <Image
+                      src="/profile-dossier-avatar.svg"
+                      alt=""
+                      width={192}
+                      height={192}
+                      className="h-auto w-2/3 max-w-48"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+                <dl className="divide-y divide-outline-variant border-y border-outline-variant">
+                  {[
+                    ['Display name', data.user.displayName],
+                    ['Level', data.level],
+                    ['Rank title', data.rank.title],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="flex min-w-0 flex-wrap items-baseline justify-between gap-space-sm px-space-lg py-space-sm"
+                    >
+                      <dt className={`${metricLabel} text-outline`}>{label}</dt>
+                      <dd className="font-headline-sm text-headline-sm text-primary [overflow-wrap:anywhere]">
+                        {value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+              <section aria-label="Selected goals">
+                <p className={panelLabel}>Selected goals</p>
+                <div className={panelBody}>
+                  {data.user.goals.length ? (
+                    <ul className="divide-y divide-surface-bright border border-surface-bright bg-surface-container-low">
+                      {data.user.goals.map((goal, index) => (
+                        <li
+                          key={`${index}:${goal}`}
+                          className="px-space-md py-space-sm [overflow-wrap:anywhere]"
+                        >
+                          {goal}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <>
+                      <ScreenNotice state="empty" />
+                      <p>No goals selected.</p>
+                    </>
+                  )}
+                </div>
+              </section>
+            </div>
+            <div className="min-w-0 bg-surface-container-lowest">
+              <section
+                aria-label="Pillar totals"
+                className="min-w-0 bg-surface-container-lowest"
+              >
+                <p className={panelLabel}>Pillar totals</p>
+                <div className={panelBody}>
+                  {!data.pillarTotals.length ||
+                  data.pillarTotals.every(({ xp }) => xp === 0) ? (
+                    <>
+                      <ScreenNotice state="empty" />
+                      <p>No pillar XP yet.</p>
+                    </>
+                  ) : (
+                    <ul className="divide-y divide-outline-variant">
+                      {data.pillarTotals.map(({ pillar, xp }, index) => (
+                        <li
+                          key={pillar}
+                          className="space-y-space-md py-space-lg first:pt-0 last:pb-0"
+                        >
+                          <p className="flex items-center gap-space-sm font-headline-md text-headline-md uppercase">
+                            <span
+                              aria-hidden="true"
+                              className={`size-2.5 ${['bg-primary-container', 'bg-tertiary', 'bg-secondary'][index % 3]}`}
+                            />
+                            {pillar}
+                          </p>
+                          <p className="border border-outline-variant bg-surface-container p-space-md font-label-mono-md text-label-mono-md tabular-nums">
+                            {pillar}: {xp} XP
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </section>
+              <section
+                aria-label="Achievement archive"
+                className="min-w-0 bg-surface"
+              >
+                <p className={panelLabel}>Achievement archive</p>
+                <div className={panelBody}>
+                  {data.seals.length ? (
+                    <ul className="divide-y divide-surface-bright border border-surface-bright bg-surface-container-low">
+                      {data.seals.map((seal) => (
+                        <li
+                          key={`${seal.achievementCode}:${seal.ruleVersion}`}
+                          className="px-space-md py-space-sm [overflow-wrap:anywhere]"
+                        >
+                          {seal.achievementCode} · Bonus XP: {seal.bonusXp} XP ·
+                          Earned:{' '}
+                          <time dateTime={seal.unlockedAt}>
+                            {seal.unlockedAt}
+                          </time>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <>
+                      <ScreenNotice state="empty" />
+                      <p>No achievements earned yet.</p>
+                    </>
+                  )}
+                </div>
+              </section>
+            </div>
           </div>
         </>
       )}
@@ -146,15 +191,8 @@ function ProfileContent({ session, scope, revision }) {
 /** @returns {import('react').ReactElement} */
 export function ProfileScreen() {
   return (
-    <main className="border border-surface-bright bg-surface font-body-md text-body-md text-on-surface">
-      <header className="border-b border-surface-bright bg-surface-container-lowest px-space-md py-space-lg sm:p-space-lg">
-        <p className="mb-space-sm inline-block bg-primary-container px-space-sm py-space-xs font-label-mono-sm text-label-mono-sm text-on-primary-container uppercase">
-          Dossier
-        </p>
-        <h1 className="font-display-xl text-display-xl-mobile font-bold uppercase sm:text-display-xl">
-          Profile
-        </h1>
-      </header>
+    <main className={dossierPanel}>
+      <DossierHeader number=".05" title="Profile" eyebrow="Personnel dossier" />
       <SessionScreen>
         {(session, scope, revision) => (
           <ProfileContent {...{ session, scope, revision }} />

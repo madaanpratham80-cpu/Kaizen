@@ -1,6 +1,13 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import {
+  DossierHeader,
+  DossierMetric,
+  dossierInput,
+  dossierLabel,
+  dossierPanel,
+} from '../dossier.jsx';
 import { screenApi } from '../../../api/client.js';
 import { ScreenNotice, SessionScreen } from '../../../api/session-screen.jsx';
 import { useCalendarRead } from '../../../api/use-calendar-read.js';
@@ -22,11 +29,17 @@ function initialWeek(timezone) {
   return date.toISOString().slice(0, 10);
 }
 
-const cellColor = {
-  Completed: 'text-health-healthy',
-  Missed: 'text-health-fading',
-  Rest: 'text-progression-ink',
+const displayClass = 'font-(family-name:--font-habits-display)';
+const cellTone = {
+  Completed: 'bg-tertiary-container text-on-tertiary-container',
+  Missed: 'bg-primary-container text-on-primary-container',
+  Rest: 'bg-surface-container-high text-secondary',
 };
+const cellFrame = 'border-r border-b border-outline-variant p-space-sm';
+const weekday = new Intl.DateTimeFormat('en', {
+  weekday: 'short',
+  timeZone: 'UTC',
+});
 
 /** @param {{session: import('../../../api/session-screen.jsx').ScreenSession, scope: import('../../../api/session-screen.jsx').SessionScope, revision: number}} props */
 function HabitsContent({ session, scope, revision }) {
@@ -40,79 +53,142 @@ function HabitsContent({ session, scope, revision }) {
     read,
   );
   return (
-    <div className="space-y-6">
-      <label className="block">
-        Week starting
-        <input
-          type="date"
-          value={week}
-          required
-          className="block border bg-white p-2"
-          onChange={(event) => {
-            if (event.target.value) setWeek(event.target.value);
-          }}
-        />
-      </label>
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-space-md border-b border-outline-variant bg-surface-container-low px-space-md py-space-md sm:px-space-lg">
+        <label className={dossierLabel}>
+          Week starting
+          <input
+            type="date"
+            value={week}
+            required
+            className={dossierInput}
+            onChange={(event) => {
+              if (event.target.value) setWeek(event.target.value);
+            }}
+          />
+        </label>
+        {data && (
+          <p className={`${dossierLabel} text-outline`}>Week of {data.week}</p>
+        )}
+      </div>
       {state && (
-        <ScreenNotice
-          state={state}
-          retry={state === 'loading' ? undefined : retry}
-        />
+        <div className="border-b border-outline-variant p-space-lg">
+          <ScreenNotice
+            state={state}
+            retry={state === 'loading' ? undefined : retry}
+          />
+        </div>
       )}
       {data && (
         <>
-          <p>
-            Weekly completion rate:{' '}
-            {data.compliance === null
-              ? 'unavailable'
-              : `${Math.round(data.compliance * 100)}%`}{' '}
-            · {data.completed} of {data.scheduled} elapsed scheduled quests
-            completed
-          </p>
+          <dl className="grid grid-cols-2 gap-px border-b-2 border-outline-variant bg-outline-variant xl:grid-cols-4">
+            <DossierMetric
+              valueClass={displayClass}
+              label="Habits in view"
+              value={data.habits.length}
+              tone="neutral"
+            />
+            <DossierMetric
+              valueClass={displayClass}
+              label="Elapsed scheduled quests"
+              value={data.scheduled}
+              tone="signal"
+            />
+            <DossierMetric
+              valueClass={displayClass}
+              label="Weekly completion rate"
+              value={
+                data.compliance === null ? (
+                  <span className="text-headline-sm">Unavailable</span>
+                ) : (
+                  `${Math.round(data.compliance * 100)}%`
+                )
+              }
+              tone="paper"
+            />
+            <DossierMetric
+              valueClass={displayClass}
+              label="Quests completed"
+              value={data.completed}
+              tone="olive"
+            />
+          </dl>
           {!data.habits.length ? (
-            <ScreenNotice state="empty" />
+            <div className="p-space-lg">
+              <ScreenNotice state="empty" />
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <caption className="pb-3 text-left">
+            <div
+              className="overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+              tabIndex={0}
+              role="region"
+              aria-label="Weekly habit matrix"
+            >
+              <table className="w-full min-w-[55rem] border-collapse text-left">
+                <caption
+                  className={`border-b border-outline-variant bg-surface-container px-space-md py-space-md text-left text-secondary sm:px-space-lg ${dossierLabel}`}
+                >
                   Habit schedule for {data.week}. Rates include elapsed
                   scheduled dates.
                 </caption>
-                <thead>
+                <thead
+                  className={`bg-surface-container-low text-outline ${dossierLabel}`}
+                >
                   <tr>
-                    <th scope="col" className="border p-2">
+                    <th scope="col" className={`${cellFrame} w-1/4`}>
                       Habit
                     </th>
                     {data.days.map((day) => (
-                      <th scope="col" key={day.date} className="border p-2">
-                        {day.date}
+                      <th
+                        scope="col"
+                        key={day.date}
+                        className={`${cellFrame} text-center`}
+                      >
+                        <span className="block text-primary">
+                          {weekday.format(new Date(day.date))}
+                        </span>
+                        <time
+                          dateTime={day.date}
+                          className="whitespace-nowrap text-label-mono-sm"
+                        >
+                          {day.date}
+                        </time>
                       </th>
                     ))}
-                    <th scope="col" className="border p-2">
+                    <th scope="col" className={`${cellFrame} min-w-36`}>
                       Streaks and rate
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.habits.map((habit) => (
-                    <tr key={habit.questId}>
-                      <th scope="row" className="border p-2">
+                    <tr
+                      key={habit.questId}
+                      className="odd:bg-surface-container-lowest even:bg-surface-container-low"
+                    >
+                      <th
+                        scope="row"
+                        className={`${cellFrame} ${displayClass} text-headline-sm uppercase [overflow-wrap:anywhere]`}
+                      >
                         {habit.title}
                       </th>
                       {habit.cells.map(({ date, label }) => (
-                        <td
-                          key={date}
-                          className={`border p-2 ${cellColor[label] ?? ''}`}
-                        >
-                          {label}
+                        <td key={date} className={`${cellFrame} text-center`}>
+                          <span
+                            className={`inline-block px-space-xs py-space-sm font-label-mono-sm text-label-mono-sm uppercase ${cellTone[label] ?? 'bg-surface-container text-secondary'}`}
+                          >
+                            {label}
+                          </span>
                         </td>
                       ))}
-                      <td className="border p-2">
-                        <p>
+                      <td
+                        className={`${cellFrame} space-y-space-xs font-label-mono-sm text-label-mono-sm`}
+                      >
+                        <p className="text-primary">
                           Current {habit.streak.current} · Best{' '}
                           {habit.streak.best}
                         </p>
-                        <p>
+                        <p className="text-secondary">
                           Completion rate:{' '}
                           {habit.completionRate === null
                             ? 'unavailable'
@@ -127,15 +203,20 @@ function HabitsContent({ session, scope, revision }) {
           )}
         </>
       )}
-    </div>
+    </>
   );
 }
 
-/** @returns {import('react').ReactElement} */
-export function HabitsScreen() {
+/** @param {{className?: string}} props */
+export function HabitsScreen({ className = '' }) {
   return (
-    <main className="space-y-6">
-      <h1 className="text-4xl font-bold">Habits</h1>
+    <main className={`${dossierPanel} ${className}`.trim()}>
+      <DossierHeader
+        number=".03"
+        title="Habits"
+        eyebrow="Weekly cadence"
+        titleClass={displayClass}
+      />
       <SessionScreen>
         {(session, scope, revision) => (
           <HabitsContent {...{ session, scope, revision }} />

@@ -46,7 +46,13 @@ const progress = {
   ledger: [entry(2)],
   nextCursor: 'page-two',
   pillarTotals: [{ pillar: 'Cognitive', xp: 20 }],
-  seals: [{ achievementCode: 'iron-will', bonusXp: 25 }],
+  seals: [
+    {
+      achievementCode: 'iron-will',
+      bonusXp: 25,
+      unlockedAt: '2026-11-18T12:00:00.000Z',
+    },
+  ],
 };
 beforeEach(() => {
   vi.stubGlobal(

@@ -9,9 +9,17 @@ import {
 } from '../../../api/session-screen.jsx';
 import { useCalendarRead } from '../../../api/use-calendar-read.js';
 import { ApiError } from '../../../auth/client.js';
-import { SealBadge } from '../../../progression/components.jsx';
+import { DossierHeader, DossierMetric, dossierPanel } from '../dossier.jsx';
 
 const PAGE_SIZE = 25;
+const panelHeading =
+  'border-b border-surface-bright bg-surface-container px-space-md py-space-sm font-headline-sm text-headline-sm uppercase sm:px-space-lg';
+const panelContents = 'space-y-space-md p-space-md sm:p-space-lg';
+const DAYS_PER_WEEK = 7;
+const monthName = new Intl.DateTimeFormat('en', {
+  month: 'short',
+  timeZone: 'UTC',
+});
 const SEAL_TITLES = {
   'seven-day-warrior': 'Seven-Day Warrior',
   'iron-will': 'Iron Will',
@@ -20,23 +28,82 @@ const SEAL_TITLES = {
 
 /** @param {{cells: Awaited<ReturnType<typeof screenApi.progress>>['heatmap']}} props */
 function Heatmap({ cells }) {
+  const months = Map.groupBy(cells, ({ localDate }) => localDate.slice(0, 7));
+  const blocks = [];
+  let column = 1;
+  for (const [month, days] of months) {
+    const startDay =
+      (new Date(days[0].localDate).getUTCDay() + 6) % DAYS_PER_WEEK;
+    const columns = Math.ceil((startDay + days.length) / DAYS_PER_WEEK);
+    blocks.push({ month, days, startDay, column, columns });
+    column += columns + 1;
+  }
+  const columns = column - 2;
   return (
-    <ul
-      aria-label="365-day activity heatmap"
-      className="grid gap-1 sm:grid-cols-7 lg:grid-cols-14"
+    <div
+      className="overflow-x-auto pb-space-sm focus-visible:outline-2 focus-visible:outline-primary"
+      tabIndex={0}
+      role="region"
+      aria-label="Annual calendar"
     >
-      {cells.map(({ localDate, status, completions }) => (
-        <li
-          key={localDate}
-          className={`border p-2 text-xs ${completions ? 'bg-progression-ink text-progression-paper' : 'bg-progression-paper'}`}
+      <div className="grid min-w-[56rem] grid-cols-[2.75rem_minmax(0,1fr)] gap-space-sm">
+        <div
+          aria-hidden="true"
+          className="grid grid-rows-7 gap-1 font-label-mono-sm text-label-mono-sm text-outline"
         >
-          <time dateTime={localDate}>{localDate}</time>
-          <br />
-          {status ?? 'No plan'} · {completions}{' '}
-          {completions === 1 ? 'completion' : 'completions'}
-        </li>
-      ))}
-    </ul>
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+            <span key={day}>{day}</span>
+          ))}
+        </div>
+        <div>
+          <ul
+            aria-label="365-day activity heatmap"
+            className="grid grid-rows-7 gap-1"
+            style={{
+              gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+            }}
+          >
+            {blocks.flatMap(({ days, startDay, column }) =>
+              days.map(({ localDate, status, completions }, index) => {
+                const day = startDay + index;
+                const detail = `${status ?? 'No plan'} · ${completions} ${completions === 1 ? 'completion' : 'completions'}`;
+                return (
+                  <li
+                    key={localDate}
+                    title={`${localDate}: ${detail}`}
+                    className={`aspect-square min-h-2 ${completions ? 'bg-tertiary' : 'bg-surface-container-high'}`}
+                    style={{
+                      gridColumn: column + Math.floor(day / DAYS_PER_WEEK),
+                      gridRow: 1 + (day % DAYS_PER_WEEK),
+                    }}
+                  >
+                    <span className="sr-only">
+                      <time dateTime={localDate}>{localDate}</time> {detail}
+                    </span>
+                  </li>
+                );
+              }),
+            )}
+          </ul>
+          <div
+            aria-hidden="true"
+            className="mt-space-sm grid gap-1 text-center font-label-mono-sm text-label-mono-sm text-outline uppercase"
+            style={{
+              gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+            }}
+          >
+            {blocks.map(({ month, column, columns }) => (
+              <span
+                key={month}
+                style={{ gridColumn: `${column} / span ${columns}` }}
+              >
+                {monthName.format(new Date(`${month}-01`))}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -125,114 +192,196 @@ function ProgressContent({ session, scope, revision }) {
   }
 
   if (state === 'expired-session' || paginationFailure === 'expired-session')
-    return <ScreenNotice state="expired-session" />;
+    return (
+      <div className={panelContents}>
+        <ScreenNotice state="expired-session" />
+      </div>
+    );
   return (
-    <div className="space-y-8">
+    <div>
       {state && (
-        <ScreenNotice
-          state={state}
-          retry={state === 'loading' ? undefined : retry}
-        />
+        <div className="border-b border-surface-bright p-space-md sm:p-space-lg">
+          <ScreenNotice
+            state={state}
+            retry={state === 'loading' ? undefined : retry}
+          />
+        </div>
       )}
       {data && (
         <>
           <section
             aria-labelledby="progress-totals"
-            className="space-y-2 border p-progression"
+            className="border-b border-surface-bright bg-surface-container-low"
           >
-            <h2 id="progress-totals" className="text-2xl font-semibold">
+            <h2 id="progress-totals" className={panelHeading}>
               Lifetime progress
             </h2>
-            <p>
+            <dl className="grid grid-cols-2 gap-px bg-outline-variant xl:grid-cols-4">
+              <DossierMetric label="Lifetime XP" value={data.totals.totalXp} />
+              <DossierMetric
+                label="Current streak"
+                value={data.totals.currentStreak}
+                note={`Days · Best streak ${data.totals.bestStreak}`}
+                tone="signal"
+              />
+              <DossierMetric
+                label="Active days this year"
+                value={
+                  data.heatmap.filter(({ completions }) => completions > 0)
+                    .length
+                }
+                tone="paper"
+              />
+              <DossierMetric
+                label="Earned seals"
+                value={data.seals.length}
+                tone="olive"
+              />
+            </dl>
+            <p className="border-t border-outline-variant px-space-lg py-space-sm font-label-mono-md text-label-mono-md text-secondary">
               {data.totals.totalXp} XP · Level {data.totals.level} ·{' '}
               {data.rank.title}
             </p>
-            <p>
-              Current streak {data.totals.currentStreak} · Best streak{' '}
-              {data.totals.bestStreak}
-            </p>
           </section>
-          <section aria-labelledby="progress-activity" className="space-y-3">
-            <h2 id="progress-activity" className="text-2xl font-semibold">
+          <section
+            aria-labelledby="progress-activity"
+            className="border-b border-surface-bright"
+          >
+            <h2 id="progress-activity" className={panelHeading}>
               Activity over the last year
             </h2>
-            <Heatmap cells={data.heatmap} />
+            <div className={panelContents}>
+              <Heatmap cells={data.heatmap} />
+            </div>
           </section>
-          <section aria-labelledby="progress-pillars" className="space-y-3">
-            <h2 id="progress-pillars" className="text-2xl font-semibold">
-              Pillar growth
-            </h2>
-            {data.pillarTotals.length ? (
-              <ul>
-                {data.pillarTotals.map(({ pillar, xp }) => (
-                  <li key={pillar}>
-                    {pillar} · {xp} XP
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <ScreenNotice state="empty" />
-            )}
-          </section>
-          <section aria-labelledby="progress-seals" className="space-y-3">
-            <h2 id="progress-seals" className="text-2xl font-semibold">
-              Seals
-            </h2>
-            {data.seals.length ? (
-              <div className="grid gap-3 sm:grid-cols-3">
-                {data.seals.map((seal) => (
-                  <SealBadge
-                    key={seal.achievementCode}
-                    earned
-                    title={
-                      SEAL_TITLES[seal.achievementCode] ?? seal.achievementCode
-                    }
-                    bonusXp={seal.bonusXp}
-                  />
-                ))}
-              </div>
-            ) : (
-              <ScreenNotice state="empty" />
-            )}
-          </section>
-          <section aria-labelledby="progress-ledger" className="space-y-3">
-            <h2 id="progress-ledger" className="text-2xl font-semibold">
-              Ledger
-            </h2>
-            <p>
-              {data.window.from} through {data.window.to}
-            </p>
-            {paginationFailure && <ScreenNotice state={paginationFailure} />}
-            {page.ledger.length ? (
-              <ol aria-label="Progress ledger" className="space-y-2">
-                {page.ledger.map((event) => (
-                  <li key={event.id} className="border p-3">
-                    <p>
-                      <time dateTime={event.localDate}>{event.localDate}</time>{' '}
-                      · {event.title ?? event.sealCode ?? event.kind}
-                    </p>
-                    <p>
-                      {event.xpDelta >= 0 ? '+' : ''}
-                      {event.xpDelta} XP · {event.healthDelta >= 0 ? '+' : ''}
-                      {event.healthDelta} health · Event {event.sequence}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <ScreenNotice state="empty" />
-            )}
-            {page.nextCursor && (
-              <button
-                className="auth-button"
-                type="button"
-                disabled={loadingMore}
-                onClick={() => void loadMore()}
+          <div className="grid bg-surface lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <div className="grid content-start border-outline-variant lg:border-r">
+              <section
+                aria-labelledby="progress-seals"
+                className="bg-surface-container-lowest"
               >
-                {loadingMore ? 'Loading entries…' : 'Load more entries'}
-              </button>
-            )}
-          </section>
+                <h2 id="progress-seals" className={panelHeading}>
+                  Seals
+                </h2>
+                <div className={panelContents}>
+                  {data.seals.length ? (
+                    <ul className="grid border-t border-l border-outline-variant bg-surface sm:grid-cols-2 xl:grid-cols-3">
+                      {data.seals.map(
+                        ({ achievementCode, bonusXp, unlockedAt }) => (
+                          <li
+                            key={achievementCode}
+                            className="min-w-0 space-y-space-md border-r border-b border-outline-variant bg-surface-container-low p-space-md"
+                          >
+                            <p className="font-label-mono-sm text-label-mono-sm text-tertiary uppercase">
+                              Earned
+                            </p>
+                            <span
+                              aria-hidden="true"
+                              className="grid size-12 place-items-center border border-outline-variant bg-surface text-xl text-tertiary"
+                            >
+                              ◆
+                            </span>
+                            <h3 className="font-headline-sm text-headline-sm uppercase">
+                              {SEAL_TITLES[achievementCode] ?? achievementCode}
+                            </h3>
+                            <p className="border-t border-outline-variant pt-space-sm font-label-mono-sm text-label-mono-sm text-secondary">
+                              <time dateTime={unlockedAt}>
+                                {unlockedAt.slice(0, 10)}
+                              </time>
+                              {' · '}
+                              <span className="text-tertiary">
+                                +{bonusXp} XP
+                              </span>
+                            </p>
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  ) : (
+                    <ScreenNotice state="empty" />
+                  )}
+                </div>
+              </section>
+              <section
+                aria-labelledby="progress-pillars"
+                className="bg-surface-container-lowest"
+              >
+                <h2 id="progress-pillars" className={panelHeading}>
+                  Pillar growth
+                </h2>
+                <div className={panelContents}>
+                  {data.pillarTotals.length ? (
+                    <ul className="divide-y divide-surface-bright border border-surface-bright bg-surface-container-low">
+                      {data.pillarTotals.map(({ pillar, xp }) => (
+                        <li
+                          key={pillar}
+                          className="px-space-md py-space-sm font-label-mono-md text-label-mono-md text-tertiary"
+                        >
+                          {pillar} · {xp} XP
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <ScreenNotice state="empty" />
+                  )}
+                </div>
+              </section>
+            </div>
+            <section
+              aria-labelledby="progress-ledger"
+              className="min-w-0 bg-surface-container-lowest"
+            >
+              <h2 id="progress-ledger" className={panelHeading}>
+                Ledger
+              </h2>
+              <div className={panelContents}>
+                <p className="font-label-mono-md text-label-mono-md text-secondary">
+                  {data.window.from} through {data.window.to}
+                </p>
+                {paginationFailure && (
+                  <ScreenNotice state={paginationFailure} />
+                )}
+                {page.ledger.length ? (
+                  <ol
+                    aria-label="Progress ledger"
+                    className="divide-y divide-surface-bright border border-surface-bright bg-surface-container-low"
+                  >
+                    {page.ledger.map((event) => (
+                      <li
+                        key={event.id}
+                        className="space-y-space-xs p-space-md [overflow-wrap:anywhere]"
+                      >
+                        <p className="font-headline-sm text-headline-sm">
+                          <time dateTime={event.localDate}>
+                            {event.localDate}
+                          </time>{' '}
+                          · {event.title ?? event.sealCode ?? event.kind}
+                        </p>
+                        <p className="font-label-mono-sm text-label-mono-sm text-tertiary">
+                          {event.xpDelta >= 0 ? '+' : ''}
+                          {event.xpDelta} XP ·{' '}
+                          {event.healthDelta >= 0 ? '+' : ''}
+                          {event.healthDelta} health · Event {event.sequence}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <ScreenNotice state="empty" />
+                )}
+                {page.nextCursor && (
+                  <button
+                    className="max-w-full border border-primary-container bg-primary-container px-space-md py-space-sm font-label-mono-md text-label-mono-md text-on-primary-container uppercase hover:bg-on-surface hover:text-surface focus-visible:outline-primary! disabled:opacity-60"
+                    type="button"
+                    disabled={loadingMore}
+                    onClick={() => void loadMore()}
+                  >
+                    {loadingMore ? 'Loading entries…' : 'Load more entries'}
+                  </button>
+                )}
+              </div>
+            </section>
+          </div>
         </>
       )}
     </div>
@@ -242,8 +391,8 @@ function ProgressContent({ session, scope, revision }) {
 /** @returns {import('react').ReactElement} */
 export function ProgressScreen() {
   return (
-    <main className="space-y-6">
-      <h1 className="text-4xl font-bold">Progress</h1>
+    <main className={dossierPanel}>
+      <DossierHeader number=".04" title="Progress" eyebrow="Activity archive" />
       <SessionScreen>
         {(session, scope, revision) => (
           <ProgressContent {...{ session, scope, revision }} />
