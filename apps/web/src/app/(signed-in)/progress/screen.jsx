@@ -12,6 +12,9 @@ import { ApiError } from '../../../auth/client.js';
 import { SealBadge } from '../../../progression/components.jsx';
 
 const PAGE_SIZE = 25;
+const panelHeading =
+  'border-b border-surface-bright bg-surface-container px-space-md py-space-sm font-headline-sm text-headline-sm uppercase sm:px-space-lg';
+const panelContents = 'space-y-space-md p-space-md sm:p-space-lg';
 const SEAL_TITLES = {
   'seven-day-warrior': 'Seven-Day Warrior',
   'iron-will': 'Iron Will',
@@ -23,12 +26,13 @@ function Heatmap({ cells }) {
   return (
     <ul
       aria-label="365-day activity heatmap"
-      className="grid gap-1 sm:grid-cols-7 lg:grid-cols-14"
+      tabIndex={0}
+      className="grid max-h-72 grid-cols-3 gap-px overflow-y-auto border border-surface-bright bg-surface-bright font-label-mono-sm text-label-mono-sm focus-visible:outline-primary! sm:grid-cols-7 lg:grid-cols-10"
     >
       {cells.map(({ localDate, status, completions }) => (
         <li
           key={localDate}
-          className={`border p-2 text-xs ${completions ? 'bg-progression-ink text-progression-paper' : 'bg-progression-paper'}`}
+          className={`min-w-0 p-space-sm [overflow-wrap:anywhere] ${completions ? 'bg-tertiary text-on-tertiary' : 'bg-surface-container-low text-secondary'}`}
         >
           <time dateTime={localDate}>{localDate}</time>
           <br />
@@ -125,114 +129,161 @@ function ProgressContent({ session, scope, revision }) {
   }
 
   if (state === 'expired-session' || paginationFailure === 'expired-session')
-    return <ScreenNotice state="expired-session" />;
+    return (
+      <div className={panelContents}>
+        <ScreenNotice state="expired-session" />
+      </div>
+    );
   return (
-    <div className="space-y-8">
+    <div>
       {state && (
-        <ScreenNotice
-          state={state}
-          retry={state === 'loading' ? undefined : retry}
-        />
+        <div className="border-b border-surface-bright p-space-md sm:p-space-lg">
+          <ScreenNotice
+            state={state}
+            retry={state === 'loading' ? undefined : retry}
+          />
+        </div>
       )}
       {data && (
         <>
           <section
             aria-labelledby="progress-totals"
-            className="space-y-2 border p-progression"
+            className="border-b border-surface-bright bg-surface-container-low"
           >
-            <h2 id="progress-totals" className="text-2xl font-semibold">
+            <h2 id="progress-totals" className={panelHeading}>
               Lifetime progress
             </h2>
-            <p>
-              {data.totals.totalXp} XP · Level {data.totals.level} ·{' '}
-              {data.rank.title}
-            </p>
-            <p>
-              Current streak {data.totals.currentStreak} · Best streak{' '}
-              {data.totals.bestStreak}
-            </p>
+            <div className="grid gap-px bg-surface-bright lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+              <p className="bg-surface-container-low p-space-md font-display-lg text-headline-lg font-bold tabular-nums [overflow-wrap:anywhere] sm:p-space-lg">
+                {data.totals.totalXp} XP · Level {data.totals.level} ·{' '}
+                {data.rank.title}
+              </p>
+              <p className="bg-secondary-fixed p-space-md font-headline-md text-headline-md text-on-secondary-fixed tabular-nums sm:p-space-lg">
+                Current streak {data.totals.currentStreak} · Best streak{' '}
+                {data.totals.bestStreak}
+              </p>
+            </div>
           </section>
-          <section aria-labelledby="progress-activity" className="space-y-3">
-            <h2 id="progress-activity" className="text-2xl font-semibold">
+          <section
+            aria-labelledby="progress-activity"
+            className="border-b border-surface-bright"
+          >
+            <h2 id="progress-activity" className={panelHeading}>
               Activity over the last year
             </h2>
-            <Heatmap cells={data.heatmap} />
+            <div className={panelContents}>
+              <Heatmap cells={data.heatmap} />
+            </div>
           </section>
-          <section aria-labelledby="progress-pillars" className="space-y-3">
-            <h2 id="progress-pillars" className="text-2xl font-semibold">
-              Pillar growth
-            </h2>
-            {data.pillarTotals.length ? (
-              <ul>
-                {data.pillarTotals.map(({ pillar, xp }) => (
-                  <li key={pillar}>
-                    {pillar} · {xp} XP
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <ScreenNotice state="empty" />
-            )}
-          </section>
-          <section aria-labelledby="progress-seals" className="space-y-3">
-            <h2 id="progress-seals" className="text-2xl font-semibold">
-              Seals
-            </h2>
-            {data.seals.length ? (
-              <div className="grid gap-3 sm:grid-cols-3">
-                {data.seals.map((seal) => (
-                  <SealBadge
-                    key={seal.achievementCode}
-                    earned
-                    title={
-                      SEAL_TITLES[seal.achievementCode] ?? seal.achievementCode
-                    }
-                    bonusXp={seal.bonusXp}
-                  />
-                ))}
-              </div>
-            ) : (
-              <ScreenNotice state="empty" />
-            )}
-          </section>
-          <section aria-labelledby="progress-ledger" className="space-y-3">
-            <h2 id="progress-ledger" className="text-2xl font-semibold">
-              Ledger
-            </h2>
-            <p>
-              {data.window.from} through {data.window.to}
-            </p>
-            {paginationFailure && <ScreenNotice state={paginationFailure} />}
-            {page.ledger.length ? (
-              <ol aria-label="Progress ledger" className="space-y-2">
-                {page.ledger.map((event) => (
-                  <li key={event.id} className="border p-3">
-                    <p>
-                      <time dateTime={event.localDate}>{event.localDate}</time>{' '}
-                      · {event.title ?? event.sealCode ?? event.kind}
-                    </p>
-                    <p>
-                      {event.xpDelta >= 0 ? '+' : ''}
-                      {event.xpDelta} XP · {event.healthDelta >= 0 ? '+' : ''}
-                      {event.healthDelta} health · Event {event.sequence}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <ScreenNotice state="empty" />
-            )}
-            {page.nextCursor && (
-              <button
-                className="auth-button"
-                type="button"
-                disabled={loadingMore}
-                onClick={() => void loadMore()}
+          <div className="grid gap-px bg-surface-bright lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            <div className="grid content-start gap-px bg-surface-bright">
+              <section
+                aria-labelledby="progress-pillars"
+                className="bg-surface-container-lowest"
               >
-                {loadingMore ? 'Loading entries…' : 'Load more entries'}
-              </button>
-            )}
-          </section>
+                <h2 id="progress-pillars" className={panelHeading}>
+                  Pillar growth
+                </h2>
+                <div className={panelContents}>
+                  {data.pillarTotals.length ? (
+                    <ul className="divide-y divide-surface-bright border border-surface-bright bg-surface-container-low">
+                      {data.pillarTotals.map(({ pillar, xp }) => (
+                        <li
+                          key={pillar}
+                          className="px-space-md py-space-sm font-label-mono-md text-label-mono-md text-tertiary"
+                        >
+                          {pillar} · {xp} XP
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <ScreenNotice state="empty" />
+                  )}
+                </div>
+              </section>
+              <section
+                aria-labelledby="progress-seals"
+                className="bg-surface-container-lowest"
+              >
+                <h2 id="progress-seals" className={panelHeading}>
+                  Seals
+                </h2>
+                <div className={panelContents}>
+                  {data.seals.length ? (
+                    <div className="grid gap-space-sm sm:grid-cols-2">
+                      {data.seals.map((seal) => (
+                        <SealBadge
+                          key={seal.achievementCode}
+                          earned
+                          title={
+                            SEAL_TITLES[seal.achievementCode] ??
+                            seal.achievementCode
+                          }
+                          bonusXp={seal.bonusXp}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <ScreenNotice state="empty" />
+                  )}
+                </div>
+              </section>
+            </div>
+            <section
+              aria-labelledby="progress-ledger"
+              className="min-w-0 bg-surface-container-lowest"
+            >
+              <h2 id="progress-ledger" className={panelHeading}>
+                Ledger
+              </h2>
+              <div className={panelContents}>
+                <p className="font-label-mono-md text-label-mono-md text-secondary">
+                  {data.window.from} through {data.window.to}
+                </p>
+                {paginationFailure && (
+                  <ScreenNotice state={paginationFailure} />
+                )}
+                {page.ledger.length ? (
+                  <ol
+                    aria-label="Progress ledger"
+                    className="divide-y divide-surface-bright border border-surface-bright bg-surface-container-low"
+                  >
+                    {page.ledger.map((event) => (
+                      <li
+                        key={event.id}
+                        className="space-y-space-xs p-space-md [overflow-wrap:anywhere]"
+                      >
+                        <p className="font-headline-sm text-headline-sm">
+                          <time dateTime={event.localDate}>
+                            {event.localDate}
+                          </time>{' '}
+                          · {event.title ?? event.sealCode ?? event.kind}
+                        </p>
+                        <p className="font-label-mono-sm text-label-mono-sm text-tertiary">
+                          {event.xpDelta >= 0 ? '+' : ''}
+                          {event.xpDelta} XP ·{' '}
+                          {event.healthDelta >= 0 ? '+' : ''}
+                          {event.healthDelta} health · Event {event.sequence}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <ScreenNotice state="empty" />
+                )}
+                {page.nextCursor && (
+                  <button
+                    className="max-w-full border border-primary-container bg-primary-container px-space-md py-space-sm font-label-mono-md text-label-mono-md text-on-primary-container uppercase hover:bg-on-surface hover:text-surface focus-visible:outline-primary! disabled:opacity-60"
+                    type="button"
+                    disabled={loadingMore}
+                    onClick={() => void loadMore()}
+                  >
+                    {loadingMore ? 'Loading entries…' : 'Load more entries'}
+                  </button>
+                )}
+              </div>
+            </section>
+          </div>
         </>
       )}
     </div>
@@ -242,8 +293,15 @@ function ProgressContent({ session, scope, revision }) {
 /** @returns {import('react').ReactElement} */
 export function ProgressScreen() {
   return (
-    <main className="space-y-6">
-      <h1 className="text-4xl font-bold">Progress</h1>
+    <main className="min-w-0 border border-surface-bright bg-surface font-body-md text-body-md text-on-surface">
+      <header className="border-b border-surface-bright bg-surface-container-lowest px-space-md py-space-lg sm:p-space-lg">
+        <p className="mb-space-sm inline-block bg-primary-container px-space-sm py-space-xs font-label-mono-sm text-label-mono-sm text-on-primary-container uppercase">
+          Activity archive
+        </p>
+        <h1 className="font-display-xl text-display-xl-mobile font-bold uppercase sm:text-display-xl">
+          Progress
+        </h1>
+      </header>
       <SessionScreen>
         {(session, scope, revision) => (
           <ProgressContent {...{ session, scope, revision }} />
