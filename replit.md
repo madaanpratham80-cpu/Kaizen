@@ -1,45 +1,20 @@
-# [Project name]
+# Kaizen
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Kaizen is a gamified discipline tracker for quests, habits, and personal progress. Guest mode keeps its data in the browser; registered accounts use PostgreSQL.
 
-## Run & Operate
+## Run and verify
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Start the managed **Kaizen** and **API Server** workflows. The web preview is at `/`; its Express API is routed under `/api/v1` on the same origin.
+- `pnpm test` runs the web, API, and shared contract suites.
+- `pnpm test:db` applies and tests the original Prisma migrations. Run it only with `DATABASE_URL` pointed at a fresh, disposable PostgreSQL database whose name contains `test`. Never run this suite against the preview or production database.
+- `pnpm --filter @workspace/kaizen run test:browser` tests the running development preview with Chromium. It creates and removes its own test account. Set `CHROMIUM_PATH` if Chromium isn't on `PATH`, and `KAIZEN_TEST_SCREENSHOTS` to save screenshots.
+- `/health/live` is API liveness. `/health/ready` and `/api/healthz` also check database readiness.
 
-## Stack
+## Layout and operating decisions
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
-
-## Where things live
-
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
-
-## Architecture decisions
-
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- `artifacts/kaizen` contains the imported screens and theme, mounted by Vite and Wouter. Express verifies registered sessions and protects account data; the browser route guard only controls navigation.
+- `artifacts/api-server` contains the original Express routes, Prisma schema, migrations, and jobs. `lib/contracts` is the shared Zod contract used by both services.
+- Prisma owns the imported database schema and applies the existing migration history at API startup and after task merges. The history includes PostgreSQL constraints and the `btree_gist` extension. Do not run the unused scaffold's Drizzle push against Kaizen's database.
+- Keep `SESSION_SECRET` server-only. Replit supplies `DATABASE_URL` and the allowed preview/published domains. For a separately hosted environment, configure `APP_ORIGIN` with the canonical web origin. Keep the browser API on the same origin for secure cookies and mutation checks.
+- `pnpm --filter @workspace/api-server run job:finalize-days` and `pnpm --filter @workspace/api-server run job:cleanup-sessions` are the existing maintenance commands. An external scheduler is not configured by the import.
+- `.migration-backup` retains the original import. No external account or activity data was moved into the Replit development database.

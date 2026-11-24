@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String                       @id @default(uuid()) @db.Uuid
+  normalizedEmail     String                       @unique
+  goals               String[]                     @default([])
+  displayName         String
+  gender              Gender?
+  passwordHash        String
+  timezone            String
+  createdAt           DateTime                     @default(now())
+  sessions            Session[]
+  playerState         PlayerState?
+  quests              Quest[]
+  dayPlans            DayPlan[]
+  dayPreferences      DayPreferenceVersion[]
+  timezoneTransitions CalendarTimezoneTransition[]
+  progressEvents      ProgressEvent[]
+  completionReceipts  CompletionReceipt[]
+  achievements        UserAchievement[]
+}
+
+enum Gender {
+  male
+  female
+}
+
+model CalendarTimezoneTransition {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  fromTimezone String
+  toTimezone   String
+  lastOldDate  DateTime  @db.Date
+  firstNewDate DateTime  @db.Date
+  gapStartsAt  DateTime
+  effectiveAt  DateTime
+  appliedAt    DateTime?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, appliedAt])
+}
+
+enum DayStatus {
+  OPEN
+  ACTIVE
+  MISSED
+  REST
+  EMPTY
+}
+
+enum OccurrenceStatus {
+  PENDING
+  COMPLETED
+}
+
+enum QuestDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model PlayerState {
+  userId            String    @id @db.Uuid
+  totalXp           Int       @default(0)
+  health            Int       @default(70)
+  currentStreak     Int       @default(0)
+  bestStreak        Int       @default(0)
+  lastFinalizedDate DateTime? @db.Date
+  stateVersion      Int       @default(0)
+  nextEventSequence Int       @default(1)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+}
+
+model Quest {
+  id                   String            @id @default(uuid()) @db.Uuid
+  userId               String            @db.Uuid
+  clientId             String?           @db.Uuid
+  title                String
+  category             String
+  pillar               String
+  archivedAt           DateTime?
+  archiveEffectiveDate DateTime?         @db.Date
+  version              Int               @default(1)
+  user                 User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  schedules            ScheduleVersion[]
+  occurrences          QuestOccurrence[]
+
+  @@unique([userId, id])
+  @@unique([userId, clientId])
+  @@index([userId, archivedAt])
+}
+
+model ScheduleVersion {
+  id            String          @id @default(uuid()) @db.Uuid
+  userId        String          @db.Uuid
+  questId       String          @db.Uuid
+  effectiveFrom DateTime        @db.Date
+  effectiveTo   DateTime?       @db.Date
+  recurrence    String
+  weekdays      Int[]           @default([])
+  title         String
+  category      String
+  pillar        String
+  difficulty    QuestDifficulty
+  target        Int
+  ruleVersion   Int
+  quest         Quest           @relation(fields: [userId, questId], references: [userId, id], onDelete: Restrict)
+
+  @@unique([userId, questId, effectiveFrom])
+}
+
+model DayPreferenceVersion {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  effectiveFrom DateTime  @db.Date
+  effectiveTo   DateTime? @db.Date
+  restWeekdays  Int[]     @default([])
+  user          User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, effectiveFrom])
+}
+
+model DayPlan {
+  id                  String            @id @default(uuid()) @db.Uuid
+  userId              String            @db.Uuid
+  localDate           DateTime          @db.Date
+  timezoneSnapshot    String
+  startsAtUtc         DateTime
+  deadlineUtc         DateTime
+  status              DayStatus
+  priorityId          String?           @db.Uuid
+  priorityLockedAt    DateTime?
+  plannedCount        Int               @default(0)
+  healthGainAccounted Int               @default(0)
+  streakApplied       Boolean           @default(false)
+  closedAt            DateTime?
+  user                User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  occurrences         QuestOccurrence[] @relation("PlanOccurrences")
+  priority            QuestOccurrence?  @relation("PlanPriority", fields: [userId, id, priorityId], references: [userId, dayPlanId, id], onDelete: NoAction, onUpdate: NoAction)
+
+  progressEvents ProgressEvent[]
+  achievements   UserAchievement[]
+
+  @@unique([userId, localDate])
+  @@unique([userId, id])
+}
+
+model QuestOccurrence {
+  id          String           @id @default(uuid()) @db.Uuid
+  userId      String           @db.Uuid
+  questId     String           @db.Uuid
+  dayPlanId   String           @db.Uuid
+  planned     Boolean
+  status      OccurrenceStatus @default(PENDING)
+  completedAt DateTime?
+  title       String
+  category    String
+  pillar      String
+  difficulty  QuestDifficulty
+  target      Int
+  rewardXp    Int
+  ruleVersion Int
+  quest       Quest            @relation(fields: [userId, questId], references: [userId, id], onDelete: Restrict)
+  dayPlan     DayPlan          @relation("PlanOccurrences", fields: [userId, dayPlanId], references: [userId, id], onDelete: Restrict)
+  priorityFor DayPlan[]        @relation("PlanPriority")
+
+  progressEvents    ProgressEvent[]   @relation("EventOccurrence")
+  dayProgressEvents ProgressEvent[]   @relation("EventDayOccurrence")
+  achievements      UserAchievement[] @relation("AchievementOccurrence")
+  dayAchievements   UserAchievement[] @relation("AchievementDayOccurrence")
+
+  @@unique([userId, id])
+  @@unique([questId, dayPlanId])
+  @@unique([userId, dayPlanId, id])
+  @@index([dayPlanId, status])
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  // Hex-encoded SHA-256 digest of the opaque session token, never the raw token.
+  tokenHash String   @unique @db.Char(64)
+  userId    String   @db.Uuid
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ProgressEvent {
+  id            String           @id @default(uuid()) @db.Uuid
+  userId        String           @db.Uuid
+  sequence      Int
+  awardKey      String
+  kind          String
+  occurrenceId  String?          @db.Uuid
+  dayId         String?          @db.Uuid
+  sealCode      String?
+  xpDelta       Int
+  healthDelta   Int
+  ruleVersion   Int
+  recordedAt    DateTime         @default(now())
+  user          User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  day           DayPlan?         @relation(fields: [userId, dayId], references: [userId, id], onDelete: Restrict)
+  occurrence    QuestOccurrence? @relation("EventOccurrence", fields: [userId, occurrenceId], references: [userId, id], onDelete: Restrict)
+  dayOccurrence QuestOccurrence? @relation("EventDayOccurrence", fields: [userId, dayId, occurrenceId], references: [userId, dayPlanId, id], onDelete: Restrict)
+  seal          Achievement?     @relation(fields: [sealCode, ruleVersion], references: [code, ruleVersion], onDelete: Restrict)
+
+  @@unique([userId, sequence])
+  @@unique([userId, awardKey])
+  @@index([userId, recordedAt])
+}
+
+model CompletionReceipt {
+  userId       String   @db.Uuid
+  operationId  String   @db.Uuid
+  requestHash  String   @db.Char(64)
+  responseBody Json
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@id([userId, operationId])
+  @@index([createdAt])
+}
+
+model Achievement {
+  code            String
+  ruleVersion     Int
+  eligibilityRule Json
+  unlocks         UserAchievement[]
+  progressEvents  ProgressEvent[]
+
+  @@id([code, ruleVersion])
+}
+
+model UserAchievement {
+  userId                  String           @db.Uuid
+  achievementCode         String
+  ruleVersion             Int
+  unlockedAt              DateTime         @default(now())
+  qualifyingOccurrenceId  String?          @db.Uuid
+  qualifyingDayId         String?          @db.Uuid
+  bonusXp                 Int
+  user                    User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  achievement             Achievement      @relation(fields: [achievementCode, ruleVersion], references: [code, ruleVersion], onDelete: Restrict)
+  qualifyingDay           DayPlan?         @relation(fields: [userId, qualifyingDayId], references: [userId, id], onDelete: Restrict)
+  qualifyingOccurrence    QuestOccurrence? @relation("AchievementOccurrence", fields: [userId, qualifyingOccurrenceId], references: [userId, id], onDelete: Restrict)
+  qualifyingDayOccurrence QuestOccurrence? @relation("AchievementDayOccurrence", fields: [userId, qualifyingDayId, qualifyingOccurrenceId], references: [userId, dayPlanId, id], onDelete: Restrict)
+
+  @@id([userId, achievementCode])
+}

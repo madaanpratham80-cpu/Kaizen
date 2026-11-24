@@ -4,29 +4,34 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
-    "build": "node ./build.mjs",
-    "start": "node --enable-source-maps ./dist/index.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "postinstall": "prisma generate",
+    "dev": "node --watch src/server.js",
+    "build": "prisma generate && find src -name '*.js' -print0 | xargs -0 -n 1 node --check && mkdir -p dist && cp -R src/. dist/",
+    "start": "node --enable-source-maps ./dist/server.js",
+    "db:migrate": "node src/ops/migrate.js",
+    "job:finalize-days": "node src/jobs/finalize-days.js",
+    "job:cleanup-sessions": "node src/jobs/cleanup-sessions.js",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:db": "vitest run --config vitest.db.config.js"
   },
   "dependencies": {
-    "@workspace/api-zod": "workspace:*",
-    "@workspace/db": "workspace:*",
-    "cookie-parser": "^1.4.7",
+    "@js-temporal/polyfill": "0.5.1",
+    "@kaizen/contracts": "workspace:@workspace/kaizen-contracts@*",
+    "@prisma/client": "6.19.3",
+    "bcrypt": "6.0.0",
     "cors": "^2.8.6",
-    "drizzle-orm": "catalog:",
     "express": "^5.3.0",
-    "pino": "^9.14.0",
-    "pino-http": "^10.5.0"
+    "express-rate-limit": "^8.0.0",
+    "helmet": "^8.0.0",
+    "pino": "^10.0.0",
+    "prisma": "6.19.3",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/cookie-parser": "^1.4.10",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/node": "catalog:",
-    "esbuild": "0.28.2",
-    "esbuild-plugin-pino": "^2.3.3",
-    "pino-pretty": "^13.2.0",
-    "thread-stream": "3.1.0"
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "supertest": "^7.0.0",
+    "vitest": "^4.0.0"
   }
 }

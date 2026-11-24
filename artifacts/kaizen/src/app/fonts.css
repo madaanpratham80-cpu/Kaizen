@@ -1,0 +1,24 @@
+@import '@fontsource/dm-sans/latin-400.css';
+@import '@fontsource/dm-sans/latin-500.css';
+@import '@fontsource/dm-sans/latin-700.css';
+@import '@fontsource/space-grotesk/latin-300.css';
+@import '@fontsource/space-grotesk/latin-400.css';
+@import '@fontsource/space-grotesk/latin-600.css';
+@import '@fontsource/space-grotesk/latin-700.css';
+@import '@fontsource/space-mono/latin-400.css';
+@import '@fontsource/space-mono/latin-700.css';
+@import '@fontsource/stix-two-text/latin-700.css';
+
+:root {
+  --font-kaizen-grotesk: 'Space Grotesk', Arial, sans-serif;
+  --font-kaizen-sans: 'DM Sans', Arial, sans-serif;
+  --font-kaizen-mono: 'Space Mono', 'Courier New', monospace;
+}
+
+.quests-display-font {
+  --font-quests-display: 'STIX Two Text', Georgia, serif;
+}
+
+.habits-display-font {
+  --font-habits-display: 'STIX Two Text', Georgia, serif;
+}

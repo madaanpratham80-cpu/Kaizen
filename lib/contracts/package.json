@@ -1,0 +1,21 @@
+{
+  "name": "@workspace/kaizen-contracts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "test": "vitest run",
+    "build": "node --input-type=module -e \"await import('@workspace/kaizen-contracts')\""
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "vitest": "^4.0.0"
+  }
+}

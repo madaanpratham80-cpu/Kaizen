@@ -1,0 +1,1 @@
+- [Kaizen migration verification](kaizen-migration-verification.md) — browser checks must distinguish guest mode from real account persistence.
