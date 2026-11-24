@@ -54,14 +54,12 @@ export default function NotFound() {
             <div className="flex flex-col gap-space-sm font-label-mono-md text-label-mono-md uppercase sm:flex-row">
               <Link
                 href="/today"
-                prefetch={false}
                 className="flex-1 border border-primary-container bg-primary-container px-space-md py-space-md text-center font-bold text-on-primary-fixed hover:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <span aria-hidden="true">← </span>Return to Today’s Ledger
               </Link>
               <Link
                 href="/quests"
-                prefetch={false}
                 className="border border-404-border-strong bg-404-surface-container px-space-md py-space-md text-center hover:bg-404-surface-container-high focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Quests
@@ -77,7 +75,6 @@ export default function NotFound() {
             <Link
               key={href}
               href={href}
-              prefetch={false}
               className="underline decoration-404-border-strong underline-offset-4 hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {label}
