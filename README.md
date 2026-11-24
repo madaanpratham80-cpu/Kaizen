@@ -1,7 +1,29 @@
-# KAIZEN (改善)
-### Gamified Real-Life Achievement Platform
+<div align="center">
 
-> *"Continuity with recovery: a missed day should provide a path back into the routine, not punitive failure."*
+# KAIZEN &nbsp;改善
+
+**`// CONTINUOUS DISCIPLINE`**
+
+*A gamified real-life achievement platform built on one rule:<br>a missed day should be a path back into the routine, not a punishment.*
+
+<br>
+
+![Next.js](https://img.shields.io/badge/Next.js-App_Router-141312?style=flat-square&logo=nextdotjs&logoColor=F5F0E6)
+![Express](https://img.shields.io/badge/Express-API-141312?style=flat-square&logo=express&logoColor=F5F0E6)
+![Prisma](https://img.shields.io/badge/Prisma-PostgreSQL-141312?style=flat-square&logo=prisma&logoColor=F5F0E6)
+![Zod](https://img.shields.io/badge/Zod-Shared_Contracts-141312?style=flat-square&logo=zod&logoColor=F5F0E6)
+![pnpm](https://img.shields.io/badge/pnpm-Workspace-141312?style=flat-square&logo=pnpm&logoColor=F5F0E6)
+![Design](https://img.shields.io/badge/Design-Editorial_Brutalist-E63827?style=flat-square)
+
+[Overview](#overview) · [Core loop](#core-loop) · [Systems](#gamification--systems-design) · [Design system](#design-system-editorial-brutalist-dossier) · [Architecture](#architecture--implementation-principles) · [Roadmap](#release-roadmap) · [Run it locally](#getting-started)
+
+<br>
+
+<img src="docs/assets/kaizen-today.png" alt="KAIZEN Today screen: Today's Ledger, character dossier with 85% health, level 85, 42-day streak and the remaining quest list" width="100%">
+
+<sub><b>Today's Ledger</b> — daily priority, remaining quests, vitality, level and streak on one screen.</sub>
+
+</div>
 
 ---
 
@@ -10,6 +32,18 @@
 **KAIZEN** is a gamified personal progression system that translates daily, real-world commitments into tangible character evolution, skill mastery, and an uncompromised, long-term ledger of achievement.
 
 Most gamified habit trackers fail when real life intervenes: streaks snap, penalties accumulate, and users abandon the tool out of fatigue or guilt. KAIZEN shifts the paradigm from punitive friction to **disciplined continuity with structured recovery**. By decoupling lifetime effort from short-term stability, KAIZEN ensures users always have a clear, manageable path back into their routine.
+
+### The five screens
+
+| | Screen | What it does |
+| :-- | :-- | :-- |
+| `.01` | **Today** | Today's Ledger: daily priority, remaining quests, one-tap completion, vitality and streak. |
+| `.02` | **Quests** | Create, edit and archive daily or weekly quests with category, difficulty and target. |
+| `.03` | **Habits** | Week view of every habit, with per-habit streaks and completion rates. |
+| `.04` | **Progress** | 12-month heatmap, XP ledger, milestone seals and pillar totals. |
+| `.05` | **Profile** | Character dossier: rank, level, health, seals and goals. |
+
+Settings and Onboarding sit beside them, and a one-click **guest mode** lets anyone evaluate the full interface without an account or database.
 
 ---
 
@@ -74,10 +108,14 @@ The user interface synthesizes **Swiss International Typographic Style**, **tech
 - **Zero-Radius:** `border-radius: 0px` across all cards, buttons, badges, and avatars.
 - **Abutting Grids:** Cards share `1px` to `2px` hairline boundaries (`0px` gutters) creating a monolithic, structural ledger facade.
 - **Palette:**
-  - `Canvas Dark`: `#121110` (Off-black foundation)
-  - `Canvas Inverted`: `#F5F0E6` (Warm cream broadsheet fill)
-  - `Signal Red`: `#E63827` (Imperatives, active state markers, primary actions)
-  - `Flat Olive`: `#8C9942` (Verified completions, positive streaks, fulfilled habits)
+
+  | Token | Hex | Use |
+  | :--- | :--- | :--- |
+  | `Canvas Dark` | `#121110` | Off-black foundation |
+  | `Canvas Inverted` | `#F5F0E6` | Warm cream broadsheet fill |
+  | `Signal Red` | `#E63827` | Imperatives, active state markers, primary actions |
+  | `Flat Olive` | `#8C9942` | Verified completions, positive streaks, fulfilled habits |
+
 - **Typography:**
   - **Display:** *Space Grotesk* (tight negative tracking, architectural density)
   - **Body:** *DM Sans* (neutral, highly legible reading copy)
@@ -95,6 +133,11 @@ The implementation blueprint is [docs/architecture/system-architecture.md](docs/
   XP and health changes are stored as append-only event logs. Progress views compute metrics from deterministic, timestamped history.
 - **Strict Deduplication:**
   Shared occurrence records ensure tasks marked from any screen (Today, Habits, or Quests) cannot trigger duplicate payouts or state corruption.
+
+```
+ apps/web  (Next.js)  ──►  apps/api  (Express + Prisma)  ──►  PostgreSQL
+        └────────── packages/contracts (shared Zod schemas) ──────────┘
+```
 
 ---
 
@@ -119,7 +162,9 @@ Detailed technical teardowns are available in the [`Competitors/`](./Competitors
 
 ---
 
-## Repository Structure
+## Getting Started
+
+The workspace uses JavaScript ESM and JSDoc. It contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
 
 ### Local auth setup
 
@@ -194,28 +239,34 @@ For local verification with the API environment file, run `node --env-file=apps/
 
 Schedule `pnpm --filter @kaizen/api job:cleanup-sessions` separately with the same database environment. Each invocation deletes up to 20 batches of 500 expired sessions. For local verification, run `node --env-file=apps/api/.env apps/api/dist/jobs/cleanup-sessions.js` from the repository root.
 
-The workspace uses JavaScript ESM and JSDoc. It contains `apps/web` (Next.js App Router), `apps/api` (Express and Prisma), and `packages/contracts` (shared Zod contracts).
+---
+
+## Repository Structure
 
 ```
 .
-├── .gitignore
+├── apps/
+│   ├── web/                          # Next.js App Router front end
+│   └── api/                          # Express + Prisma API, jobs and DB tests
+├── packages/
+│   └── contracts/                    # Shared Zod contracts
+├── deploy/nginx/                     # Production ingress config
+├── docs/
+│   ├── architecture/                 # System architecture and feature list
+│   ├── archive/                      # Earlier system design
+│   └── assets/                       # README imagery
+├── openspec/                         # Specs and change proposals
+├── scripts/                          # Pilot verification and tooling
+├── Competitors/                      # Competitor tear-downs & architectures
+│   ├── Duolingo/  Focumon/  HabitQuest/  Habitica/
+│   └── Levelyss/  Matiks/  Productivitism/
+├── UI, v4/                           # Editorial Brutalist design system & mockups
+│   ├── editorial_brutalist_dossier/  # Design token spec (DESIGN.md)
+│   └── kaizen.01 … kaizen.05         # Today, Quests, Habits, Progress, Profile
 ├── KAIZEN_Feature_List.pdf           # Official product scope and specification
-├── README.md                         # Project documentation and architectural overview
-├── Competitors/                      # Comprehensive competitor tear-downs & architectures
-│   ├── Duolingo/
-│   ├── Focumon/
-│   ├── HabitQuest/
-│   ├── Habitica/
-│   ├── Levelyss/
-│   ├── Matiks/
-│   └── Productivitism/
-└── UI, v4/                           # Editorial Brutalist design system & interactive mockups
-    ├── editorial_brutalist_dossier/  # Design token spec (DESIGN.md)
-    ├── kaizen.01_today_poster_editorial_edition/
-    ├── kaizen.02_quests_poster_editorial_edition/
-    ├── kaizen.03_habits_poster_editorial_edition/
-    ├── kaizen.04_progress_12_month_block_heatmap/
-    └── kaizen.05_profile_character_dossier_poster_edition/
+├── KAIZEN_System_Architecture.pdf
+├── KAIZEN_System_Design.pdf
+└── README.md
 ```
 
 ---
@@ -224,3 +275,4 @@ The workspace uses JavaScript ESM and JSDoc. It contains `apps/web` (Next.js App
 
 Built for disciplined continuous improvement. All rights reserved.
 
+<div align="center"><sub><code>// KAIZEN — CONTINUOUS DISCIPLINE</code></sub></div>
