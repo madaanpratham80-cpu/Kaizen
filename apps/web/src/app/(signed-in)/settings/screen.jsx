@@ -620,46 +620,10 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
             </fieldset>
           </section>
 
-          {/* SECTION 4: APPEARANCE & DESIGN TOKENS */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-[#5c403b] pb-2 text-xs font-bold text-[#cac6bd] uppercase tracking-wider">
-              <span>{'// 04'}</span>
-              <span>BRUTALIST VISUAL DESIGN SYSTEM</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 border-2 border-[#5c403b] bg-[#5c403b] p-[1px]">
-              <div className="bg-[#141312] p-3 text-center">
-                <div className="w-full h-8 bg-[#141312] border border-[#5c403b] mb-1"></div>
-                <div className="text-[10px] font-bold text-white">#141312</div>
-                <div className="text-[9px] text-[#ac8883]">OBSIDIAN</div>
-              </div>
-              <div className="bg-[#141312] p-3 text-center">
-                <div className="w-full h-8 bg-[#ff5541] mb-1"></div>
-                <div className="text-[10px] font-bold text-white">#FF5541</div>
-                <div className="text-[9px] text-[#ac8883]">SIGNAL</div>
-              </div>
-              <div className="bg-[#141312] p-3 text-center">
-                <div className="w-full h-8 bg-[#c0ce71] mb-1"></div>
-                <div className="text-[10px] font-bold text-white">#C0CE71</div>
-                <div className="text-[9px] text-[#ac8883]">LIME</div>
-              </div>
-              <div className="bg-[#141312] p-3 text-center">
-                <div className="w-full h-8 bg-[#5c403b] mb-1"></div>
-                <div className="text-[10px] font-bold text-white">#5C403B</div>
-                <div className="text-[9px] text-[#ac8883]">TERRACOTTA</div>
-              </div>
-              <div className="bg-[#141312] p-3 text-center col-span-2 sm:col-span-1">
-                <div className="w-full h-8 bg-[#f5f0e6] mb-1"></div>
-                <div className="text-[10px] font-bold text-white">#F5F0E6</div>
-                <div className="text-[9px] text-[#ac8883]">PAPER</div>
-              </div>
-            </div>
-          </section>
-
-          {/* SECTION 5: TELEMETRY & FEEDBACK */}
+          {/* SECTION 4: TELEMETRY & FEEDBACK */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 border-b border-[#5c403b] pb-2 text-xs font-bold text-[#ac8883] uppercase tracking-wider">
-              <span>{'// 05'}</span>
+              <span>{'// 04'}</span>
               <span>TELEMETRY & FEEDBACK PREFERENCES</span>
             </div>
 
@@ -686,10 +650,10 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
             </div>
           </section>
 
-          {/* SECTION 6: GAME RULES & RECOVERY */}
+          {/* SECTION 5: GAME RULES & RECOVERY */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 border-b border-[#5c403b] pb-2 text-xs font-bold text-[#cac6bd] uppercase tracking-wider">
-              <span>{'// 06'}</span>
+              <span>{'// 05'}</span>
               <span>GAME RULES & CONTINUITY INVARIANTS</span>
             </div>
 
