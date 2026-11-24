@@ -1,0 +1,951 @@
+import {
+  habitsResponseSchema,
+  profileResponseSchema,
+  progressResponseSchema,
+  settingsSaveResponseSchema,
+  settingsValidationErrorResponseSchema,
+} from '@kaizen/contracts';
+import { PrismaClient } from '@prisma/client';
+import { Temporal } from '@js-temporal/polyfill';
+import request from 'supertest';
+import { describe, expect, it } from 'vitest';
+import { createApp } from '../../src/app.js';
+import { dateColumn, dayBounds } from '../../src/domain/calendar.js';
+import { SESSION_COOKIE } from '../../src/http/boundary.js';
+import { createSession } from '../../src/services/sessions.js';
+import {
+  holdPlayer,
+  useCompletionDatabase,
+  waitForBlocked,
+} from './completion-fixture.js';
+
+const { prisma, owner, plan, occurrence } = useCompletionDatabase();
+const origin = 'http://localhost:3000';
+const password = '  exact submitted password  ';
+const options = {
+  database: prisma,
+  appOrigin: origin,
+  csrfSecret: 'slice-4-db-test',
+};
+const api = request(createApp(options));
+const today = () => Temporal.Now.plainDateISO('UTC');
+
+async function account(client = api) {
+  const actor = await owner();
+  const cookie = `${SESSION_COOKIE}=${await createSession(prisma, actor.userId)}`;
+  const { body } = await client
+    .get('/api/v1/auth/session')
+    .set('Cookie', cookie)
+    .expect(200);
+  expect(body.data.user.id).toBe(actor.userId);
+  return {
+    ...actor,
+    cookie,
+    get: (path) => client.get(`/api/v1${path}`).set('Cookie', cookie),
+    send: (method, path, payload) => {
+      const call = client[method](`/api/v1${path}`)
+        .set('Cookie', cookie)
+        .set('Origin', origin)
+        .set('X-CSRF-Token', body.data.csrfToken);
+      return payload ? call.send(payload) : call;
+    },
+  };
+}
+
+function noStore(response) {
+  expect(response.headers['cache-control']).toBe('private, no-store');
+  expect(response.body.requestId).toBe(response.headers['x-request-id']);
+}
+
+describe('habits-week-routes', () => {
+  const cellsFrom = (week, labels) =>
+    labels.map((label, index) => ({
+      date: week.add({ days: index }).toString(),
+      label,
+    }));
+  async function streakHistory(actor, outcomes) {
+    const first = await plan(actor, { offset: -outcomes.length });
+    const item = await occurrence(first);
+    await prisma.user.update({
+      where: { id: actor.userId },
+      data: { createdAt: first.localDate },
+    });
+    await prisma.scheduleVersion.create({
+      data: {
+        userId: actor.userId,
+        questId: item.questId,
+        effectiveFrom: first.localDate,
+        recurrence: 'DAILY',
+        title: 'Read',
+        category: 'Academic',
+        pillar: 'Cognitive',
+        difficulty: 'EASY',
+        target: 1,
+        ruleVersion: 1,
+      },
+    });
+    for (const [index, outcome] of outcomes.entries()) {
+      const saved =
+        index === 0
+          ? first
+          : await plan(actor, {
+              offset: index - outcomes.length,
+              status: outcome === null ? 'REST' : 'OPEN',
+              plannedCount: outcome === null ? 0 : 1,
+            });
+      if (outcome === null) continue;
+      const values = {
+        status: outcome ? 'COMPLETED' : 'PENDING',
+        completedAt: outcome ? saved.startsAtUtc : null,
+      };
+      if (index === 0)
+        await prisma.questOccurrence.update({
+          where: { id: item.id },
+          data: values,
+        });
+      else {
+        const fields = { ...item };
+        delete fields.id;
+        await prisma.questOccurrence.create({
+          data: { ...fields, ...values, dayPlanId: saved.id },
+        });
+      }
+    }
+    return item;
+  }
+
+  it('per-habit streak is owner-scoped', async () => {
+    const alice = await account();
+    const bob = await account();
+    const a = await streakHistory(alice, [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
+    const b = await streakHistory(bob, [true, false, true]);
+    const week = today().subtract({ days: 1 });
+    const read = async (actor) =>
+      habitsResponseSchema.parse(
+        (await actor.get(`/habits?week=${week}`).expect(200)).body,
+      ).data;
+    expect((await read(alice)).habits).toEqual([
+      {
+        questId: a.questId,
+        title: 'Read',
+        streak: { current: 8, best: 8 },
+        completionRate: 1,
+        cells: cellsFrom(week, [
+          'Completed',
+          'Pending',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+        ]),
+      },
+    ]);
+    const output = await read(bob);
+    expect(output.habits).toEqual([
+      {
+        questId: b.questId,
+        title: 'Read',
+        streak: { current: 1, best: 1 },
+        completionRate: 1,
+        cells: cellsFrom(week, [
+          'Completed',
+          'Pending',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+          'Scheduled',
+        ]),
+      },
+    ]);
+    expect(JSON.stringify(output)).not.toContain(a.questId);
+    expect(output.habits.map(({ streak }) => streak)).not.toContainEqual({
+      current: 8,
+      best: 8,
+    });
+    await bob.get(`/habits?week=${week}&userId=${alice.userId}`).expect(400);
+  });
+
+  it('per-habit streak counts only scheduled dates', async () => {
+    const alice = await account();
+    const item = await streakHistory(alice, [true, null, true, null, true]);
+    // The fourth date is an opened EMPTY day with no scheduled occurrence.
+    await prisma.dayPlan.update({
+      where: {
+        userId_localDate: {
+          userId: alice.userId,
+          localDate: dateColumn(today().subtract({ days: 2 })),
+        },
+      },
+      data: { status: 'EMPTY' },
+    });
+    const response = await alice
+      .get(`/habits?week=${today().subtract({ days: 5 })}`)
+      .expect(200);
+    expect(habitsResponseSchema.parse(response.body).data.habits).toEqual([
+      {
+        questId: item.questId,
+        title: 'Read',
+        streak: { current: 3, best: 3 },
+        completionRate: 1,
+        cells: cellsFrom(today().subtract({ days: 5 }), [
+          'Completed',
+          'Rest',
+          'Completed',
+          'Not scheduled',
+          'Completed',
+          'Pending',
+          'Scheduled',
+        ]),
+      },
+    ]);
+  });
+
+  it('returns seven dates with historical snapshots and excludes future dates from compliance', async () => {
+    const alice = await account();
+    const bob = await account();
+    const week = today().subtract({ days: 2 });
+    for (const { userId } of [alice, bob]) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { createdAt: dateColumn(week) },
+      });
+    }
+    const saved = await plan(alice, { offset: -1, status: 'ACTIVE' });
+    const item = await occurrence(saved);
+    const foreign = await plan(bob, { offset: -1, status: 'ACTIVE' });
+    await occurrence(foreign);
+    await prisma.questOccurrence.update({
+      where: { id: item.id },
+      data: {
+        status: 'COMPLETED',
+        completedAt: saved.startsAtUtc,
+        title: 'Original snapshot',
+      },
+    });
+    await prisma.quest.update({
+      where: { id: item.questId },
+      data: { title: 'Current catalog title' },
+    });
+    await prisma.scheduleVersion.create({
+      data: {
+        userId: alice.userId,
+        questId: item.questId,
+        effectiveFrom: dateColumn(week),
+        recurrence: 'DAILY',
+        title: 'Historical rule',
+        category: 'Academic',
+        pillar: 'Cognitive',
+        difficulty: 'EASY',
+        target: 1,
+        ruleVersion: 1,
+      },
+    });
+    await alice.get('/habits?week=2026-02-30').expect(400);
+    await alice.get(`/habits?week=${week}&userId=${bob.userId}`).expect(400);
+    const response = await alice.get(`/habits?week=${week}`).expect(200);
+    noStore(response);
+    const habit = response.body.data.habits[0];
+    expect(habit.completionRate).toBe(0.5);
+    expect(habit.cells).toEqual(
+      cellsFrom(week, [
+        'Missed',
+        'Completed',
+        'Pending',
+        'Scheduled',
+        'Scheduled',
+        'Scheduled',
+        'Scheduled',
+      ]),
+    );
+    const { days, scheduled, completed, compliance } =
+      habitsResponseSchema.parse(response.body).data;
+    expect(days.map(({ date }) => date)).toEqual(
+      Array.from({ length: 7 }, (_, days) => week.add({ days }).toString()),
+    );
+    expect(days[0].occurrences).toEqual([
+      expect.objectContaining({ title: 'Historical rule', status: 'MISSED' }),
+    ]);
+    expect(days[1].occurrences).toEqual([
+      expect.objectContaining({
+        id: item.id,
+        title: 'Original snapshot',
+        status: 'COMPLETED',
+      }),
+    ]);
+    expect(days[3]).toMatchObject({
+      timing: 'future',
+      occurrences: [{ status: 'SCHEDULED' }],
+    });
+    expect({ scheduled, completed, compliance }).toEqual({
+      scheduled: 2,
+      completed: 1,
+      compliance: 0.5,
+    });
+    expect({
+      week: response.body.data.week,
+      days,
+      scheduled,
+      completed,
+      compliance,
+    }).toEqual({
+      week: week.toString(),
+      days: Array.from({ length: 7 }, (_, index) => ({
+        date: week.add({ days: index }).toString(),
+        id: index === 1 ? saved.id : null,
+        status: index === 1 ? 'ACTIVE' : 'SCHEDULED',
+        timing: index < 2 ? 'elapsed' : index === 2 ? 'today' : 'future',
+        occurrences: [
+          {
+            id: index === 1 ? item.id : null,
+            questId: item.questId,
+            title: index === 1 ? 'Original snapshot' : 'Historical rule',
+            target: 1,
+            status:
+              index === 0 ? 'MISSED' : index === 1 ? 'COMPLETED' : 'SCHEDULED',
+          },
+        ],
+      })),
+      scheduled: 2,
+      completed: 1,
+      compliance: 0.5,
+    });
+    expect(
+      await prisma.dayPlan.count({ where: { userId: alice.userId } }),
+    ).toBe(1);
+    const empty = await alice
+      .get(`/habits?week=${today().add({ days: 7 })}`)
+      .expect(200);
+    expect(empty.body.data.compliance).toBeNull();
+    expect(empty.body.data.habits[0].completionRate).toBeNull();
+    expect(
+      (await bob.get(`/habits?week=${week}`).expect(200)).body.data.days[1]
+        .occurrences[0].id,
+    ).not.toBe(item.id);
+  });
+});
+
+describe('progress-routes', () => {
+  it('bounds dates and pages, keeps tied sequence pages stable, and counts only snapshot pillar XP', async () => {
+    const alice = await account();
+    const bob = await account();
+    const empty = await bob.get('/progress').expect(200);
+    expect(empty.body.data).toMatchObject({
+      aggregates: [],
+      ledger: [],
+      nextCursor: null,
+      seals: [],
+      pillarTotals: [],
+    });
+    expect(empty.body.data.heatmap).toHaveLength(365);
+    for (const query of [
+      'limit=101',
+      'limit=2&limit=3',
+      'from=2020-01-01',
+      'from=2020-01-01&to=2022-01-01',
+      'cursor=abc',
+    ]) {
+      await alice.get(`/progress?${query}`).expect(400);
+    }
+    const timezone = 'America/New_York';
+    const localToday = Temporal.Now.plainDateISO(timezone);
+    const heatmapStart = localToday.subtract({ days: 364 });
+    // Pick a March DST Sunday inside the 365-date window.
+    const month = Temporal.PlainDate.from({
+      year: localToday.year,
+      month: 3,
+      day: 8,
+    });
+    let spring = month.add({ days: (7 - month.dayOfWeek) % 7 });
+    if (Temporal.PlainDate.compare(spring, localToday) > 0) {
+      const prior = month.subtract({ years: 1 });
+      spring = prior.add({ days: (7 - prior.dayOfWeek) % 7 });
+    }
+    const localDate = dateColumn(spring);
+    const bounds = dayBounds(spring, timezone);
+    expect((bounds.deadlineUtc - bounds.startsAtUtc) / 3_600_000).toBe(23);
+    await prisma.user.update({
+      where: { id: alice.userId },
+      data: { timezone },
+    });
+    const saved = await prisma.dayPlan.create({
+      data: {
+        userId: alice.userId,
+        localDate,
+        timezoneSnapshot: timezone,
+        status: 'ACTIVE',
+        ...bounds,
+      },
+    });
+    const target = await occurrence(saved);
+    await prisma.questOccurrence.update({
+      where: { id: target.id },
+      data: { status: 'COMPLETED', completedAt: bounds.startsAtUtc },
+    });
+    const event = {
+      userId: alice.userId,
+      dayId: saved.id,
+      occurrenceId: target.id,
+      xpDelta: 10,
+      healthDelta: 0,
+      ruleVersion: 1,
+      kind: 'COMPLETION',
+      recordedAt: bounds.startsAtUtc,
+    };
+    await prisma.progressEvent.createMany({
+      data: [
+        { ...event, sequence: 1, awardKey: 'test:completion' },
+        {
+          ...event,
+          sequence: 2,
+          awardKey: 'test:seal',
+          xpDelta: 25,
+          kind: 'SEAL',
+          sealCode: 'iron-will',
+        },
+      ],
+    });
+    await prisma.userAchievement.create({
+      data: {
+        userId: alice.userId,
+        achievementCode: 'iron-will',
+        ruleVersion: 1,
+        bonusXp: 25,
+        qualifyingOccurrenceId: target.id,
+      },
+    });
+    await prisma.playerState.update({
+      where: { userId: alice.userId },
+      data: { totalXp: 401, nextEventSequence: 3, stateVersion: 2 },
+    });
+    const through = `from=${spring}&to=${spring}&limit=1`;
+    await prisma.quest.update({
+      where: { id: target.questId },
+      data: { pillar: 'Physical', title: 'Changed catalog title' },
+    });
+    const page = await alice.get(`/progress?${through}`).expect(200);
+    noStore(page);
+    const output = progressResponseSchema.parse(page.body).data;
+    expect(output.aggregates).toEqual([
+      {
+        localDate: spring.toString(),
+        completions: 1,
+        xpDelta: 35,
+        healthDelta: 0,
+      },
+    ]);
+    expect(output.heatmap).toHaveLength(365);
+    expect(output.heatmap[0].localDate).toBe(heatmapStart.toString());
+    expect(output.heatmap.at(-1).localDate).toBe(localToday.toString());
+    if (Temporal.PlainDate.compare(spring, heatmapStart) >= 0) {
+      expect(output.heatmap).toContainEqual({
+        localDate: spring.toString(),
+        status: 'ACTIVE',
+        completions: 1,
+      });
+    }
+    expect(output.rank).toMatchObject({
+      title: 'Practitioner',
+      ruleVersion: 1,
+    });
+    expect(output.pillarTotals).toEqual([{ pillar: 'Cognitive', xp: 10 }]);
+    expect(output.seals).toEqual([
+      expect.objectContaining({ achievementCode: 'iron-will', bonusXp: 25 }),
+    ]);
+    expect(output.ledger[0]).toMatchObject({ sequence: 2, title: 'Read' });
+    expect(output.nextCursor).toEqual(expect.any(String));
+    await bob.get(`/progress?cursor=${output.nextCursor}`).expect(400);
+    await prisma.progressEvent.create({
+      data: {
+        ...event,
+        sequence: 3,
+        awardKey: 'test:later',
+        occurrenceId: null,
+        xpDelta: 0,
+        kind: 'DAY_CLOSE',
+      },
+    });
+    await prisma.playerState.update({
+      where: { userId: alice.userId },
+      data: { nextEventSequence: 4 },
+    });
+    const next = await alice
+      .get(`/progress?limit=1&cursor=${output.nextCursor}`)
+      .expect(200);
+    expect(next.body.data.ledger.map(({ sequence }) => sequence)).toEqual([1]);
+    expect(next.body.data.ledger[0]).toMatchObject({
+      kind: 'COMPLETION',
+      title: 'Read',
+    });
+    expect(next.body.data.nextCursor).toBeNull();
+    expect((await bob.get('/progress').expect(200)).body.data.ledger).toEqual(
+      [],
+    );
+  });
+});
+
+describe('profile-settings-routes', () => {
+  async function pillarHistory(actor, rewards) {
+    const saved = await plan(actor, { status: 'ACTIVE' });
+    const items = [];
+    for (const [index, { pillar, xp }] of rewards.entries()) {
+      const item = await occurrence(saved, { priority: false, rewardXp: 999 });
+      await prisma.questOccurrence.update({
+        where: { id: item.id },
+        data: { pillar, status: 'COMPLETED', completedAt: saved.startsAtUtc },
+      });
+      await prisma.progressEvent.create({
+        data: {
+          userId: actor.userId,
+          sequence: index + 1,
+          awardKey: `test:pillar:${index}`,
+          kind: 'COMPLETION',
+          dayId: saved.id,
+          occurrenceId: item.id,
+          xpDelta: xp,
+          healthDelta: 0,
+          ruleVersion: 1,
+        },
+      });
+      items.push(item);
+    }
+    await prisma.playerState.update({
+      where: { userId: actor.userId },
+      data: {
+        totalXp: rewards.reduce((total, { xp }) => total + xp, 0),
+        nextEventSequence: rewards.length + 1,
+        stateVersion: rewards.length,
+      },
+    });
+    return items;
+  }
+
+  it('profile pillar totals are owner-scoped', async () => {
+    const alice = await account();
+    const bob = await account();
+    await pillarHistory(alice, [
+      { pillar: 'Cognitive', xp: 37 },
+      { pillar: 'Craft', xp: 11 },
+    ]);
+    const read = async (actor) => {
+      const response = await actor.get('/profile').expect(200);
+      noStore(response);
+      return profileResponseSchema.parse(response.body).data;
+    };
+    expect((await read(alice)).pillarTotals).toEqual([
+      { pillar: 'Cognitive', xp: 37 },
+      { pillar: 'Craft', xp: 11 },
+    ]);
+    expect((await read(bob)).pillarTotals).toEqual([]);
+    await pillarHistory(bob, [{ pillar: 'Physical', xp: 7 }]);
+    const output = await read(bob);
+    expect(output.user.id).toBe(bob.userId);
+    expect(output.pillarTotals).toEqual([{ pillar: 'Physical', xp: 7 }]);
+    expect(output.pillarTotals).not.toContainEqual({
+      pillar: 'Cognitive',
+      xp: 37,
+    });
+    expect(output.pillarTotals).not.toContainEqual({ pillar: 'Craft', xp: 11 });
+    expect(JSON.stringify(output)).not.toContain(alice.userId);
+    await bob.get(`/profile?userId=${alice.userId}`).expect(400);
+  });
+
+  it('profile pillar totals match progress at the same stateVersion', async () => {
+    const actor = await account();
+    const compare = async () => {
+      const profile = profileResponseSchema.parse(
+        (await actor.get('/profile').expect(200)).body,
+      ).data;
+      const progress = progressResponseSchema.parse(
+        (await actor.get('/progress?limit=1').expect(200)).body,
+      ).data;
+      expect(profile.user.id).toBe(actor.userId);
+      expect(profile.stateVersion).toBe(progress.stateVersion);
+      expect(profile.pillarTotals).toEqual(progress.pillarTotals);
+      return profile;
+    };
+    expect((await compare()).pillarTotals).toEqual([]);
+    const items = await pillarHistory(actor, [
+      { pillar: 'Cognitive', xp: 10 },
+      { pillar: 'Cognitive', xp: 20 },
+      { pillar: 'Craft', xp: 7 },
+      { pillar: 'Physical', xp: 3 },
+    ]);
+    await prisma.quest.update({
+      where: { id: items[0].questId },
+      data: { pillar: 'Physical' },
+    });
+    const afterCatalogEdit = await compare();
+    expect(afterCatalogEdit.stateVersion).toBe(4);
+    expect(afterCatalogEdit.pillarTotals).toEqual([
+      { pillar: 'Cognitive', xp: 30 },
+      { pillar: 'Craft', xp: 7 },
+      { pillar: 'Physical', xp: 3 },
+    ]);
+    await prisma.progressEvent.create({
+      data: {
+        userId: actor.userId,
+        sequence: 5,
+        awardKey: 'test:pillar:seal',
+        kind: 'SEAL',
+        occurrenceId: items[0].id,
+        sealCode: 'iron-will',
+        xpDelta: 25,
+        healthDelta: 0,
+        ruleVersion: 1,
+      },
+    });
+    await prisma.playerState.update({
+      where: { userId: actor.userId },
+      data: { totalXp: 65, nextEventSequence: 6, stateVersion: 5 },
+    });
+    const profile = await compare();
+    expect(profile.stateVersion).toBe(5);
+    expect(profile.totalXp).toBe(65);
+    expect(profile.pillarTotals).toEqual([
+      { pillar: 'Cognitive', xp: 30 },
+      { pillar: 'Craft', xp: 7 },
+      { pillar: 'Physical', xp: 3 },
+    ]);
+  });
+
+  it('returns safe committed fields and preserves historical dates when settings change', async () => {
+    const alice = await account();
+    const bob = await account();
+    await alice.get(`/profile?userId=${bob.userId}`).expect(400);
+    const synced = await alice.send('post', '/calendar/sync').expect(200);
+    const dayId = synced.body.data.plan.id;
+    const baseline = await prisma.dayPlan.findUnique({ where: { id: dayId } });
+    await alice
+      .send('patch', '/settings', { timezone: 'Mars/Olympus' })
+      .expect(400);
+    await alice
+      .send('patch', '/settings', {
+        userId: bob.userId,
+        displayName: 'Foreign',
+      })
+      .expect(400);
+    const updated = await alice
+      .send('patch', '/settings', {
+        timezone: 'Asia/Kolkata',
+        displayName: ' Alice ',
+        goals: ['Read every day'],
+      })
+      .expect(200);
+    noStore(updated);
+    expect(updated.body.data).toMatchObject({
+      user: {
+        id: alice.userId,
+        displayName: 'Alice',
+        timezone: 'UTC',
+        goals: ['Read every day'],
+      },
+      pendingTimezone: {
+        timezone: 'Asia/Kolkata',
+        effectiveDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      },
+    });
+    expect(
+      new Date(updated.body.data.pendingTimezone.effectiveAt).getTime(),
+    ).toBeGreaterThanOrEqual(baseline.deadlineUtc.getTime());
+    await alice
+      .send('patch', '/settings', {
+        timezone: 'America/New_York',
+        displayName: 'Should roll back',
+      })
+      .expect(409);
+    const profile = await alice.get('/profile').expect(200);
+    noStore(profile);
+    expect(profileResponseSchema.parse(profile.body).data).toMatchObject({
+      user: {
+        id: alice.userId,
+        displayName: 'Alice',
+        goals: ['Read every day'],
+      },
+      totalXp: 0,
+      health: 70,
+      level: 1,
+      stateVersion: 0,
+    });
+    expect(Object.keys(profile.body.data.user).sort()).toEqual([
+      'displayName',
+      'email',
+      'goals',
+      'id',
+      'timezone',
+    ]);
+    expect(await prisma.dayPlan.findUnique({ where: { id: dayId } })).toEqual(
+      baseline,
+    );
+    expect(
+      (await bob.get('/profile').expect(200)).body.data.user,
+    ).toMatchObject({ id: bob.userId, displayName: 'Test student', goals: [] });
+  });
+});
+
+describe('settings-validation-field-errors', () => {
+  it('returns one, multiple, nested and form-level paths without saving rejected changes', async () => {
+    const actor = await account();
+    const where = { id: actor.userId };
+    const before = await prisma.user.findUniqueOrThrow({ where });
+    const cases = [
+      [
+        { timezone: 'Mars/Olympus' },
+        [{ path: ['timezone'], code: 'INVALID_VALUE' }],
+      ],
+      [
+        { displayName: ' ', timezone: 'Mars/Olympus', goals: ['Uncommitted'] },
+        [
+          { path: ['displayName'], code: 'TOO_SMALL' },
+          { path: ['timezone'], code: 'INVALID_VALUE' },
+        ],
+      ],
+      [
+        { goals: [42], displayName: 'Uncommitted' },
+        [{ path: ['goals', 0], code: 'INVALID_TYPE' }],
+      ],
+      [{}, [{ path: [], code: 'INVALID_VALUE' }]],
+    ];
+    for (const [body, details] of cases) {
+      const result = await actor.send('patch', '/settings', body).expect(400);
+      noStore(result);
+      expect(
+        settingsValidationErrorResponseSchema.parse(result.body).error,
+      ).toEqual({
+        code: 'INVALID_INPUT',
+        message: 'Invalid request input.',
+        details,
+      });
+    }
+    expect(await prisma.user.findUniqueOrThrow({ where })).toEqual(before);
+    expect(
+      await prisma.calendarTimezoneTransition.count({
+        where: { userId: actor.userId },
+      }),
+    ).toBe(0);
+  });
+
+  it('rejects an owner override without reflecting it or changing either account', async () => {
+    const owner = await account();
+    const other = await account();
+    const query = {
+      where: { id: { in: [owner.userId, other.userId] } },
+      orderBy: { id: 'asc' },
+    };
+    const before = await prisma.user.findMany(query);
+    expect(before).toHaveLength(2);
+    const response = await owner
+      .send('patch', '/settings', {
+        displayName: 'Uncommitted',
+        userId: other.userId,
+      })
+      .expect(400);
+    const { error } = settingsValidationErrorResponseSchema.parse(
+      response.body,
+    );
+    expect(error.details).toEqual([{ path: [], code: 'UNKNOWN_FIELD' }]);
+    expect(JSON.stringify(response.body)).not.toContain(other.userId);
+    expect(JSON.stringify(response.body)).not.toContain('userId');
+    expect(await prisma.user.findMany(query)).toEqual(before);
+  });
+
+  it('keeps authorization, malformed JSON, other validation errors, and successful saves compatible', async () => {
+    const actor = await account();
+    const invalid = { timezone: 'Mars/Olympus' };
+    const withoutSession = await api
+      .patch('/api/v1/settings')
+      .set('Origin', origin)
+      .send(invalid)
+      .expect(401);
+    const withoutOrigin = await api
+      .patch('/api/v1/settings')
+      .set('Cookie', actor.cookie)
+      .send(invalid)
+      .expect(403);
+    const withoutCsrf = await api
+      .patch('/api/v1/settings')
+      .set('Origin', origin)
+      .set('Cookie', actor.cookie)
+      .send(invalid)
+      .expect(403);
+    const malformed = await actor
+      .send('patch', '/settings')
+      .set('Content-Type', 'application/json')
+      .send('{')
+      .expect(400);
+    const unrelated = await actor.get('/quests?limit=0').expect(400);
+    for (const [response, code, message] of [
+      [withoutSession, 'SESSION_INVALID', 'Invalid session.'],
+      [withoutOrigin, 'ORIGIN_NOT_ALLOWED', 'Origin is not allowed.'],
+      [withoutCsrf, 'CSRF_INVALID', 'Invalid CSRF token.'],
+      [malformed, 'INVALID_BODY', 'Invalid JSON body.'],
+      [unrelated, 'INVALID_INPUT', 'Invalid request input.'],
+    ]) {
+      expect(response.body).toEqual({
+        error: { code, message },
+        requestId: response.headers['x-request-id'],
+      });
+    }
+    const saved = await actor
+      .send('patch', '/settings', { displayName: 'Saved' })
+      .expect(200);
+    noStore(saved);
+    expect(settingsSaveResponseSchema.parse(saved.body).data).toMatchObject({
+      user: { id: actor.userId, displayName: 'Saved' },
+      pendingTimezone: null,
+    });
+  });
+});
+
+describe('account-deletion-postgres', () => {
+  it('requires the exact password and protected session, revokes cookies and leaves the second account and seal definitions intact', async () => {
+    const alice = await account();
+    const bob = await account();
+    const saved = await plan(alice);
+    await occurrence(saved);
+    const definitionQuery = {
+      where: {
+        code: { in: ['hundred-gates', 'iron-will', 'seven-day-warrior'] },
+        ruleVersion: 1,
+      },
+      orderBy: { code: 'asc' },
+    };
+    const sealDefinitions = await prisma.achievement.findMany(definitionQuery);
+    expect(sealDefinitions.map(({ code }) => code)).toEqual([
+      'hundred-gates',
+      'iron-will',
+      'seven-day-warrior',
+    ]);
+    await api
+      .delete('/api/v1/account')
+      .set('Cookie', alice.cookie)
+      .send({ password })
+      .expect(403);
+    await api
+      .delete('/api/v1/account')
+      .set('Origin', origin)
+      .set('Cookie', alice.cookie)
+      .send({ password })
+      .expect(403);
+    await alice
+      .send('delete', '/account', { password, userId: bob.userId })
+      .expect(400);
+    await alice
+      .send('delete', '/account', { password: password.trim() })
+      .expect(401);
+    const response = await alice
+      .send('delete', '/account', { password })
+      .expect(200);
+    noStore(response);
+    expect(response.body.data).toEqual({ deleted: true });
+    expect(response.headers['set-cookie'][0]).toMatch(
+      /__Host-kaizen_session=;.*Path=\/.*HttpOnly.*Secure.*SameSite=Lax/,
+    );
+    await alice.get('/profile').expect(401);
+    await bob.get('/profile').expect(200);
+    expect(
+      await prisma.dayPlan.count({ where: { userId: alice.userId } }),
+    ).toBe(0);
+    expect(
+      await prisma.session.count({ where: { userId: alice.userId } }),
+    ).toBe(0);
+    expect(await prisma.achievement.findMany(definitionQuery)).toEqual(
+      sealDefinitions,
+    );
+  });
+
+  it('rolls back sessions and owned records if deletion fails after revoking sessions', async () => {
+    const actor = await account();
+    await prisma.user.update({
+      where: { id: actor.userId },
+      data: { displayName: 'Deletion rollback test' },
+    });
+    const saved = await plan(actor);
+    await occurrence(saved);
+    const where = { userId: actor.userId };
+    const sessions = await prisma.session.count({ where });
+    await prisma.$executeRaw`
+      CREATE FUNCTION reject_test_account_delete() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN
+        IF OLD."displayName" = 'Deletion rollback test' THEN
+          IF EXISTS (SELECT 1 FROM "Session" WHERE "userId" = OLD.id) THEN
+            RAISE EXCEPTION 'test deletion reached User before revoking sessions';
+          END IF;
+          RAISE EXCEPTION 'test failure after revoking sessions';
+        END IF;
+        RETURN OLD;
+      END;
+      $$
+    `;
+    try {
+      await prisma.$executeRaw`
+        CREATE TRIGGER reject_test_account_delete BEFORE DELETE ON "User"
+        FOR EACH ROW EXECUTE FUNCTION reject_test_account_delete()
+      `;
+      await actor.send('delete', '/account', { password }).expect(500);
+      expect(await prisma.session.count({ where })).toBe(sessions);
+      expect(await prisma.dayPlan.count({ where })).toBe(1);
+      await actor.get('/profile').expect(200);
+    } finally {
+      await prisma.$executeRaw`DROP TRIGGER IF EXISTS reject_test_account_delete ON "User"`;
+      await prisma.$executeRaw`DROP FUNCTION reject_test_account_delete()`;
+    }
+  });
+
+  it('serializes simultaneous session issuance behind deletion on the owner lock', async () => {
+    const actor = await account();
+    const other = new PrismaClient();
+    const lock = await holdPlayer(actor);
+    const pattern = '%PlayerState%FOR UPDATE%';
+    const deleting = actor
+      .send('delete', '/account', { password })
+      .then((value) => value);
+    let results = Promise.allSettled([deleting]);
+    try {
+      await waitForBlocked(prisma, lock.pid, pattern);
+      results = Promise.allSettled([
+        deleting,
+        createSession(other, actor.userId),
+      ]);
+      await waitForBlocked(prisma, lock.pid, pattern, 2);
+    } finally {
+      await lock.release();
+      await results;
+      await other.$disconnect();
+    }
+    const [deletion, issuance] = await results;
+    expect(deletion).toMatchObject({
+      status: 'fulfilled',
+      value: { status: 200 },
+    });
+    expect(issuance).toEqual({ status: 'fulfilled', value: null });
+    expect(
+      await prisma.session.count({ where: { userId: actor.userId } }),
+    ).toBe(0);
+  });
+
+  it('limits repeated password confirmation by the authenticated account and IP', async () => {
+    const limited = request(
+      createApp({ ...options, rateLimits: { loginAccount: 1, loginIp: 3 } }),
+    );
+    const actor = await account(limited);
+    await actor
+      .send('delete', '/account', { password: 'Incorrect password' })
+      .expect(401);
+    const blocked = await actor
+      .send('delete', '/account', { password })
+      .expect(429);
+    expect(blocked.body.error.code).toBe('RATE_LIMITED');
+    await actor.get('/profile').expect(200);
+  });
+});

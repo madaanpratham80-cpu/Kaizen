@@ -1,0 +1,17 @@
+<svg fill="none" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 20H160M0 40H160M0 60H160M0 80H160M0 100H160M0 120H160M0 140H160" stroke="#211f1e" stroke-width="0.5"></path>
+<path d="M20 0V160M40 0V160M60 0V160M80 0V160M100 0V160M120 0V160M140 0V160" stroke="#211f1e" stroke-width="0.5"></path>
+<polygon fill="#ff5541" points="80,24 50,48 110,48"></polygon>
+<rect fill="#ff5541" height="6" width="12" x="74" y="18"></rect>
+<rect fill="#e6e1df" height="30" width="48" x="56" y="52"></rect>
+<rect fill="#690000" height="8" width="8" x="66" y="60"></rect>
+<rect fill="#690000" height="8" width="8" x="86" y="60"></rect>
+<rect fill="#363433" height="4" width="12" x="74" y="82"></rect>
+<rect fill="#e6e1df" height="34" width="56" x="52" y="86"></rect>
+<rect fill="#ff5541" height="10" width="56" x="52" y="98"></rect>
+<rect fill="#141312" height="6" width="8" x="76" y="100"></rect>
+<rect fill="#363433" height="24" width="12" x="62" y="120"></rect>
+<rect fill="#363433" height="24" width="12" x="86" y="120"></rect>
+<rect fill="#ff5541" height="6" width="16" x="58" y="138"></rect>
+<rect fill="#ff5541" height="6" width="16" x="86" y="138"></rect>
+</svg>

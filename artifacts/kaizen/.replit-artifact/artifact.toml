@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Kaizen"
+description = "Kaizen is a gamified discipline tracker. Plan daily quests and habits, track progress and achievements, and play as a guest or with a saved account."
+version = "1.0.0"
+id = "artifacts/kaizen"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20545
+
+[services.development]
+run = "pnpm --filter @workspace/kaizen run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/kaizen", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/kaizen/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20545"
+BASE_PATH = "/"
