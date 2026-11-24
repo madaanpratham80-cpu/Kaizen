@@ -309,7 +309,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
             DISCIPLE ONBOARDING
           </p>
           <span className="text-xs uppercase tracking-tight text-[#cac6bd] font-bold mt-1 md:mt-0">
-            CHOOSE ACCESS PATHWAY: COMMISSION PROTOCOL, LOG IN, OR LAUNCH INSTANT GUEST MODE.
+            CHOOSE ACCESS PATHWAY: COMMISSION PROTOCOL, ACCESS TERMINAL WITH EXISTING ACCOUNT, INITIALISE ACCOUNT, OR LAUNCH INSTANT GUEST MODE.
           </span>
         </div>
       </section>
@@ -338,7 +338,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
               : 'bg-[#0f0e0d] text-[#cac6bd] hover:bg-[#1d1b1a]'
           }`}
         >
-          <span>.02 LOG IN OPTION</span>
+          <span>.02 ACCESS TERMINAL WITH EXISTING ACCOUNT</span>
           <span className="text-[10px] opacity-75">[SIGN IN]</span>
         </button>
 
@@ -351,7 +351,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
               : 'bg-[#0f0e0d] text-[#cac6bd] hover:bg-[#1d1b1a]'
           }`}
         >
-          <span>.03 SIGN UP OPTION</span>
+          <span>.03 INITIALISE ACCOUNT</span>
           <span className="text-[10px] opacity-75">[REGISTER]</span>
         </button>
 
@@ -370,7 +370,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
         <div className="p-6 lg:p-8 max-w-xl space-y-6">
           <div className="border-b border-[#5c403b] pb-3">
             <span className="text-xs text-[#ff5541] uppercase tracking-wider font-bold block mb-1">
-              {'OPTION 02 // LOG IN'}
+              {'OPTION 02 // ACCESS TERMINAL WITH EXISTING ACCOUNT'}
             </span>
             <p className="text-2xl font-black text-white uppercase font-['Space_Grotesk',sans-serif] m-0">
               AUTHENTICATE EXISTING OPERATOR
@@ -415,7 +415,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
               disabled={authPending}
               className="w-full py-3 bg-[#ff5541] text-[#5c0000] font-bold text-xs uppercase hover:bg-white hover:text-black transition-none cursor-pointer"
             >
-              {authPending ? 'Authenticating…' : 'Log In & Open Terminal →'}
+              {authPending ? 'Authenticating…' : 'Access Terminal With Existing Account →'}
             </button>
           </form>
         </div>
@@ -426,7 +426,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
         <div className="p-6 lg:p-8 max-w-xl space-y-6">
           <div className="border-b border-[#5c403b] pb-3">
             <span className="text-xs text-[#ff5541] uppercase tracking-wider font-bold block mb-1">
-              {'OPTION 03 // SIGN UP'}
+              {'OPTION 03 // INITIALISE ACCOUNT'}
             </span>
             <p className="text-2xl font-black text-white uppercase font-['Space_Grotesk',sans-serif] m-0">
               REGISTER NEW OPERATOR CALLSIGN
@@ -440,7 +440,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
               href="/register"
               className="inline-block px-6 py-3 bg-[#ff5541] text-[#5c0000] font-bold text-xs uppercase hover:bg-white hover:text-black transition-none"
             >
-              Open Full Registration Terminal →
+              Initialise Account Terminal →
             </Link>
           </div>
         </div>

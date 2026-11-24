@@ -45,7 +45,7 @@ export default function HomePage() {
             href="/login"
             className="text-[#ff5541] hover:text-white uppercase font-bold transition-none"
           >
-            [ LOG IN ]
+            [ ACCESS TERMINAL ]
           </Link>
         </div>
       </header>
@@ -94,7 +94,7 @@ export default function HomePage() {
           >
             <span className="text-xs opacity-70 mb-4">{'// NEW DISCIPLE'}</span>
             <span className="text-lg flex items-center justify-between">
-              SIGN UP
+              INITIALISE ACCOUNT
               <span className="group-hover:translate-x-1 transition-transform">→</span>
             </span>
           </Link>
@@ -106,7 +106,7 @@ export default function HomePage() {
           >
             <span className="text-xs text-[#ac8883] mb-4">{'// RETURNING OPERATOR'}</span>
             <span className="text-lg flex items-center justify-between">
-              LOG IN
+              ACCESS TERMINAL WITH EXISTING ACCOUNT
               <span className="group-hover:translate-x-1 transition-transform">→</span>
             </span>
           </Link>
