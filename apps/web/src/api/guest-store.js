@@ -14,6 +14,10 @@ function getStorage() {
 const STORAGE_KEY = 'kaizen_guest_state_v1';
 const XP_PER_LEVEL = 100;
 
+/** Credentials the "auto-fill demo" shortcuts use; they open the guest, not an account. */
+export const DEMO_EMAIL = 'disciple42@kaizen.local';
+export const DEMO_PASSWORD = 'KaizenDisciple2026!';
+
 function initialGuestState() {
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);

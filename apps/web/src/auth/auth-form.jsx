@@ -8,10 +8,8 @@ import {
   loginRequestSchema,
   registerRequestSchema,
 } from '@kaizen/contracts';
+import { DEMO_EMAIL, DEMO_PASSWORD } from '../api/guest-store.js';
 import { auth, errorMessage } from './client.js';
-
-const DEMO_EMAIL = 'disciple42@kaizen.local';
-const DEMO_PASSWORD = 'KaizenDisciple2026!';
 
 const fieldLabel =
   'flex flex-col gap-1 font-mono text-xs text-[#cac6bd] uppercase font-bold';
