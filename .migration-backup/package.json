@@ -1,0 +1,14 @@
+{
+  "name": "kaizen",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "test:db": "bash apps/api/tests/db/auth-migration-empty-db.sh && pnpm --filter @kaizen/contracts build && pnpm --filter @kaizen/api exec vitest run --config vitest.db.config.js",
+    "build": "pnpm -r build"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.0"
+  }
+}

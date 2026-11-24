@@ -1,0 +1,23 @@
+.DS_Store
+*/.DS_Store
+*/**/.DS_Store
+Thumbs.db
+*.log
+node_modules/
+.next/
+dist/
+coverage/
+.pnpm-store/
+.env
+.env.local
+/reviews/
+
+
+/graphify-out/
+.playwright-mcp/
+
+# Local Stitch design exports
+/UI, v4/kaizen 404/
+/UI, v4/kaizen login/
+/stitch_kaizen_gamified_growth_platform.zip
+/stitch_kaizen_gamified_growth_platform (1).zip
