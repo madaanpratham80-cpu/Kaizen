@@ -12,6 +12,7 @@ function getStorage() {
 }
 
 const STORAGE_KEY = 'kaizen_guest_state_v1';
+const XP_PER_LEVEL = 100;
 
 function initialGuestState() {
   const now = new Date();
@@ -228,8 +229,6 @@ function initialGuestState() {
     currentStreak: 42,
     bestStreak: 42,
     stateVersion: 1,
-    level: 12,
-    xpIntoLevel: 420,
     occurrences,
     quests,
     goals: [
@@ -571,8 +570,8 @@ export function getGuestProfile() {
     currentStreak: state.currentStreak,
     bestStreak: state.bestStreak,
     stateVersion: state.stateVersion,
-    level: state.level,
-    xpIntoLevel: state.xpIntoLevel,
+    level: 1 + Math.floor(state.totalXp / XP_PER_LEVEL),
+    xpIntoLevel: state.totalXp % XP_PER_LEVEL,
     rank: progress.rank,
     seals: progress.seals,
     pillarTotals: progress.pillarTotals,
