@@ -109,6 +109,20 @@ function recordSession(request, identity, signal) {
 }
 
 /**
+ * Guest mode stands in only when there is no Kaizen API to talk to (network
+ * failure, or a host that does not serve it). Errors the API itself returned,
+ * such as wrong credentials or a duplicate email, always reach the user.
+ * @param {unknown} error
+ */
+function apiUnavailable(error) {
+  if (!(error instanceof ApiError)) return true;
+  return (
+    error.code === undefined &&
+    (error.status === 404 || error.status === 405 || error.status >= 500)
+  );
+}
+
+/**
  * @param {'login' | 'register'} path
  * @param {LoginRequest | RegisterRequest} body
  */
@@ -120,7 +134,8 @@ async function startSession(path, body) {
   } catch (error) {
     if (
       typeof window !== 'undefined' &&
-      import.meta.env.MODE !== 'test'
+      import.meta.env.MODE !== 'test' &&
+      apiUnavailable(error)
     ) {
       enableGuestMode();
       const guestState = loadGuestState();
