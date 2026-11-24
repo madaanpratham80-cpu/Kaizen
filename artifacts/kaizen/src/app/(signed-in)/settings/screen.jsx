@@ -97,6 +97,7 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
   );
   const [messages, setMessages] = useState({});
   const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState('');
   const [gender, setGender] = useState('male');
   const [audioFeedback, setAudioFeedback] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -145,26 +146,39 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
   }
 
   function handleResetProgress() {
-    if (typeof window === 'undefined') return;
-    if (confirm('CONFIRM RESET: Reset current interval completions back to pending?')) {
+    if (typeof window === 'undefined' || !isGuestMode()) return;
+    if (
+      confirm(
+        'CONFIRM RESET: Reset current interval completions back to pending?',
+      )
+    ) {
       const guestState = loadGuestState();
-      const updated = {
+      saveGuestState({
         ...guestState,
         occurrences: guestState.occurrences.map((o) => ({
           ...o,
           status: 'PENDING',
           completedAt: null,
         })),
-      };
-      saveGuestState(updated);
+      });
+      setNotice('Today’s completions were reset to pending.');
     }
   }
 
   async function handlePurgeSession() {
     if (typeof window === 'undefined') return;
-    if (confirm('CONFIRM PURGE: Clear session state and return to gateway?')) {
-      await auth.logout('kaizen-guest-operator-csrf-token');
-      window.location.href = '/';
+    if (!confirm('CONFIRM PURGE: Clear session state and return to gateway?'))
+      return;
+    try {
+      if ((await auth.logout(session.csrfToken)) === 'done') {
+        window.location.href = import.meta.env.BASE_URL;
+      } else {
+        setMessages({
+          form: 'Your session changed. Reload the page before purging it.',
+        });
+      }
+    } catch {
+      setMessages({ form: 'Could not purge the session. Try again.' });
     }
   }
 
@@ -199,6 +213,17 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
     const parsed = settingsSchema.safeParse(changes);
     if (!parsed.success) {
       setMessages(validationMessages(parsed.error.issues));
+      return;
+    }
+
+    if (isGuestMode()) {
+      // Guests have no server account; their settings live in the browser.
+      saveGuestState({ ...loadGuestState(), ...parsed.data });
+      setSaved({
+        value: { user: { ...current, ...parsed.data }, pendingTimezone: null },
+        source: profileRef.current,
+      });
+      setDraft({});
       return;
     }
 
@@ -252,17 +277,6 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
         source: profileRef.current,
       });
       setDraft({});
-
-      // Also sync guest store if applicable
-      if (isGuestMode()) {
-        const guestState = loadGuestState();
-        saveGuestState({
-          ...guestState,
-          displayName: values.displayName,
-          timezone: values.timezone,
-          goals: values.goals,
-        });
-      }
     } catch (error) {
       if (signal.aborted) return;
       if (error instanceof ApiError && error.status === 401) {
@@ -721,13 +735,15 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
           </p>
 
           <div className="flex flex-wrap gap-4 pt-2 text-xs font-bold uppercase">
-            <button
-              type="button"
-              onClick={handleResetProgress}
-              className="px-4 py-2 bg-[#0f0e0d] text-[#ff5541] border border-[#ff5541] hover:bg-[#ff5541] hover:text-[#5c0000] transition-none cursor-pointer"
-            >
-              {"[ Reset Today's Completions ]"}
-            </button>
+            {isGuestMode() && (
+              <button
+                type="button"
+                onClick={handleResetProgress}
+                className="px-4 py-2 bg-[#0f0e0d] text-[#ff5541] border border-[#ff5541] hover:bg-[#ff5541] hover:text-[#5c0000] transition-none cursor-pointer"
+              >
+                {"[ Reset Today's Completions ]"}
+              </button>
+            )}
             <button
               type="button"
               onClick={handleExportDossier}
@@ -743,6 +759,11 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
               [ Purge Session ]
             </button>
           </div>
+          {notice && (
+            <p role="status" className="text-xs font-bold text-[#c0ce71] uppercase">
+              {notice}
+            </p>
+          )}
         </section>
       </form>
     </div>
