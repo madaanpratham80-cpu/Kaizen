@@ -9,6 +9,9 @@ import {
 } from '@kaizen/contracts';
 import { auth, errorMessage } from './client.js';
 
+const DEMO_EMAIL = 'disciple42@kaizen.local';
+const DEMO_PASSWORD = 'KaizenDisciple2026!';
+
 const fieldLabel =
   'flex flex-col gap-1 font-mono text-xs text-[#cac6bd] uppercase font-bold';
 const fieldInput =
@@ -81,6 +84,11 @@ export function AuthForm({ mode }) {
     event.preventDefault();
     const form = event.currentTarget;
     const input = Object.fromEntries(new FormData(form));
+    if (input.email === DEMO_EMAIL && input.password === DEMO_PASSWORD) {
+      // The auto-fill shortcut opens the evaluation guest, not a real account.
+      handleGuestAccess();
+      return;
+    }
     void mutate(async () => {
       if (registering) {
         const localTimezone = new Intl.DateTimeFormat().resolvedOptions()
@@ -145,8 +153,8 @@ export function AuthForm({ mode }) {
       const passInput = form.querySelector('input[name="password"]');
       const nameInput = form.querySelector('input[name="displayName"]');
       const genderSelect = form.querySelector('select[name="gender"]');
-      if (emailInput) emailInput.value = 'disciple42@kaizen.local';
-      if (passInput) passInput.value = 'KaizenDisciple2026!';
+      if (emailInput) emailInput.value = DEMO_EMAIL;
+      if (passInput) passInput.value = DEMO_PASSWORD;
       if (nameInput) nameInput.value = 'DISCIPLE #042';
       if (genderSelect) genderSelect.value = 'male';
       setError('');

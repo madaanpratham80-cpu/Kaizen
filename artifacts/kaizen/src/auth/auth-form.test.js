@@ -212,4 +212,18 @@ describe('auth-web-form-component', () => {
       ),
     );
   });
+  it('opens the evaluation guest for the demo credentials without calling login', async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(failure('Invalid session.', 401));
+    vi.stubGlobal('fetch', fetch);
+    render(createElement(AuthForm, { mode: 'login' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: /auto-fill demo credentials/i }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Log in' }));
+    await screen.findByText('Opening Today…');
+    expect(router.replace).toHaveBeenCalledExactlyOnceWith('/today', { replace: true });
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual(['/api/v1/auth/session']);
+    window.localStorage.removeItem('kaizen_guest_mode');
+    document.cookie = 'kaizen_guest=; path=/; max-age=0';
+  });
 });
