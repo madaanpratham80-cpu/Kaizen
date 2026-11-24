@@ -575,7 +575,7 @@ export default function HomePage() {
                 </li>
                 <li>
                   <strong className="text-white">Bounded Routine Health:</strong>{' '}
-                  Health adjusts within controlled thresholds (70–100% Healthy; max -5% daily dip).
+                  Health adjusts within controlled thresholds: Healthy (70–100%), Tired (40–69%), and Fading (0–39%), with a maximum -5% daily dip.
                 </li>
                 <li>
                   <strong className="text-white">Scheduled Rest Days:</strong>{' '}
@@ -734,8 +734,10 @@ export default function HomePage() {
               </h3>
               <p className="text-xs sm:text-sm text-[#cac6bd] font-sans leading-relaxed m-0">
                 Yes. Click &ldquo;Try the demo&rdquo; to launch directly into an
-                in-browser workspace preloaded with realistic sample habits. No email,
-                password, or setup required.
+                in-browser workspace preloaded with realistic sample habits. Your demo
+                progress is saved in your browser&apos;s local storage so you can test daily
+                priority locking and completions immediately. You can create a cloud account
+                whenever you want to back up and sync across devices.
               </p>
             </div>
           </div>

@@ -309,16 +309,16 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
       {/* TOP HEADER DISPATCH */}
       <section className="w-full bg-[#0f0e0d] border-b-2 border-[#5c403b] p-6 lg:p-8">
         <div className="flex items-center gap-3 font-mono text-xs text-[#ac8883] uppercase tracking-wider">
-          <span className="text-[#ff5541] font-bold">{'// TERMINAL CONFIGURATION'}</span>
+          <span className="text-[#ff5541] font-bold">{'// SYSTEM PREFERENCES'}</span>
           <span>{'// DISPATCH .06'}</span>
-          <span>{'// ARCHIVAL SECURITY'}</span>
+          <span>{'// PROFILE & CONFIGURATION'}</span>
         </div>
         <div className="mt-3 flex flex-col md:flex-row md:items-baseline md:gap-6">
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase text-[#e6e1df] leading-none m-0 font-['Space_Grotesk',sans-serif]">
             .06 SETTINGS
           </h2>
           <span className="font-mono text-xs uppercase tracking-tight text-[#cac6bd] font-bold mt-1 md:mt-0">
-            OPERATOR REPUTATION, TEMPORAL CADENCE, AND PROTOCOL SAFEGUARDS.
+            PROFILE DETAILS, DAILY TIMEZONE, GOALS, AND SESSION CONTROLS.
           </span>
         </div>
       </section>
@@ -326,7 +326,7 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
       {/* COMMAND METRIC RIBBON */}
       <section className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-b-2 border-[#5c403b] bg-[#5c403b] gap-[1px]">
         <div className="bg-[#0f0e0d] p-6 flex flex-col justify-between">
-          <span className="text-[10px] text-[#ac8883] uppercase block mb-1">OPERATOR ID</span>
+          <span className="text-[10px] text-[#ac8883] uppercase block mb-1">Display Name</span>
           <div className="text-2xl font-black text-white truncate">{values.displayName}</div>
           <span className="text-[10px] text-[#c0ce71] uppercase font-bold mt-2 pt-2 border-t border-[#2b2a28]">
             RANK 12 {'//'} DISCIPLE
@@ -334,26 +334,28 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
         </div>
 
         <div className="bg-[#0f0e0d] p-6 flex flex-col justify-between">
-          <span className="text-[10px] text-[#ac8883] uppercase block mb-1">TEMPORAL CADENCE</span>
+          <span className="text-[10px] text-[#ac8883] uppercase block mb-1">Timezone</span>
           <div className="text-2xl font-black text-[#ff5541] truncate">{values.timezone}</div>
           <span className="text-[10px] text-[#ac8883] uppercase font-bold mt-2 pt-2 border-t border-[#2b2a28]">
-            SYNCHRONIZED (00:00:00Z)
+            MIDNIGHT ROLLOVER
           </span>
         </div>
 
         <div className="bg-[#0f0e0d] p-6 flex flex-col justify-between">
-          <span className="text-[10px] text-[#ac8883] uppercase block mb-1">DIRECTIVES ACTIVE</span>
+          <span className="text-[10px] text-[#ac8883] uppercase block mb-1">Active Goals</span>
           <div className="text-2xl font-black text-[#c0ce71]">{values.goals.length} OF {MAX_GOALS}</div>
           <span className="text-[10px] text-[#cac6bd] uppercase font-bold mt-2 pt-2 border-t border-[#2b2a28]">
-            DISCIPLINED GOALS
+            PERSONAL TARGETS
           </span>
         </div>
 
         <div className="bg-[#f5f0e6] text-[#141312] p-6 flex flex-col justify-between">
-          <span className="text-[10px] uppercase block mb-1 font-bold text-[#494740]">ACCESS LEVEL</span>
-          <div className="text-xl font-black text-[#141312]">GUEST OPERATOR</div>
+          <span className="text-[10px] uppercase block mb-1 font-bold text-[#494740]">Account Mode</span>
+          <div className="text-xl font-black text-[#141312]">
+            {isGuestMode() ? 'GUEST DEMO' : 'ACTIVE USER'}
+          </div>
           <span className="text-[10px] uppercase font-bold text-[#141312] mt-2 pt-2 border-t border-[#d2cab9]">
-            [ FULL EVALUATION SCOPE ]
+            {isGuestMode() ? '[ LOCAL STORAGE ONLY ]' : '[ CLOUD SYNCHRONIZED ]'}
           </span>
         </div>
       </section>
@@ -371,7 +373,7 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
           <section className="space-y-4">
             <div className="flex items-center gap-2 border-b border-[#5c403b] pb-2 text-xs font-bold text-[#ff5541] uppercase tracking-wider">
               <span>{'// 01'}</span>
-              <span>OPERATOR IDENTITY PROTOCOL</span>
+              <span>PROFILE INFORMATION</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -395,8 +397,8 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
                     {messages.displayName}
                   </p>
                 )}
-                <span className="block text-[10px] text-[#ac8883] uppercase mt-1">
-                  PUBLIC CALLSIGN LOGGED ACROSS DISCIPLINE LEDGERS.
+                <span className="block text-[11px] text-[#ac8883] mt-1 font-sans">
+                  Your public name shown on your profile and progress reports.
                 </span>
               </div>
 
@@ -410,15 +412,18 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
                     VERIFIED
                   </span>
                 </div>
-                <span className="block text-[10px] text-[#ac8883] uppercase mt-1">
-                  CANONICAL IMMUTABLE SESSION LEDGER ANCHOR.
+                <span className="block text-[11px] text-[#ac8883] mt-1 font-sans">
+                  Email address associated with your authentication session.
                 </span>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs text-[#cac6bd] uppercase mb-2 font-bold">
-                  Biometric Portrait Representation
+                <label className="block text-xs text-[#cac6bd] uppercase mb-1 font-bold">
+                  Avatar
                 </label>
+                <p className="text-[11px] text-[#ac8883] mb-2 font-sans">
+                  Choose your profile portrait. No biometric data is stored.
+                </p>
                 <div className="grid grid-cols-2 gap-4 max-w-md text-xs uppercase">
                   <button
                     type="button"
@@ -429,8 +434,8 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
                         : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd] hover:border-[#ac8883]'
                     }`}
                   >
-                    <div className="text-base mb-1 text-white">PORTRAIT 01</div>
-                    <div className="text-[10px] text-[#ac8883]">DISCIPLE // MALE PROFILE</div>
+                    <div className="text-base mb-1 text-white">Portrait 01</div>
+                    <div className="text-[10px] text-[#ac8883]">Style // Athlete</div>
                   </button>
                   <button
                     type="button"
@@ -441,8 +446,8 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
                         : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd] hover:border-[#ac8883]'
                     }`}
                   >
-                    <div className="text-base mb-1 text-white">PORTRAIT 02</div>
-                    <div className="text-[10px] text-[#ac8883]">DISCIPLE // FEMALE PROFILE</div>
+                    <div className="text-base mb-1 text-white">Portrait 02</div>
+                    <div className="text-[10px] text-[#ac8883]">Style // Scholar</div>
                   </button>
                 </div>
               </div>
@@ -453,7 +458,7 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
           <section className="space-y-4">
             <div className="flex items-center gap-2 border-b border-[#5c403b] pb-2 text-xs font-bold text-[#c0ce71] uppercase tracking-wider">
               <span>{'// 02'}</span>
-              <span>TEMPORAL COORDINATES & CADENCE</span>
+              <span>TIMEZONE & DAILY SCHEDULE</span>
             </div>
 
             <div className="max-w-2xl space-y-3">
@@ -490,7 +495,7 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
                 ))}
               </div>
 
-              <p id="settings-timezone-help" className="text-xs text-[#cac6bd] p-3 bg-[#1d1b1a] border border-[#5c403b] leading-relaxed">
+              <p id="settings-timezone-help" className="text-xs text-[#cac6bd] p-3 bg-[#1d1b1a] border border-[#5c403b] leading-relaxed font-sans">
                 {TZ_HELP}
               </p>
 
@@ -624,27 +629,37 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
           <section className="space-y-4">
             <div className="flex items-center gap-2 border-b border-[#5c403b] pb-2 text-xs font-bold text-[#ac8883] uppercase tracking-wider">
               <span>{'// 04'}</span>
-              <span>TELEMETRY & FEEDBACK PREFERENCES</span>
+              <span>PREFERENCES & FEEDBACK</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <label className="flex items-center justify-between p-4 bg-[#1d1b1a] border border-[#5c403b] cursor-pointer">
-                <span>AUDIO CONFIRMATIONS ON COMPLETION</span>
+              <label className="flex items-start justify-between p-4 bg-[#1d1b1a] border border-[#5c403b] cursor-pointer gap-4">
+                <div className="space-y-1">
+                  <span className="font-bold text-white uppercase block">Audio Confirmations</span>
+                  <span className="text-[11px] text-[#cac6bd] font-sans block leading-snug">
+                    Plays a sound confirmation chime when you complete a habit or earn a seal.
+                  </span>
+                </div>
                 <input
                   type="checkbox"
                   checked={audioFeedback}
                   onChange={(e) => setAudioFeedback(e.target.checked)}
-                  className="w-4 h-4 accent-[#ff5541]"
+                  className="w-4 h-4 accent-[#ff5541] mt-0.5"
                 />
               </label>
 
-              <label className="flex items-center justify-between p-4 bg-[#1d1b1a] border border-[#5c403b] cursor-pointer">
-                <span>PREFER REDUCED MOTION (ZERO ANIMATION)</span>
+              <label className="flex items-start justify-between p-4 bg-[#1d1b1a] border border-[#5c403b] cursor-pointer gap-4">
+                <div className="space-y-1">
+                  <span className="font-bold text-white uppercase block">Prefer Reduced Motion</span>
+                  <span className="text-[11px] text-[#cac6bd] font-sans block leading-snug">
+                    Disables UI animations, sliding transitions, and animated number rollups.
+                  </span>
+                </div>
                 <input
                   type="checkbox"
                   checked={reducedMotion}
                   onChange={(e) => setReducedMotion(e.target.checked)}
-                  className="w-4 h-4 accent-[#ff5541]"
+                  className="w-4 h-4 accent-[#ff5541] mt-0.5"
                 />
               </label>
             </div>
@@ -662,7 +677,7 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
                 <span>{'✓ ANTI-PUNITIVE STREAK RECOVERY:'}</span>
               </div>
               <p>
-                Kaizen strictly eliminates punitive streak wipeouts. A missed day is treated as an active recovery state rather than a demoralizing zero-reset. Health bands: Healthy (71-100%), Tired (31-70%), Fading (0-30%).
+                Kaizen strictly eliminates punitive streak wipeouts. A missed day is treated as an active recovery state rather than a demoralizing zero-reset. Health bands: Healthy (70–100%), Tired (40–69%), Fading (0–39%).
               </p>
             </div>
           </section>
@@ -688,40 +703,81 @@ function SettingsForm({ profile, session, scope, unavailable, expire }) {
           </p>
         )}
 
-        {/* SECTION 7: DANGER PROTOCOLS */}
-        <section className="mt-12 p-6 border-2 border-[#ff5541] bg-[#1d1b1a] space-y-4">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#ff5541] uppercase tracking-wider">
-            <span>{'⚠ DANGER PROTOCOLS // STATE OPERATORS'}</span>
+        {/* SECTION 6: DATA EXPORT (NEUTRAL / ACCENT) */}
+        <section className="mt-8 p-6 border-2 border-[#c0ce71] bg-[#171f11] space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#c0ce71] uppercase tracking-wider">
+              {'DATA BACKUP & EXPORT'}
+            </span>
+            <span className="text-[10px] text-[#c0ce71] font-mono">[JSON]</span>
           </div>
-          <p className="text-xs text-[#cac6bd] leading-relaxed">
-            Operations here modify active progression memory or export security snapshots.
+          <p className="text-xs text-[#cac6bd] leading-relaxed font-sans">
+            Download a portable JSON snapshot of your current settings, display name, timezone, and personal goals.
           </p>
-
-          <div className="flex flex-wrap gap-4 pt-2 text-xs font-bold uppercase">
-            {isGuestMode() && (
-              <button
-                type="button"
-                onClick={handleResetProgress}
-                className="px-4 py-2 bg-[#0f0e0d] text-[#ff5541] border border-[#ff5541] hover:bg-[#ff5541] hover:text-[#5c0000] transition-none cursor-pointer"
-              >
-                {"[ Reset Today's Completions ]"}
-              </button>
-            )}
+          <div className="pt-1">
             <button
               type="button"
               onClick={handleExportDossier}
-              className="px-4 py-2 bg-[#0f0e0d] text-[#c0ce71] border border-[#c0ce71] hover:bg-[#c0ce71] hover:text-[#2d3400] transition-none cursor-pointer"
+              className="px-5 py-2.5 bg-[#0f0e0d] text-[#c0ce71] border-2 border-[#c0ce71] hover:bg-[#c0ce71] hover:text-[#2d3400] text-xs font-bold uppercase transition-none cursor-pointer"
             >
-              [ Export Dossier JSON ]
-            </button>
-            <button
-              type="button"
-              onClick={handlePurgeSession}
-              className="px-4 py-2 bg-[#ff5541] text-[#5c0000] hover:bg-white hover:text-black transition-none cursor-pointer"
-            >
-              [ Purge Session ]
+              Export Settings JSON
             </button>
           </div>
+        </section>
+
+        {/* SECTION 7: DESTRUCTIVE ACTIONS (VISUALLY SEPARATED DANGER ZONE) */}
+        <section className="mt-6 p-6 border-2 border-[#ff5541] bg-[#1d1b1a] space-y-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#ff5541] uppercase tracking-wider">
+            <span>{'⚠ DANGER ZONE // ACCOUNT & SESSION ACTIONS'}</span>
+          </div>
+          <p className="text-xs text-[#cac6bd] leading-relaxed font-sans">
+            These actions clear active session tokens or reset daily test completions. Each operation requires explicit confirmation before execution.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            {isGuestMode() && (
+              <div className="p-4 bg-[#0f0e0d] border border-[#5c403b] space-y-2 flex flex-col justify-between">
+                <div>
+                  <strong className="text-xs font-bold text-[#ff5541] uppercase block mb-1">
+                    Reset Today&apos;s Completions
+                  </strong>
+                  <p className="text-[11px] text-[#cac6bd] font-sans leading-relaxed m-0">
+                    Reverts all habits for today back to pending in this browser. Historical stats and streak data will not be wiped.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleResetProgress}
+                    className="w-full py-2 bg-[#0f0e0d] text-[#ff5541] border border-[#ff5541] hover:bg-[#ff5541] hover:text-[#5c0000] text-xs font-bold uppercase transition-none cursor-pointer"
+                  >
+                    Reset Today&apos;s Completions
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="p-4 bg-[#0f0e0d] border border-[#5c403b] space-y-2 flex flex-col justify-between">
+              <div>
+                <strong className="text-xs font-bold text-[#ff5541] uppercase block mb-1">
+                  Purge Session & Sign Out
+                </strong>
+                <p className="text-[11px] text-[#cac6bd] font-sans leading-relaxed m-0">
+                  Logs out of your current session and clears security cookies from this browser.
+                </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handlePurgeSession}
+                  className="w-full py-2 bg-[#ff5541] text-[#5c0000] hover:bg-white hover:text-black text-xs font-bold uppercase transition-none cursor-pointer"
+                >
+                  Purge Session
+                </button>
+              </div>
+            </div>
+          </div>
+
           {notice && (
             <p role="status" className="text-xs font-bold text-[#c0ce71] uppercase">
               {notice}

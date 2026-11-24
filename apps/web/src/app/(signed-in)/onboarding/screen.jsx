@@ -317,69 +317,50 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
       {/* TOP HEADER DISPATCH */}
       <section className="w-full bg-[#0f0e0d] border-b-2 border-[#5c403b] p-6 lg:p-8">
         <div className="flex items-center gap-3 text-xs text-[#ac8883] uppercase tracking-wider">
-          <span className="text-[#ff5541] font-bold">{'// COMMISSIONING PROTOCOL'}</span>
-          <span>{'// CADENCE 2026'}</span>
-          <span>{'// GATEWAY WIZARD'}</span>
+          <span className="text-[#ff5541] font-bold">{'// GETTING STARTED'}</span>
+          <span>{'// SETUP WIZARD'}</span>
+          <span>{'// STEP-BY-STEP'}</span>
         </div>
         <div className="mt-3 flex flex-col md:flex-row md:items-baseline md:gap-6">
-          <p className="text-4xl md:text-5xl font-black tracking-tighter uppercase text-[#e6e1df] leading-none m-0 font-['Space_Grotesk',sans-serif]">
-            DISCIPLE ONBOARDING
+          <p className="text-3xl md:text-5xl font-black tracking-tight uppercase text-[#e6e1df] leading-none m-0 font-['Space_Grotesk',sans-serif]">
+            Account Setup & Starter Habit
           </p>
-          <span className="text-xs uppercase tracking-tight text-[#cac6bd] font-bold mt-1 md:mt-0">
-            CHOOSE ACCESS PATHWAY: COMMISSION PROTOCOL, ACCESS TERMINAL WITH EXISTING ACCOUNT, INITIALISE ACCOUNT, OR LAUNCH INSTANT GUEST MODE.
+          <span className="text-xs tracking-tight text-[#cac6bd] mt-1 md:mt-0 font-sans">
+            Set up your profile, timezone, optional goals, and first daily habit. You can change any of these later in Settings.
           </span>
         </div>
       </section>
 
-      {/* 4-OPTION PATHWAY TABS (COMMISSION, LOGIN, SIGN UP, GUEST) */}
-      <section className="w-full grid grid-cols-2 lg:grid-cols-4 border-b-2 border-[#5c403b] bg-[#5c403b] gap-[1px] text-xs uppercase font-bold">
-        <button
-          type="button"
-          onClick={() => setActiveTab('wizard')}
-          className={`p-4 flex items-center justify-between transition-none cursor-pointer ${
-            activeTab === 'wizard'
-              ? 'bg-[#ff5541] text-[#5c0000]'
-              : 'bg-[#0f0e0d] text-[#cac6bd] hover:bg-[#1d1b1a]'
-          }`}
-        >
-          <span>.01 COMMISSION PROTOCOL</span>
-          <span className="text-[10px] opacity-75">[ACTIVE]</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('login')}
-          className={`p-4 flex items-center justify-between transition-none cursor-pointer ${
-            activeTab === 'login'
-              ? 'bg-[#ff5541] text-[#5c0000]'
-              : 'bg-[#0f0e0d] text-[#cac6bd] hover:bg-[#1d1b1a]'
-          }`}
-        >
-          <span>.02 ACCESS TERMINAL WITH EXISTING ACCOUNT</span>
-          <span className="text-[10px] opacity-75">[SIGN IN]</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('signup')}
-          className={`p-4 flex items-center justify-between transition-none cursor-pointer ${
-            activeTab === 'signup'
-              ? 'bg-[#ff5541] text-[#5c0000]'
-              : 'bg-[#0f0e0d] text-[#cac6bd] hover:bg-[#1d1b1a]'
-          }`}
-        >
-          <span>.03 INITIALISE ACCOUNT</span>
-          <span className="text-[10px] opacity-75">[REGISTER]</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleInstantGuestMode}
-          className="p-4 flex items-center justify-between bg-[#f5f0e6] text-[#141312] hover:bg-white transition-none cursor-pointer"
-        >
-          <span>⚡ INSTANT GUEST ACCESS</span>
-          <span className="text-[10px] font-bold">[1-CLICK]</span>
-        </button>
+      {/* QUICK ACCESS PATHWAY UTILITY STRIP */}
+      <section className="w-full bg-[#1d1b1a] border-b-2 border-[#5c403b] px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-3 text-[#cac6bd]">
+          <span className="text-[#ac8883]">Need a different option?</span>
+          <button
+            type="button"
+            onClick={() => setActiveTab(activeTab === 'login' ? 'wizard' : 'login')}
+            className="text-[#ff5541] hover:underline font-bold uppercase transition-none cursor-pointer"
+          >
+            {activeTab === 'login' ? '← Back to setup wizard' : 'Sign in with existing account'}
+          </button>
+          <span className="text-[#5c403b]" aria-hidden="true">|</span>
+          <Link
+            href="/register"
+            className="text-[#cac6bd] hover:text-white uppercase transition-none"
+          >
+            Create account
+          </Link>
+        </div>
+        <div>
+          <button
+            type="button"
+            onClick={handleInstantGuestMode}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#f5f0e6] text-[#141312] hover:bg-white font-bold text-xs uppercase transition-none cursor-pointer"
+            title="Saves progress in your browser local storage without creating an account"
+          >
+            <span>⚡ Instant Guest Demo</span>
+            <span className="text-[10px] text-[#5c403b] font-normal">(Saved locally)</span>
+          </button>
+        </div>
       </section>
 
       {/* TAB CONTENT: QUICK LOG IN OPTION */}
@@ -387,10 +368,10 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
         <div className="p-6 lg:p-8 max-w-xl space-y-6">
           <div className="border-b border-[#5c403b] pb-3">
             <span className="text-xs text-[#ff5541] uppercase tracking-wider font-bold block mb-1">
-              {'OPTION 02 // ACCESS TERMINAL WITH EXISTING ACCOUNT'}
+              {'SIGN IN // EXISTING ACCOUNT'}
             </span>
             <p className="text-2xl font-black text-white uppercase font-['Space_Grotesk',sans-serif] m-0">
-              AUTHENTICATE EXISTING OPERATOR
+              Sign In to Your Account
             </p>
           </div>
 
@@ -403,7 +384,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
           <form onSubmit={handleQuickLogin} className="space-y-4">
             <div>
               <label className="block text-xs text-[#cac6bd] uppercase mb-1 font-bold">
-                Operator Email
+                Email Address
               </label>
               <input
                 type="email"
@@ -416,7 +397,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
 
             <div>
               <label className="block text-xs text-[#cac6bd] uppercase mb-1 font-bold">
-                Access Passphrase
+                Password
               </label>
               <input
                 type="password"
@@ -432,7 +413,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
               disabled={authPending}
               className="w-full py-3 bg-[#ff5541] text-[#5c0000] font-bold text-xs uppercase hover:bg-white hover:text-black transition-none cursor-pointer"
             >
-              {authPending ? 'Authenticating…' : 'Access Terminal With Existing Account →'}
+              {authPending ? 'Authenticating…' : 'Sign in →'}
             </button>
           </form>
         </div>
@@ -443,44 +424,60 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
         <div className="p-6 lg:p-8 max-w-xl space-y-6">
           <div className="border-b border-[#5c403b] pb-3">
             <span className="text-xs text-[#ff5541] uppercase tracking-wider font-bold block mb-1">
-              {'OPTION 03 // INITIALISE ACCOUNT'}
+              {'CREATE ACCOUNT // NEW USER'}
             </span>
             <p className="text-2xl font-black text-white uppercase font-['Space_Grotesk',sans-serif] m-0">
-              REGISTER NEW OPERATOR CALLSIGN
+              Create a Permanent Account
             </p>
           </div>
-          <p className="text-xs text-[#cac6bd] leading-relaxed">
-            Initialize an immutable discipline ledger with server-side streak preservation.
+          <p className="text-xs text-[#cac6bd] leading-relaxed font-sans">
+            Create an account to securely save and sync your habits, routine stability, and XP across all your devices.
           </p>
           <div className="pt-2">
             <Link
               href="/register"
               className="inline-block px-6 py-3 bg-[#ff5541] text-[#5c0000] font-bold text-xs uppercase hover:bg-white hover:text-black transition-none"
             >
-              Initialise Account Terminal →
+              Go to Account Registration →
             </Link>
           </div>
         </div>
       )}
 
-      {/* TAB CONTENT: WIZARD & MAIN COMMISSIONING FORM */}
+      {/* TAB CONTENT: WIZARD & MAIN SETUP FORM */}
       {activeTab === 'wizard' && (
         <div className="p-6 lg:p-8 max-w-4xl space-y-6">
+          {/* SEQUENTIAL STEPS PROGRESS HEADER */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 border-2 border-[#5c403b] bg-[#0f0e0d] p-3 text-xs">
+            <div className="flex items-center gap-2 text-[#ff5541] font-bold">
+              <span className="w-5 h-5 bg-[#ff5541] text-[#5c0000] flex items-center justify-center font-bold text-[11px]">1</span>
+              <span>Profile & Timezone</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#c0ce71] font-bold">
+              <span className="w-5 h-5 bg-[#2d3400] text-[#c0ce71] flex items-center justify-center font-bold text-[11px]">2</span>
+              <span>Goals (Optional)</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#cac6bd] font-bold">
+              <span className="w-5 h-5 bg-[#2b2a28] text-[#cac6bd] flex items-center justify-center font-bold text-[11px]">3</span>
+              <span>Starter Habit</span>
+            </div>
+          </div>
+
           {saved && <SavedSummary saved={saved} />}
           {quest ? (
             <div className="p-6 border-2 border-[#c0ce71] bg-[#1d1b1a] space-y-3">
               <p role="status" className="text-sm font-bold text-[#c0ce71] uppercase">
                 Starter quest created: {quest.title}.
               </p>
-              <p className="text-xs text-[#cac6bd]">
-                Your discipline framework is now active. Open the Today screen to begin your daily execution cadence.
+              <p className="text-xs text-[#cac6bd] font-sans">
+                Your profile and starter habit are now active. Head over to the Today dashboard to review your schedule and start your streak.
               </p>
               <div className="pt-2">
                 <Link
                   href="/today"
                   className="inline-block px-6 py-3 bg-[#c0ce71] text-[#2d3400] font-bold text-xs uppercase hover:bg-white transition-none"
                 >
-                  Enter Operational Dashboard (/today) →
+                  Go to Today Dashboard →
                 </Link>
               </div>
             </div>
@@ -505,97 +502,105 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
               <FieldErrors field="" issues={issues} />
 
               {!saved && (
-                <fieldset disabled={disabled} className="space-y-6">
-                  {/* STEP 1: IDENTITY */}
-                  <div className="border-b border-[#5c403b] pb-2">
-                    <span className="text-xs text-[#ff5541] uppercase tracking-wider font-bold block mb-1">
-                      {'PHASE 01 // IDENTITY ANCHOR'}
-                    </span>
-                    <legend className="text-xl font-bold text-white uppercase font-['Space_Grotesk',sans-serif]">
-                      Your settings
-                    </legend>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs text-[#cac6bd] uppercase mb-1 font-bold">
-                        Display name
-                        <input
-                          name="displayName"
-                          className={inputStyle}
-                          defaultValue={profile.user.displayName}
-                          {...errorAttributes(issues, 'displayName')}
-                        />
-                      </label>
-                      <FieldErrors field="displayName" issues={issues} />
-                      <span className="block text-[10px] text-[#ac8883] uppercase mt-1">
-                        CALLSIGN FOR THE DISCIPLINE DOSSIER.
-                      </span>
+                <fieldset disabled={disabled} className="space-y-8">
+                  {/* STEP 1: PROFILE & TIMEZONE */}
+                  <div className="space-y-4">
+                    <div className="border-b border-[#5c403b] pb-2 flex items-center justify-between">
+                      <legend className="text-lg font-bold text-white uppercase font-['Space_Grotesk',sans-serif]">
+                        Your settings
+                      </legend>
+                      <span className="text-xs text-[#ff5541] font-bold">Step 1 of 3</span>
                     </div>
 
-                    <div>
-                      <label className="block text-xs text-[#cac6bd] uppercase mb-1 font-bold">
-                        Timezone
-                        <input
-                          name="timezone"
-                          className={inputStyle}
-                          defaultValue={profile.user.timezone}
-                          {...errorAttributes(
-                            issues,
-                            'timezone',
-                            'onboarding-timezone-help',
-                          )}
-                        />
-                      </label>
-                      <p id="onboarding-timezone-help" className="text-[11px] text-[#cac6bd] p-2 bg-[#0f0e0d] border border-[#5c403b] mt-1 leading-relaxed">
-                        {timezoneHelp}
-                      </p>
-                      <FieldErrors field="timezone" issues={issues} />
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-xs text-[#cac6bd] uppercase mb-1 font-bold">
+                          Display name
+                          <input
+                            name="displayName"
+                            className={inputStyle}
+                            defaultValue={profile.user.displayName}
+                            {...errorAttributes(issues, 'displayName')}
+                          />
+                        </label>
+                        <FieldErrors field="displayName" issues={issues} />
+                        <span className="block text-[11px] text-[#ac8883] mt-1 font-sans">
+                          Your public name shown on your profile and progress reports.
+                        </span>
+                      </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block text-xs text-[#cac6bd] uppercase mb-2 font-bold">
-                        Biometric Avatar Profile
-                      </label>
-                      <div className="grid grid-cols-2 gap-4 max-w-md text-xs uppercase">
-                        <button
-                          type="button"
-                          onClick={() => setGender('male')}
-                          className={`p-3 border-2 text-left cursor-pointer transition-none ${
-                            gender === 'male'
-                              ? 'border-[#ff5541] bg-[#1d1b1a] text-white font-bold'
-                              : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd]'
-                          }`}
-                        >
-                          <div className="text-sm font-bold text-white">PORTRAIT 01</div>
-                          <div className="text-[10px] text-[#ac8883]">DISCIPLE // MALE</div>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setGender('female')}
-                          className={`p-3 border-2 text-left cursor-pointer transition-none ${
-                            gender === 'female'
-                              ? 'border-[#ff5541] bg-[#1d1b1a] text-white font-bold'
-                              : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd]'
-                          }`}
-                        >
-                          <div className="text-sm font-bold text-white">PORTRAIT 02</div>
-                          <div className="text-[10px] text-[#ac8883]">DISCIPLE // FEMALE</div>
-                        </button>
+                      <div>
+                        <label className="block text-xs text-[#cac6bd] uppercase mb-1 font-bold">
+                          Timezone
+                          <input
+                            name="timezone"
+                            className={inputStyle}
+                            defaultValue={profile.user.timezone}
+                            {...errorAttributes(
+                              issues,
+                              'timezone',
+                              'onboarding-timezone-help',
+                            )}
+                          />
+                        </label>
+                        <p id="onboarding-timezone-help" className="text-[11px] text-[#cac6bd] p-2 bg-[#0f0e0d] border border-[#5c403b] mt-1 leading-relaxed font-sans">
+                          {timezoneHelp}
+                        </p>
+                        <FieldErrors field="timezone" issues={issues} />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-xs text-[#cac6bd] uppercase mb-1 font-bold">
+                          Avatar
+                        </label>
+                        <p className="text-[11px] text-[#ac8883] mb-2 font-sans">
+                          Choose a profile portrait. No biometric data is collected.
+                        </p>
+                        <div className="grid grid-cols-2 gap-4 max-w-md text-xs uppercase">
+                          <button
+                            type="button"
+                            onClick={() => setGender('male')}
+                            className={`p-3 border-2 text-left cursor-pointer transition-none ${
+                              gender === 'male'
+                                ? 'border-[#ff5541] bg-[#1d1b1a] text-white font-bold'
+                                : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd]'
+                            }`}
+                          >
+                            <div className="text-sm font-bold text-white">Portrait 01</div>
+                            <div className="text-[10px] text-[#ac8883]">Style // Athlete</div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setGender('female')}
+                            className={`p-3 border-2 text-left cursor-pointer transition-none ${
+                              gender === 'female'
+                                ? 'border-[#ff5541] bg-[#1d1b1a] text-white font-bold'
+                                : 'border-[#5c403b] bg-[#0f0e0d] text-[#cac6bd]'
+                            }`}
+                          >
+                            <div className="text-sm font-bold text-white">Portrait 02</div>
+                            <div className="text-[10px] text-[#ac8883]">Style // Scholar</div>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* STEP 2: GOALS */}
                   <fieldset
-                    className="space-y-4 pt-4 border-t border-[#5c403b]"
+                    className="space-y-4 pt-6 border-t border-[#5c403b]"
                     {...errorAttributes(issues, 'goals')}
                   >
                     <div className="flex items-center justify-between border-b border-[#5c403b] pb-2">
-                      <legend className="text-lg font-bold text-[#c0ce71] uppercase">
-                        Goals
-                      </legend>
-                      <span className="text-xs text-[#ac8883]">{goals.length} OF {MAX_GOALS} SLOTS</span>
+                      <div>
+                        <legend className="text-lg font-bold text-[#c0ce71] uppercase">
+                          Goals
+                        </legend>
+                        <p className="text-[11px] text-[#cac6bd] font-sans mt-0.5">
+                          High-level milestones you are working toward (optional, up to 8).
+                        </p>
+                      </div>
+                      <span className="text-xs text-[#ac8883] font-bold">{goals.length} of {MAX_GOALS} slots</span>
                     </div>
 
                     <div className="space-y-3">
@@ -656,8 +661,8 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
 
                       {/* QUICK GOAL CHIPS */}
                       <div className="pt-2">
-                        <span className="text-[10px] text-[#ac8883] uppercase block mb-1 font-bold">
-                          SUGGESTED DISCIPLINE DIRECTIVES (CLICK TO ADD):
+                        <span className="text-[11px] text-[#ac8883] block mb-1 font-bold font-sans">
+                          Suggested goal ideas (click to add):
                         </span>
                         <div className="flex flex-wrap gap-2">
                           {PRESET_GOALS.map((preset) => (
@@ -679,14 +684,17 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
               )}
 
               {/* STEP 3: STARTER QUEST */}
-              <fieldset disabled={disabled} className="space-y-4 pt-4 border-t border-[#5c403b]">
-                <div className="border-b border-[#5c403b] pb-2">
-                  <span className="text-xs text-[#ff5541] uppercase tracking-wider font-bold block mb-1">
-                    {'PHASE 02 // INITIAL EXECUTION TARGET'}
-                  </span>
-                  <legend className="text-xl font-bold text-white uppercase font-['Space_Grotesk',sans-serif]">
-                    Starter quest
-                  </legend>
+              <fieldset disabled={disabled} className="space-y-4 pt-6 border-t border-[#5c403b]">
+                <div className="border-b border-[#5c403b] pb-2 flex items-center justify-between">
+                  <div>
+                    <legend className="text-lg font-bold text-white uppercase font-['Space_Grotesk',sans-serif]">
+                      Starter quest
+                    </legend>
+                    <p className="text-[11px] text-[#cac6bd] font-sans mt-0.5">
+                      Your first recurring daily habit. Saving will initialize your profile and schedule this habit into your plan for today.
+                    </p>
+                  </div>
+                  <span className="text-xs text-[#ff5541] font-bold">Step 3 of 3</span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -695,7 +703,7 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
                       Quest title
                       <input
                         name="title"
-                        defaultValue="LINEAR ALGEBRA: EIGENVECTORS & SVD DRILL"
+                        defaultValue="Linear Algebra: Eigenvectors & SVD Drill"
                         className={inputStyle}
                         {...errorAttributes(issues, 'title')}
                       />
@@ -737,8 +745,8 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
 
               {/* ACTION SUBMIT */}
               <div className="pt-4 border-t-2 border-[#5c403b] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <span className="text-xs text-[#ac8883] uppercase">
-                  CONFIRM COMMISSIONING TO INITIALIZE CADENCE LEDGER.
+                <span className="text-xs text-[#ac8883] font-sans">
+                  Saves your profile settings and creates your first daily habit.
                 </span>
                 <button
                   type="submit"
