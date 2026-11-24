@@ -18,6 +18,7 @@ import { setFeedbackSession } from '../progression/feedback-session.js';
 /** @typedef {import('@kaizen/contracts').RegisterRequest} RegisterRequest */
 
 const base = process.env.NEXT_PUBLIC_API_BASE_PATH || '/api/v1';
+const requireAccountApi = process.env.NEXT_PUBLIC_REQUIRE_ACCOUNT_API === '1';
 const errorResponse = z.object({
   error: z.object({ message: z.string(), code: z.string().optional() }),
 });
@@ -116,6 +117,7 @@ async function startSession(path, body) {
     return result;
   } catch (error) {
     if (
+      !requireAccountApi &&
       typeof window !== 'undefined' &&
       !(typeof process !== 'undefined' && process.env?.NODE_ENV === 'test')
     ) {
@@ -180,6 +182,7 @@ export const auth = {
         return null;
       }
       if (
+        !requireAccountApi &&
         typeof window !== 'undefined' &&
         !(typeof process !== 'undefined' && process.env?.NODE_ENV === 'test')
       ) {
