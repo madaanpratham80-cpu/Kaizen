@@ -239,10 +239,10 @@ export function AuthForm({ mode }) {
             {registering ? (
               <>
                 <Link className={inactiveTab} href="/login">
-                  Log in
+                  Access terminal with existing account
                 </Link>
                 <span aria-current="page" className={activeTab}>
-                  Create an account
+                  Initialise account
                 </span>
                 <button
                   type="button"
@@ -255,10 +255,10 @@ export function AuthForm({ mode }) {
             ) : (
               <>
                 <span aria-current="page" className={activeTab}>
-                  Log in
+                  Access terminal with existing account
                 </span>
                 <Link className={inactiveTab} href="/register">
-                  Create an account
+                  Initialise account
                 </Link>
                 <button
                   type="button"

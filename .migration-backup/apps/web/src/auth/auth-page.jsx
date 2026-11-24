@@ -38,12 +38,16 @@ export function AuthPage({ mode }) {
               {registering ? 'DISPATCH .01' : 'DISPATCH .02'}
             </span>
             <span className="text-[#ac8883]">
-              {registering ? '// NEW OPERATOR SIGN UP' : '// OPERATOR LOG IN'}
+              {registering
+                ? '// INITIALISE ACCOUNT'
+                : '// ACCESS TERMINAL WITH EXISTING ACCOUNT'}
             </span>
           </div>
           <div className="flex items-baseline justify-between">
             <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-[#e6e1df] font-['Space_Grotesk',sans-serif] m-0">
-              {registering ? 'SIGN UP' : 'LOG IN'}
+              {registering
+                ? 'INITIALISE ACCOUNT'
+                : 'ACCESS TERMINAL WITH EXISTING ACCOUNT'}
             </h1>
             <span className="text-3xl font-black text-[#c0ce71] font-mono">改善</span>
           </div>
