@@ -16,7 +16,7 @@ export function AuthPage({ mode }) {
             <span className="w-2 h-2 bg-[#c0ce71] inline-block animate-pulse"></span>
             KAIZEN // 改善
           </Link>
-          <span className="hidden md:inline text-[#5c403b]">//</span>
+          <span className="hidden md:inline text-[#5c403b]">{'//'}</span>
           <span className="hidden md:inline">SECURITY REGIME: ACTIVE</span>
         </div>
         <div className="flex items-center gap-6">

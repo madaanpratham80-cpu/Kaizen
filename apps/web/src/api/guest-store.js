@@ -273,6 +273,26 @@ export function saveGuestState(state) {
   }
 }
 
+export function enableGuestMode() {
+  if (typeof document !== 'undefined') {
+    document.cookie = 'kaizen_guest=true; path=/; max-age=86400; SameSite=Lax';
+  }
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem('kaizen_guest_mode', 'true');
+  }
+}
+
+export function clearGuestMode() {
+  if (typeof document !== 'undefined') {
+    document.cookie =
+      'kaizen_guest=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+  }
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.removeItem('kaizen_guest_mode');
+    window.localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
 export function isGuestMode() {
   if (typeof document === 'undefined') return false;
   return (

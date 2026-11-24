@@ -14,6 +14,7 @@ coverage/
 
 
 /graphify-out/
+.playwright-mcp/
 
 # Local Stitch design exports
 /UI, v4/kaizen 404/

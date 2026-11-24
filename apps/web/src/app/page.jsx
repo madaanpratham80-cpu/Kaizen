@@ -36,7 +36,7 @@ export default function HomePage() {
             <span className="w-2 h-2 bg-[#c0ce71] inline-block animate-pulse"></span>
             SYS_STATUS: OPERATIONAL
           </span>
-          <span className="hidden md:inline text-[#5c403b]">//</span>
+          <span className="hidden md:inline text-[#5c403b]">{'//'}</span>
           <span className="hidden md:inline">DISCIPLINE ARCHITECTURE: V.1.0</span>
         </div>
         <div className="flex items-center gap-6">
@@ -58,7 +58,7 @@ export default function HomePage() {
             DISPATCH .00
           </span>
           <span className="text-[#ac8883]">
-            // REAL-WORLD GAMIFIED PROGRESSION PLATFORM
+            {'// REAL-WORLD GAMIFIED PROGRESSION PLATFORM'}
           </span>
         </div>
 
@@ -92,7 +92,7 @@ export default function HomePage() {
             href="/register"
             className="group p-6 bg-[#ff5541] text-[#5c0000] uppercase font-bold text-sm tracking-wider flex flex-col justify-between hover:bg-[#e6e1df] hover:text-[#141312] transition-none"
           >
-            <span className="text-xs opacity-70 mb-4">// NEW DISCIPLE</span>
+            <span className="text-xs opacity-70 mb-4">{'// NEW DISCIPLE'}</span>
             <span className="text-lg flex items-center justify-between">
               SIGN UP
               <span className="group-hover:translate-x-1 transition-transform">→</span>
@@ -104,7 +104,7 @@ export default function HomePage() {
             href="/login"
             className="group p-6 bg-[#1d1b1a] text-[#e6e1df] uppercase font-bold text-sm tracking-wider flex flex-col justify-between hover:bg-[#2b2a28] transition-none"
           >
-            <span className="text-xs text-[#ac8883] mb-4">// RETURNING OPERATOR</span>
+            <span className="text-xs text-[#ac8883] mb-4">{'// RETURNING OPERATOR'}</span>
             <span className="text-lg flex items-center justify-between">
               LOG IN
               <span className="group-hover:translate-x-1 transition-transform">→</span>
@@ -120,7 +120,7 @@ export default function HomePage() {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs text-[#c0ce71] opacity-80 mb-4">
-                // INSTANT EVALUATION
+                {'// INSTANT EVALUATION'}
               </span>
               <span className="bg-[#c0ce71] text-[#2d3400] text-[10px] font-bold px-1.5 py-0.5">
                 DEMO
