@@ -12,6 +12,11 @@ function getStorage() {
 }
 
 const STORAGE_KEY = 'kaizen_guest_state_v1';
+const XP_PER_LEVEL = 100;
+
+/** Credentials the "auto-fill demo" shortcuts use; they open the guest, not an account. */
+export const DEMO_EMAIL = 'disciple42@kaizen.local';
+export const DEMO_PASSWORD = 'KaizenDisciple2026!';
 
 function initialGuestState() {
   const now = new Date();
@@ -228,8 +233,6 @@ function initialGuestState() {
     currentStreak: 42,
     bestStreak: 42,
     stateVersion: 1,
-    level: 12,
-    xpIntoLevel: 420,
     occurrences,
     quests,
     goals: [
@@ -388,67 +391,84 @@ export function completeGuestOccurrence(occurrenceId) {
   };
 }
 
+const DAY_MS = 86400000;
+
 export function getGuestHabits(week) {
   const now = new Date();
-  const weekStart = week || now.toISOString().slice(0, 10);
+  const today = now.toISOString().slice(0, 10);
+  const weekStart = week || today;
+  const first = Date.parse(`${weekStart}T00:00:00Z`);
   const days = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(now.getTime() - (6 - i) * 86400000);
+    const date = new Date(first + i * DAY_MS).toISOString().slice(0, 10);
+    const timing =
+      date < today ? 'elapsed' : date === today ? 'today' : 'future';
     days.push({
-      date: d.toISOString().slice(0, 10),
+      date,
       id: `00000000-0000-0000-0000-00000000090${i}`,
-      status: i === 6 ? 'ACTIVE' : i === 2 ? 'REST' : 'OPEN',
-      timing: i === 6 ? 'today' : 'elapsed',
+      status: i === 2 ? 'REST' : timing === 'today' ? 'ACTIVE' : 'OPEN',
+      timing,
       occurrences: [
         {
           id: `00000000-0000-0000-0000-00000000080${i}`,
           questId: '00000000-0000-0000-0000-000000000201',
           title: 'Linear Algebra: Eigenvectors & SVD Drill',
           target: 1,
-          status: i < 5 ? 'COMPLETED' : 'PENDING',
+          status:
+            timing === 'elapsed' && i !== 2
+              ? 'COMPLETED'
+              : timing === 'future'
+                ? 'SCHEDULED'
+                : 'PENDING',
         },
       ],
     });
   }
+  const label = (day, i, missedAt) =>
+    i === 2
+      ? 'Rest'
+      : day.timing === 'future'
+        ? 'Scheduled'
+        : day.timing === 'today'
+          ? 'Pending'
+          : i === missedAt
+            ? 'Missed'
+            : 'Completed';
+
+  const habits = [
+    {
+      questId: '00000000-0000-0000-0000-000000000201',
+      title: 'Linear Algebra: Eigenvectors & SVD Drill',
+      streak: { current: 42, best: 42 },
+      completionRate: 0.92,
+      missedAt: -1,
+    },
+    {
+      questId: '00000000-0000-0000-0000-000000000204',
+      title: 'Deep Sleep Cold Therapy Routine',
+      streak: { current: 18, best: 24 },
+      completionRate: 0.85,
+      missedAt: 4,
+    },
+  ].map(({ missedAt, ...habit }) => ({
+    ...habit,
+    cells: days.map((day, i) => ({
+      date: day.date,
+      label: label(day, i, missedAt),
+    })),
+  }));
+  const cells = habits.flatMap((habit) => habit.cells);
+  const due = cells.filter(({ label }) => label !== 'Rest' && label !== 'Scheduled');
+  const completed = due.filter(({ label }) => label === 'Completed').length;
+  const scheduled = due.length;
 
   return {
     week: weekStart,
-    habits: [
-      {
-        questId: '00000000-0000-0000-0000-000000000201',
-        title: 'Linear Algebra: Eigenvectors & SVD Drill',
-        streak: { current: 42, best: 42 },
-        completionRate: 0.92,
-        cells: [
-          { date: days[0].date, label: 'Completed' },
-          { date: days[1].date, label: 'Completed' },
-          { date: days[2].date, label: 'Rest' },
-          { date: days[3].date, label: 'Completed' },
-          { date: days[4].date, label: 'Completed' },
-          { date: days[5].date, label: 'Completed' },
-          { date: days[6].date, label: 'Pending' },
-        ],
-      },
-      {
-        questId: '00000000-0000-0000-0000-000000000204',
-        title: 'Deep Sleep Cold Therapy Routine',
-        streak: { current: 18, best: 24 },
-        completionRate: 0.85,
-        cells: [
-          { date: days[0].date, label: 'Completed' },
-          { date: days[1].date, label: 'Completed' },
-          { date: days[2].date, label: 'Completed' },
-          { date: days[3].date, label: 'Completed' },
-          { date: days[4].date, label: 'Missed' },
-          { date: days[5].date, label: 'Completed' },
-          { date: days[6].date, label: 'Pending' },
-        ],
-      },
-    ],
+    habits,
     days,
-    scheduled: 28,
-    completed: 24,
-    compliance: 0.857,
+    scheduled,
+    completed,
+    compliance: scheduled ? completed / scheduled : null,
   };
 }
 
@@ -458,11 +478,12 @@ export function getGuestProgress() {
   const heatmap = [];
   for (let i = 0; i < 365; i++) {
     const d = new Date(now.getTime() - (364 - i) * 86400000);
-    const hasCompletions = i % 7 !== 2 && Math.random() > 0.15;
+    // Deterministic pattern so the heatmap stays stable between reloads.
+    const hasCompletions = i % 7 !== 2 && (i * 7 + 3) % 13 !== 0;
     heatmap.push({
       localDate: d.toISOString().slice(0, 10),
       status: hasCompletions ? 'ACTIVE' : i % 7 === 2 ? 'REST' : 'OPEN',
-      completions: hasCompletions ? Math.floor(Math.random() * 3) + 1 : 0,
+      completions: hasCompletions ? (i % 3) + 1 : 0,
     });
   }
 
@@ -571,8 +592,8 @@ export function getGuestProfile() {
     currentStreak: state.currentStreak,
     bestStreak: state.bestStreak,
     stateVersion: state.stateVersion,
-    level: state.level,
-    xpIntoLevel: state.xpIntoLevel,
+    level: 1 + Math.floor(state.totalXp / XP_PER_LEVEL),
+    xpIntoLevel: state.totalXp % XP_PER_LEVEL,
     rank: progress.rank,
     seals: progress.seals,
     pillarTotals: progress.pillarTotals,

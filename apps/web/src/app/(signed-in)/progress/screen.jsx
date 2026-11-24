@@ -41,7 +41,7 @@ function Heatmap({ cells }) {
   const columns = column - 2;
   return (
     <div
-      className="overflow-x-auto pb-space-sm focus-visible:outline-2 focus-visible:outline-primary"
+      className="relative overflow-x-auto pb-space-sm focus-visible:outline-2 focus-visible:outline-primary"
       tabIndex={0}
       role="region"
       aria-label="Annual calendar"

@@ -18,7 +18,14 @@ import {
 } from '../../../api/session-screen.jsx';
 import { useCalendarRead } from '../../../api/use-calendar-read.js';
 import { ApiError, auth } from '../../../auth/client.js';
-import { isGuestMode, loadGuestState, saveGuestState, createGuestQuest } from '../../../api/guest-store.js';
+import {
+  DEMO_EMAIL,
+  DEMO_PASSWORD,
+  getGuestProfile,
+  isGuestMode,
+  loadGuestState,
+  saveGuestState,
+} from '../../../api/guest-store.js';
 
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_PATH || '/api/v1';
 const SAVE_TIMEOUT_MS = 15_000;
@@ -52,6 +59,11 @@ const PRESET_GOALS = [
  */
 async function saveSettings(input, { csrfToken, signal }) {
   signal.throwIfAborted();
+  if (isGuestMode()) {
+    // Guests have no server account; their settings live in the browser.
+    saveGuestState({ ...loadGuestState(), ...input });
+    return { saved: { user: getGuestProfile().user, pendingTimezone: null } };
+  }
   const response = await fetch(`${apiBase}/settings`, {
     method: 'PATCH',
     credentials: 'include',
@@ -173,8 +185,8 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
   const [gender, setGender] = useState('male');
 
   // Quick Auth tab states
-  const [loginEmail, setLoginEmail] = useState('disciple42@kaizen.local');
-  const [loginPassword, setLoginPassword] = useState('KaizenDisciple2026!');
+  const [loginEmail, setLoginEmail] = useState(DEMO_EMAIL);
+  const [loginPassword, setLoginPassword] = useState(DEMO_PASSWORD);
   const [authError, setAuthError] = useState('');
   const [authPending, setAuthPending] = useState(false);
 
@@ -205,8 +217,13 @@ function OnboardingForm({ profile, session, scope, unavailable, expire }) {
     setAuthError('');
     setAuthPending(true);
     try {
+      if (loginEmail === DEMO_EMAIL && loginPassword === DEMO_PASSWORD) {
+        handleInstantGuestMode();
+        return;
+      }
       await auth.login({ email: loginEmail, password: loginPassword });
-      if (typeof window !== 'undefined') window.location.href = '/today';
+      if (typeof window !== 'undefined')
+        window.location.href = '/today';
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : 'Login failed');
       setAuthPending(false);
