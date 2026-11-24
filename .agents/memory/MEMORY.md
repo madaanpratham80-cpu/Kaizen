@@ -1,1 +1,2 @@
 - [Kaizen migration verification](kaizen-migration-verification.md) — browser checks must distinguish guest mode from real account persistence.
+- [Git push divergence](git-push-divergence.md) — local main (artifacts/kaizen layout) shares no history with GitHub origin/main (apps/web layout); plain push is rejected, never force without consent.
